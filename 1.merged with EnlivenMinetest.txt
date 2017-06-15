@@ -1,0 +1,13 @@
+#source code for mtanalyze (formerly minetest-chunkymap) project has been merged with [EnlivenMinetest](http://www.github.com/expertmm/EnlivenMinetest) and is maintained there.
+
+#git mtanalyze add --prefix=mtanalyze git://github.com/expertmm/mtanalyze.git master
+#git remote remove mtanalyze
+
+#see Jakub's response to https://stackoverflow.com/questions/1425892/how-do-you-merge-two-git-repositories
+git remote add -f mtanalyze git://github.com/expertmm/mtanalyze.git
+git merge -s ours --allow-unrelated-histories --no-commit mtanalyze/master
+#"By specifying the ‘ours’ merge strategy, we tell Git that we want the result of the merge to be the current HEAD, no matter what." http://nuclearsquid.com/writings/subtree-merging-and-you/
+git read-tree --prefix=mtanalyze/ -u mtanalyze/master
+#prefix is where (in which subfolder name) to place the remote repo into this repo
+git commit -m "Merge mtanalyze project as subdirectory"
+git pull -s subtree mtanalyze master
