@@ -329,11 +329,18 @@ def init_minetestinfo():
         minetestinfo.save_yaml()
 
     default_shared_minetest_path = "/usr/share/games/minetest"
-    try_path = "/usr/local/share/minetest"
+
+    # packaged version gets priority (Ubuntu Xenial 0.4.15 and
+    # Zesty 0.4.16 packages use /usr/share/games/, /usr/local/share
+    # is from source)
+    try_paths = ["/usr/share/games/minetest","/usr/local/share/minetest"]
     if os.path.isdir("C:\\Games\\Minetest"):  # if os_name == "windows":
         default_shared_minetest_path = "C:\\Games\\Minetest"
-    elif os.path.isdir(try_path):
-        default_shared_minetest_path = try_path
+    else:
+        for try_path in try_paths:
+            if os.path.isdir(try_path):
+                default_shared_minetest_path = try_path
+                break
 
     while True:
         minetestinfo.prepare_var("shared_minetest_path", default_shared_minetest_path, "path containing Minetest's games folder")
