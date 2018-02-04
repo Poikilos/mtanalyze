@@ -82,7 +82,7 @@ class ChunkymapOfflineRenderer:
         #if (self.backend_string!="sqlite3"):
             # minetestmapper-numpy had trouble with leveldb but this fork has it fixed so use numpy always always instead of running the following line
             # self.minetestmapper_py_path = self.minetestmapper_custom_path
-        print("Chose image generator script: "+self.minetestmapper_py_path)
+        print("Chose image generator script: " + self.minetestmapper_py_path)
         if not os.path.isfile(self.minetestmapper_py_path):
             print("ERROR: script does not exist, so exiting "+__file__+".")
             sys.exit(2)
@@ -143,7 +143,7 @@ class ChunkymapOfflineRenderer:
         if self.mtm_bin_enable:
             cmd_no_out_string = self.minetestmapper_bin_path+" --colors "+dest_colors_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
         else:
-            cmd_no_out_string = python_exe_path+" "+self.minetestmapper_py_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
+            cmd_no_out_string = get_python2_exe_path() + " " + self.minetestmapper_py_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
         cmd_string = cmd_no_out_string + cmd_suffix
         print("")
         print("")
@@ -269,6 +269,23 @@ class ChunkymapOfflineRenderer:
             print("No image could be generated from '"+self.world_path+"'")
             if is_locked:
                 print("(database is locked--shutdown server first or try generator.py to render chunks individually).")
+            else:
+                # ins = open(genresult_path, 'r')
+                ins = open(gen_error_path, 'r')
+                line = True
+                while line:
+                    line = ins.readline()
+                    if line:
+                        print("  " + line.strip())
+                        if "No module named leveldb" in line:
+                            print("")
+                            print("To fix this error, try:")
+                            print("  Ubuntu (tested on Trusty to Zesty):")
+                            print("    apt install python-leveldb  # python2 version")
+                            print("  Arch-based distros:")
+                            print("    sudo pacman -Syu --noconfirm yaourt")
+                            print("    yaourt -Syu --noconfirm --aur python2-leveldb")
+                ins.close()
 
 cmor = ChunkymapOfflineRenderer()
 cmor.RenderSingleImage()

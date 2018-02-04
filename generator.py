@@ -2115,10 +2115,11 @@ if __name__ == '__main__':
         else:
             mtchunks.refresh_players_enable = False
             mtchunks.refresh_map_enable = False
-            print("Nothing to do since "+str(args))
+            print("Nothing to do since " + str(args))
     if mtchunks.refresh_players_enable or mtchunks.refresh_map_enable:
         if args.no_loop:
             mtchunks.run()
         else:
-            print("To stop generator.py loop, save a line '"+stop_line+"' to '"+signal_path+"'")
+            print("To stop generator.py loop, save a line '" + stop_line
+                  + "' to '" + signal_path + "'")
             mtchunks.run_loop()

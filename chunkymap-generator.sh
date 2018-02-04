@@ -16,4 +16,8 @@ echo
 # FAILS: flock -n /var/run/chunkymap-regen.lockfile -c "screen -S chunkymapregen python $SCRIPTPATH/unused/chunkymap-regen.py"
 # FAILS: screen -S chunkymapregen flock -n /var/run/chunkymap-regen.lockfile -c python $SCRIPTPATH/unused/chunkymap-regen.py
 # sudo screen -S chunkymapgen python $SCRIPTPATH/generator.py
-sudo screen -S chunkymapgen python "$SCRIPTPATH/generator.py"
+sudo screen -S chunkymapgen python3 "$SCRIPTPATH/generator.py"
+# or:
+# python3 ~/GitHub/EnlivenMinetest/mtanalyze/generator.py
+# see also:
+# python3 ~/GitHub/EnlivenMinetest/mtanalyze/singleimage.py
