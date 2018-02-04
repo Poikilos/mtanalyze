@@ -1,7 +1,26 @@
+#!/usr/bin/env python
 
-#purpose: assist in data recovery where original filename is not known
-#KNOWN ISSUES:
-# * (status:closed reason:no solution) assumes name specified in file is same as id (filename)
+# Process minetest player files when server is not running
+# such as assist in data recovery where original filename is not known
+# (such as where player_id does not match filename of player file,
+# as caused by data recovery or other corruption)
+# Copyright (C) 2018 Jake Gustafson
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
 import shutil
 import os
 from datetime import datetime
@@ -57,7 +76,7 @@ def confirm_min_date():
     if is_start_now:
         print("  (which is the current time, so nothing will be replayed [this is the default just be extra careful, because if you run the replay function on the same part of the log more than once, that will double #of each item each player digs and double the quantity of those items in players offline storage folder])")
     print("")
-    
+
 
 players_offline_storage_name = "players_offline_storage"
 deprecated_players_offline_storage_name = "player_storage"
@@ -289,7 +308,7 @@ class MinetestPlayer:
         self._player_args["yaw"] = 0.0
         self.playerid = playerid
         self.inventories = list()
-    
+
     #Set multiplied internal pos using actual pos
     def set_pos(self, pos):
         if (len(pos)==3):
@@ -305,7 +324,7 @@ class MinetestPlayer:
                 if isinstance(self._player_args["position"], str):
                     self._player_args["position"] = literal_eval(self._player_args["position"])
                 element_count = len(self._player_args["position"])
-                
+
                 if (element_count!=3):
                     #if element_count>1:
                     if element_count==2:
@@ -317,7 +336,7 @@ class MinetestPlayer:
                     else:
                         self.set_pos(0,0,0)
                         print("ERROR in get_pos: Element count "+str(element_count)+" too low (should have numbers for 3 axes) for player position, so set to 0,0,0")
-                
+
                 #self._player_args["position"] = float(pos[0]), float(pos[1]), float(pos[2])
             else:
                 self.set_pos(0,0,0)
@@ -326,14 +345,14 @@ class MinetestPlayer:
             print("ERROR in get_pos: Missing _player_args for player id "+self.get_safe_player_id_quoted()+" so setting to 0,0,0")
             self.set_pos(0,0,0)
         return self._player_args["position"][0]/minetest_player_pos_multiplier, self._player_args["position"][1]/minetest_player_pos_multiplier, self._player_args["position"][2]/minetest_player_pos_multiplier
-    
+
     def get_safe_player_id_quoted(self):
         result = None
         if self.player_id is None:
             result = "None"
         else:
             result = "'"+str(self.player_id)+"'"
-        return result    
+        return result
     # returns how many didnt' fit in any inventory lists
     def push_item(self, item_id, qty):
         main_index = -1
@@ -789,7 +808,7 @@ def set_player_names_to_file_names():
                                         print(min_indent+"      WARNING: name is blank in "+sub_path)
                                 else:
                                     print(min_indent+"      WARNING: name not found in "+sub_path)
-                            
+
                         #else:
                         #    print(min_indent+"    ERROR in set_player_names_to_file_names: '"+str(sub_path)+"' is not a file.")
                     else:
@@ -813,7 +832,7 @@ debug_log_replay_to_offline_player_storage("C:\\Users\\jgustafson\\Desktop\\Back
 
 def switch_player_file_contents(player1_path, player2_path):
     #switches everything except name
-    
+
     player1 = MinetestPlayer(os.path.basename(player1_path))
     player2 = MinetestPlayer(os.path.basename(player2_path))
     tmp_id = player1.playerid

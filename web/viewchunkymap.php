@@ -70,7 +70,10 @@ if (is_file('chunkymap.php')) {
             // closedir($handle);
         // }
     // }
-    echo "Press F5 key on your keyboard to refresh player locations.<br/>";
+    $is_ready = check_world();
+    if ($is_ready) {
+    	echo "Press F5 key on your keyboard to refresh player locations.<br/>";
+    }
     echo_chunkymap_canvas($show_player_names_enable,$decachunks_enable,$chunks_enable,$visual_debug_enable,$html4_mode_enable);
     //echo_chunkymap_as_chunk_table(false);
     //echo_decachunk_table();

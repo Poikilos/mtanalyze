@@ -1,0 +1,28 @@
+#!/bin/sh
+# call built-in php web server (not for production use)
+# see http://php.net/manual/en/features.commandline.webserver.php
+
+# get dir where script resides (see al's answer at https://stackoverflow
+# .com/questions/242538/unix-shell-script-find-out-which-directory-the-
+# script-file-resides
+# Absolute path to this script, e.g. /home/user/bin/foo.sh
+SCRIPT=$(readlink -f "$0")
+# Absolute path this script is in, thus /home/user/bin
+SCRIPTPATH=$(dirname "$SCRIPT")
+echo
+echo
+if [ "$SCRIPTPATH" == "$HOME/public_html" ]; then
+  if [ -d "$HOME/GitHub/EnlivenMinetest" ]; then
+    html_git_path=$HOME/GitHub/EnlivenMinetest/mtanalyze/web
+    cp -Rf $html_git_path/* $HOME/public_html/
+    echo "got updated files from $HOME/GitHub/EnlivenMinetest/mtanalyze/web"
+  else
+    echo "skipping update since no '$HOME/GitHub/EnlivenMinetest'"
+  fi
+else
+  echo "If you run this script from $HOME/public_html, it will"
+  echo "  update (WITH OVERWRITE) to there with all files from"
+  echo "    $SCRIPTPATH"
+  echo
+fi
+php -S localhost:8000

@@ -1,9 +1,27 @@
+#!/usr/bin/env python3
+# script for listing players by distance from a certain point
+# Copyright (C) 2018 Jake Gustafson
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
 
 from minetestoffline import *
 import math
 
 # (used below)
-def list_players_by_distance(single_axis_enable):
+def list_players_by_distance(single_axis_enable, start=(0,0,0)):
 
     #from ast import literal_eval # as make_tuple
 
@@ -48,11 +66,11 @@ def list_players_by_distance(single_axis_enable):
                     if this_max_abs<=min_abs:
                         min_abs = this_max_abs
                         min_key = key
-                    #if abs(pos[2])<=min_abs:  
+                    #if abs(pos[2])<=min_abs:
                     #    min_abs = pos[2]
                     #    min_key = key
                 else:
-                    dist = math.sqrt(pos[0]**2 * pos[2]**2)
+                    dist = math.sqrt((pos[0]-start[0])**2 * (pos[2]-start[2])**2)
                     if dist<=min_dist:
                         min_dist = dist
                         min_key = key

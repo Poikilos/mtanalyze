@@ -1,16 +1,35 @@
 import os
 import datetime
-from expertmm import *
+import platform
+try:
+    from expertmm import *
+except ImportError:
+    from mtanalyze.expertmm import *
 
-#variables to eliminate from generator.py (and managed here centrally instead, so configuration is shared across minetest helper programs):
-#os_name
+# module for finding minetest paths and other installation metadata
+# Copyright (C) 2018 Jake Gustafson
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
+
+#TODO: eliminate the following variables from generator.py (and manage here centrally instead, so configuration is shared across minetest helper programs):
 #self.config (use minetestinfo.get_val instead)
-#config_name
-#config_path
 #profile_path
 minetest_player_pos_multiplier = 10.0
 
-profile_path = None
 
 worldgen_mod_list = list()
 worldgen_mod_list.append("caverealms")
@@ -75,12 +94,32 @@ gen_error_name_closer_string = "_mapper_err.txt"
 loaded_mod_list = list()
 
 prepackaged_game_mod_list = list()
-prepackaged_gameid = "minetest_game"
+prepackaged_gameid = None
 new_mod_list = list()
 
 user_excluded_mod_count = 0
 
-minetestinfo = ConfigManager(os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmeta.yml"), ":")
+profile_path = None
+appdata_path = None
+if "windows" in platform.system().lower():
+    if 'USERPROFILE' in os.environ:
+        profile_path = os.environ['USERPROFILE']
+        appdatas_path = os.path.join(profile_path, "AppData")
+        appdata_path = os.path.join(appdatas_path, "Local")
+    else:
+        print("ERROR: missing HOME variable")
+else:
+    if 'HOME' in os.environ:
+        profile_path = os.environ['HOME']
+        appdata_path = os.path.join(profile_path, ".config")
+    else:
+        print("ERROR: missing HOME variable")
+
+configs_path = os.path.join(appdata_path, "enlivenminetest")
+# conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         # "minetestmeta.yml")
+conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmeta.yml")
+minetestinfo = ConfigManager(conf_path, ":")
 
 game_path_from_gameid_dict = {}
 FLAG_EMPTY_HEXCOLOR = "#010000"
@@ -103,11 +142,11 @@ class MTDecaChunk:
         save_conf_from_dict(yml_path, self.metadata, assignment_operator=":", save_nulls_enable=False)
 
 class MTChunk:
-    #x = None
-    #z = None
+    # x = None
+    # z = None
     metadata = None
     is_fresh = None
-    #luid = None
+    # luid = None
 
     def __init__(self):
         # NOTE: variables that need to be saved (and only they) should be stored in dict
@@ -133,24 +172,24 @@ class MTChunk:
     def save_yaml(self, yml_path):
         save_conf_from_dict(yml_path, self.metadata, assignment_operator=":", save_nulls_enable=False)
 
-    #requires output such as from minetestmapper-numpy.py
-    #returns whether save is needed (whether metadata was changed)
+    # requires output such as from minetestmapper-numpy.py
+    # returns whether save is needed (whether metadata was changed)
     def set_from_genresult(self, this_genresult_path):
-        #this_genresult_path = mtchunks.get_chunk_genresult_path(chunk_luid)
+        # this_genresult_path = mtchunks.get_chunk_genresult_path(chunk_luid)
         participle = "getting copy of dict"
         try:
             is_changed = False
             old_meta = get_dict_deepcopy(self.metadata)
             if os.path.isfile(this_genresult_path):
-                #may have data such as:
-                #Result image (w=16 h=16) will be written to chunk_x0z0.png
-                #Unknown node names: meze:meze default:stone_with_iron air default:dirt_with_snow default:stone_with_copper default:snow
-                #Unknown node ids: 0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7
-                #Drawing image
-                #Saving to: chunk_x0z0.png
-                #('PNG Region: ', [0, 64, 0, 64])
-                #('Pixels PerNode: ', 1)
-                #('border: ', 0)
+                # may have data such as:
+                # Result image (w=16 h=16) will be written to chunk_x0z0.png
+                # Unknown node names: meze:meze default:stone_with_iron air default:dirt_with_snow default:stone_with_copper default:snow
+                # Unknown node ids: 0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7
+                # Drawing image
+                # Saving to: chunk_x0z0.png
+                # ('PNG Region: ', [0, 64, 0, 64])
+                # ('Pixels PerNode: ', 1)
+                # ('border: ', 0)
                 self.metadata["is_marked"] = True
                 participle = "opening '"+this_genresult_path+"'"
                 ins = open(this_genresult_path, 'r')
@@ -172,7 +211,7 @@ class MTChunk:
                                     if (cparen_index>-1):
                                         operations_string = line_strip[oparen_index+1:cparen_index]
                                         operation_list = operations_string.split(" ")
-                                        #if len(operation_list)==2:
+                                        # if len(operation_list)==2:
                                         for operation_string in operation_list:
                                             if "=" in operation_string:
                                                 chunks = operation_string.split("=")
@@ -203,7 +242,7 @@ class MTChunk:
                                         rect_values_string = line_strip[obracket_index+1:cbracket_index]
                                         rect_values_list = rect_values_string.split(",")
                                         if len(rect_values_list)==4:
-                                            #pngregion=[pngminx, pngmaxx, pngminz, pngmaxz] #from minetestmapper-numpy.py
+                                            # pngregion=[pngminx, pngmaxx, pngminz, pngmaxz] #from minetestmapper-numpy.py
                                             self.metadata["image_left"]=int(rect_values_list[0].strip())
                                             self.metadata["image_right"]=int(rect_values_list[1].strip())
                                             self.metadata["image_top"]=int(rect_values_list[2].strip())
@@ -215,10 +254,10 @@ class MTChunk:
                             elif (len(line_strip)>5) and (line_strip[:5]=="xmax:"):
                                 self.metadata["image_right"] = int(line_strip[5:].strip())
                             elif (len(line_strip)>5) and (line_strip[:5]=="zmin:"):
-                                #(zmin is bottom since cartesian)
+                                # (zmin is bottom since cartesian)
                                 self.metadata["image_bottom"] = int(line_strip[5:].strip())
                             elif (len(line_strip)>5) and (line_strip[:5]=="zmax:"):
-                                #(zmax is top since cartesian)
+                                # (zmax is top since cartesian)
                                 self.metadata["image_top"] = int(line_strip[5:].strip())
                         except:
                             print("#failed to parse line:"+str(line_strip))
@@ -264,16 +303,16 @@ def get_game_path_from_gameid(gameid):
             for this_game_name in os.listdir(games_path):
                 game_count += 1
                 this_game_path = os.path.join(games_path, this_game_name)
-                #for decachunk_z_basepath, decachunk_z_dirnames, decachunk_z_filenames in os.walk(this_game_dirnames):
+                # for decachunk_z_basepath, decachunk_z_dirnames, decachunk_z_filenames in os.walk(this_game_dirnames):
                 if this_game_name[:1]!="." and os.path.isdir(this_game_path):
                     this_gameid = get_gameid_from_game_path(this_game_path)
-                    #print("get_game_path_from_gameid is seeing if '"+str(this_gameid)+"' is the desired '"+gameid+"'")
+                    # print("get_game_path_from_gameid is seeing if '"+str(this_gameid)+"' is the desired '"+gameid+"'")
                     if this_gameid is not None:
                         if this_gameid.lower() == gameid.lower():
                             result = this_game_path
                             break
-                #else:
-                    #print("skipping '"+this_game_path+"'")
+                # else:
+                    # print("skipping '"+this_game_path+"'")
             if game_count<=0:
                 print("WARNING: "+str(game_count)+" games in '"+games_path+"'.")
         else:
@@ -288,7 +327,7 @@ def init_minetestinfo():
     global profile_path
     if not minetestinfo.contains("www_minetest_path"):
         default_www_minetest_path = "/var/www/html/minetest"
-        if not os.path.isdir(default_www_minetest_path):  # if os_name=="windows":
+        if "windows" in platform.system().lower():
             default_www_minetest_path = None
             prioritized_try_paths = list()
             prioritized_try_paths.append("C:\\wamp\\www")
@@ -296,28 +335,39 @@ def init_minetestinfo():
             prioritized_try_paths.append("C:\\Program Files\\Apache Software Foundation\\Apache2.2\\htdocs")
             prioritized_try_paths.append("C:\\Inetpub\\Wwwroot")
 
-            #prioritized_try_paths.append("C:\\Program Files\\Apache Software Foundation\\Apache2.2\\htdocs\\folder_test\\website")
+            # prioritized_try_paths.append("C:\\Program Files\\Apache Software Foundation\\Apache2.2\\htdocs\\folder_test\\website")
             for try_path in prioritized_try_paths:
                 try:
                     if os.path.isdir(try_path):
-                        default_www_minetest_path = try_path
+                        deep_path = os.path.join(try_path, "minetest")
+                        if os.path.isdir(deep_path):
+                            default_www_minetest_path = deep_path
+                        else:
+                            default_www_minetest_path = try_path
                         break
                 except:
                     pass
             if default_www_minetest_path is None:
                 print("WARNING: could not detect website directory automatically. You need WAMP or similar web server with php 5 or higher to use minetest website scripts. You can change www_minetest_path to your server's website root later by editing '"+minetestinfo._config_path+"'")
                 default_www_minetest_path = os.path.dirname(os.path.abspath(__file__))
-
+        else:
+            try_path = os.path.join(profile_path,"public_html")
+            if os.path.isdir(try_path):
+                deep_path = os.path.join(try_path, "minetest")
+                if os.path.isdir(deep_path):
+                    default_www_minetest_path = deep_path
+                else:
+                    default_www_minetest_path = os.path.join(try_path, "minetest")
+                print("You can test the php website like:")
+                print("  cd '" + default_www_minetest_path + "'")
+                print("  php -S localhost:8000")
+                print("  # but for production use a full web server")
+                print("  # see http://php.net/manual/en/features."
+                      "commandline.webserver.php")
         minetestinfo.prepare_var("www_minetest_path", default_www_minetest_path, "your web server directory (or other folder where minetest website features and data should be placed)")
 
-
-    if 'HOME' in os.environ:  # if os_name=="windows":
-        profile_path = os.environ['HOME']
-    else:
-        profile_path = os.environ['USERPROFILE']
-
     default_profile_minetest_path = os.path.join(profile_path,".minetest")
-    if os.path.isdir("C:\\games\\Minetest"):  # if (os_name=="windows"):
+    if "windows" in platform.system().lower():
         default_profile_minetest_path = "C:\\games\\Minetest"
     minetestinfo.prepare_var("profile_minetest_path", default_profile_minetest_path, "user minetest path containing worlds folder and debug.txt")
     if not os.path.isdir(minetestinfo.get_var("profile_minetest_path")):
@@ -330,11 +380,13 @@ def init_minetestinfo():
 
     default_shared_minetest_path = "/usr/share/games/minetest"
 
-    # packaged version gets priority (Ubuntu Xenial 0.4.15 and
-    # Zesty 0.4.16 packages use /usr/share/games/, /usr/local/share
-    # is from source)
-    try_paths = ["/usr/share/games/minetest","/usr/local/share/minetest"]
-    if os.path.isdir("C:\\Games\\Minetest"):  # if os_name == "windows":
+    # packaged versions get priority
+    # /usr/share/games/minetest: Ubuntu Xenial 0.4.15 and
+    #   Zesty 0.4.16 packages.
+    # /usr/share/games/minetest: arch package
+    # /usr/local/share/minetest: compiled from source
+    try_paths = ["/usr/share/games/minetest", "/usr/share/games/minetest", "/usr/local/share/minetest"]
+    if "windows" in platform.system().lower():
         default_shared_minetest_path = "C:\\Games\\Minetest"
     else:
         for try_path in try_paths:
@@ -519,12 +571,12 @@ def load_world_and_mod_data():
         minetestinfo.save_yaml()
     print("Using world at '"+minetestinfo.get_var("primary_world_path")+"'")
     #game_name = None
-    #if minetestinfo.contains("game_path"):
-    #    game_name = os.path.basename(minetestinfo.get_var("game_path"))
+    # if minetestinfo.contains("game_path"):
+        # game_name = os.path.basename(minetestinfo.get_var("game_path"))
     tmp_gameid = get_world_var("gameid")
     tmp_game_gameid = get_gameid_from_game_path( minetestinfo.get_var("game_path") )
     if tmp_game_gameid is not None:
-        #print("World gameid is "+str(tmp_gameid))
+        # print("World gameid is "+str(tmp_gameid))
         print(" (game.conf in game_path has 'gameid' "+str(tmp_game_gameid)+")")
     if minetestinfo.contains("game_path"):
         if (tmp_gameid is None) or (tmp_gameid.lower() != tmp_game_gameid.lower()):
@@ -544,7 +596,9 @@ def load_world_and_mod_data():
             print("")
             print("gameid '"+default_gameid+"' detected in world"+explained_string+".")
         game_folder_name_blacklist = list()  # is only used if there is no game defined in world
-        game_folder_name_blacklist.append(prepackaged_gameid)
+        game_folder_name_blacklist.append("minetest_game")
+        game_folder_name_blacklist.append("minetest")
+            # on arch, 0.4.16 uses the directory name minetest instead
         games_list = list()
         if default_gameid is None:
             folder_path = games_path
@@ -576,7 +630,7 @@ def load_world_and_mod_data():
                 path_msg = " (or gameid if listed above)"
             minetestinfo.prepare_var("game_path",default_game_path,"game (your subgame) path"+path_msg)
             if minetestinfo.get_var("game_path") in games_list:
-                #convert game_path to a game path (this is why intentionally used as param for get_game_path_from_gameid)
+                # convert game_path to a game path (this is why intentionally used as param for get_game_path_from_gameid)
                 try_path = get_game_path_from_gameid(minetestinfo.get_var("game_path"))
                 if try_path is not None:
                     if os.path.isdir(try_path):
@@ -591,7 +645,26 @@ def load_world_and_mod_data():
     mods_path = None
     prepackaged_game_path = None
     if games_path is not None:
-        prepackaged_game_path = os.path.join(games_path, prepackaged_gameid)
+        # from release 0.4.16 on, directory is just called minetest
+        try_id = "minetest_game"
+        try_path = os.path.join(games_path, try_id)
+        if os.path.isdir(try_path):
+            prepackaged_game_path = try_path
+            prepackaged_gameid = try_id
+        else:
+            try_id = "minetest"  # on arch, 0.4.16 uses this name
+            try_path = os.path.join(games_path, try_id)
+            if os.path.isdir(try_path):
+                prepackaged_game_path = try_path
+                prepackaged_gameid = try_id
+            else:
+                prepackaged_gameid = "minetest_game"
+                prepackaged_game_path = os.path.join(games_path,
+                                                     prepackaged_gameid)
+                print("WARNING: neither minetest_game nor minetest"
+                      + " in " + games_path + ", so reverting to"
+                      + " default location for it: "
+                      + prepackaged_game_path)
     print("")
     if len(prepackaged_game_mod_list)<1:
         prepackaged_game_mod_list = get_modified_mod_list_from_game_path(prepackaged_game_mod_list, prepackaged_game_path)
@@ -599,7 +672,7 @@ def load_world_and_mod_data():
 
     if minetestinfo.contains("game_path") and os.path.isdir(minetestinfo.get_var("game_path")):
         loaded_mod_list = get_modified_mod_list_from_game_path(loaded_mod_list, minetestinfo.get_var("game_path"))
-        #print("Mod list for current game: "+','.join(loaded_mod_list))
+        # print("Mod list for current game: "+','.join(loaded_mod_list))
 
         for this_mod in loaded_mod_list:
             if this_mod not in prepackaged_game_mod_list:
@@ -655,7 +728,7 @@ def get_world_var(name):
 def check_world_mt():
     global world_mt_mapvars_world_path
     world_path = minetestinfo.get_var("primary_world_path")
-    #world_mt_mapvars = None
+    # world_mt_mapvars = None
     global world_mt_mapvars
     if world_mt_mapvars is None or (world_path != world_mt_mapvars_world_path):
         if world_mt_mapvars is not None:
@@ -663,7 +736,7 @@ def check_world_mt():
         world_mt_mapvars_world_path = world_path
         if world_path is not None:
             this_world_mt_path = os.path.join(world_path, "world.mt")
-            #DO convert strings to autodetected types:
+            # DO convert strings to autodetected types:
             world_mt_mapvars = get_dict_from_conf_file(this_world_mt_path,"=")
             if world_mt_mapvars is None:
                 print("ERROR: Tried to get world.mt settings but couldn't read '"+this_world_mt_path+"'")
@@ -672,3 +745,7 @@ def check_world_mt():
 
 
 init_minetestinfo()
+print("[ minetestinfo.py ] generating minetestinfo is complete.")
+
+if __name__ == '__main__':
+    print(" Import this into your py file via `import minetestinfo` ")

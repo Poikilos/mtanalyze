@@ -1,4 +1,26 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+
+# (deprecated) module for generating map chunks and/or player locations
+# for mtanalyze/web. Both this module and mtanalyze/web are deprecated
+# in favor of ../webapp since it is planned to run as the same user
+# as the user who ran minetestserver.
+# Copyright (C) 2018 Jake Gustafson
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
 import os
 import subprocess
 import traceback
@@ -152,16 +174,16 @@ class MTChunks:
 
         if minetestinfo.get_var("primary_world_path") is not None:
             if os.path.isdir(minetestinfo.get_var("primary_world_path")):
-                print ("Using primary_world_path '"+minetestinfo.get_var("primary_world_path")+"'")
+                print("Using primary_world_path '"+minetestinfo.get_var("primary_world_path")+"'")
             else:
-                print ("ERROR: Missing world '"+minetestinfo.get_var("primary_world_path")+"'")
+                print("ERROR: Missing world '"+minetestinfo.get_var("primary_world_path")+"'")
                 sys.exit(2)
         else:
-            print ("ERROR: No primary_world_path")
+            print("ERROR: No primary_world_path")
             sys.exit(2)
 
-        #if not os.path.isdir(minetestinfo.get_var("primary_world_path")):
-        #    print("(ERROR: missing, so please close immediately and update primary_world_path in '"+minetestinfo._config_path+"' before next run)")
+        # if not os.path.isdir(minetestinfo.get_var("primary_world_path")):
+             # print("(ERROR: missing, so please close immediately and update primary_world_path in '"+minetestinfo._config_path+"' before next run)")
         #print("")
 
         worldmt_path = os.path.join(minetestinfo.get_var("primary_world_path"), "world.mt")

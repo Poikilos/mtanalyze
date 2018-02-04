@@ -1,34 +1,55 @@
+#!/usr/bin/env python3
+
+# module for not quite trivial data processing operations and avoidance
+# of regex
+# Copyright (C) 2018 Jake Gustafson
+
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
 import os
 import sys
 import traceback
 import copy
+try:
+    input = raw_input
+except:
+    pass
 
 verbose_enable = False
+# os_name is deprecated--use: import platform, then
+# if "windows" in platform.system().lower(): do windows things
 
-os_name = "GNU/Linux"
-if os.sep=="\\":
-    os_name = "windows"
-    print("Windows detected")
-    #TODO: deprecate os_name--still needed for detecting whether to use squote in singleimage.py (when not Windows, squote is "'" otherwise "")
-
-#formerly pcttext:
-#uppercase_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#lowercase_chars = uppercase_chars.lower()
-#letter_chars = uppercase_chars+lowercase_chars
+# formerly pcttext:
+# uppercase_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# lowercase_chars = uppercase_chars.lower()
+# letter_chars = uppercase_chars+lowercase_chars
 digit_chars = "0123456789"
-#identifier_chars = letter_chars+"_"+digit_chars
-#identifier_and_dot_chars = identifier_chars + "."
+# identifier_chars = letter_chars+"_"+digit_chars
+# identifier_and_dot_chars = identifier_chars + "."
 
-#formerly from expertmmregressionsuite:
+# formerly from expertmmregressionsuite:
 alpha_upper_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 alpha_lower_chars = alpha_upper_chars.lower()
 alpha_chars = alpha_upper_chars+alpha_lower_chars
-#numeric_chars = "1234567890"
+# numeric_chars = "1234567890"
 alnum_chars = alpha_chars+digit_chars
 identifier_chars = alnum_chars+"_"
 identifier_and_dot_chars = identifier_chars+"."
 min_indent = ""
-dict_entries_modified_count = 0
+entries_modified_count = 0
 
 class InstalledFile:
     source_dir_path = None
@@ -53,17 +74,30 @@ class ConfigManager:
         self._data = {}
         self._config_path = config_file_path
         self._ao = assignment_operator_string
-        self._data = get_dict_modified_by_conf_file(self._data, self._config_path, self._ao)
+        self._data = get_dict_modified_by_conf_file(
+            self._data,
+            self._config_path, self._ao
+        )
 
-    #DOES ask for user input if does not exist. If default_value is none, do not add to _data if not given
-    def load_var_or_ask_console_input(self, name, default_value, description):
+    # interactive_enable: if true, this method DOES ask for user input
+    # if variable does not exist. If default_value is None, does not add
+    # to _data if not given.
+
+    def load_var(self, name, default_value, description,
+                 interactive_enable=False):
         is_changed = False
         if name not in self._data:
             print("")
             if default_value is None:
-                print("WARNING: this program does not have a default value for "+name+".")
+                print("WARNING: this program does not have a"
+                      + " default value for "+name+".")
                 default_value = ""
-            answer = raw_input("Please enter "+description+" ("+name+") [blank for "+default_value+"]: ")
+            if interactive_enable:
+                answer = input("Please enter " + description + " ("
+                               + name + ") [blank for " + default_value
+                               + "]: ")
+            else:
+                answer = default_value
             if answer is not None:
                 answer = answer.strip()
 
@@ -71,7 +105,7 @@ class ConfigManager:
                 self._data[name] = answer
             else:
                 self._data[name] = default_value
-            print("Using "+name+" '"+self._data[name]+"'")
+            print("Using " + name + " '" + self._data[name] + "'")
             is_changed = True
 
         if not os.path.isfile(self._config_path):
@@ -80,8 +114,14 @@ class ConfigManager:
         if is_changed:
             self.save_yaml()
 
-    def prepare_var(self, name, default_value, description):
-        self.load_var_or_ask_console_input(name, default_value, description)
+    def prepare_var(self, name, default_value, description,
+                    interactive_enable=True):
+        self.load_var_or_ask_console_input(
+            name,
+            default_value,
+            description,
+            interactive_enable=interactive_enable
+        )
 
     def contains(self, name):
         return (name in self._data.keys())
@@ -97,7 +137,8 @@ class ConfigManager:
     def set_var(self, name, val):
         is_changed = False
         if name not in self._data.keys():
-            print("WARNING to developer: run prepare_var before set_val, so that variable has a default.")
+            print("WARNING to developer: run prepare_var before"
+                  " set_val, so that variable has a default.")
             is_changed = True
         elif self._data[name] != val:
             is_changed = True
@@ -112,7 +153,8 @@ class ConfigManager:
         return result
 
     def save_yaml(self):
-        save_conf_from_dict(self._config_path, self._data, self._ao, save_nulls_enable=False)
+        save_conf_from_dict(self._config_path, self._data, self._ao,
+                            save_nulls_enable=False)
 
 def get_dict_deepcopy(old_dict):
     new_dict = None
@@ -122,7 +164,8 @@ def get_dict_deepcopy(old_dict):
             new_dict[this_key] = copy.deepcopy(old_dict[this_key])
     return new_dict
 
-def is_dict_subset(new_dict, old_dict, verbose_messages_enable, verbose_dest_description="unknown file"):
+def is_dict_subset(new_dict, old_dict, verbose_messages_enable,
+                   verbose_dest_description="unknown file"):
     is_changed = False
     try:
         if old_dict is not None:
@@ -132,14 +175,19 @@ def is_dict_subset(new_dict, old_dict, verbose_messages_enable, verbose_dest_des
                     if (this_key not in old_dict_keys):
                         is_changed = True
                         if verbose_messages_enable:
-                            print("SAVING '"+verbose_dest_description+"' since "+str(this_key)+" not in saved version.")
+                            print("SAVING '" + verbose_dest_description
+                                  + "' since " + str(this_key)
+                                  + " not in saved version.")
                         break
                     elif new_dict[this_key] != old_dict[this_key]:
                         is_changed = True
                         if verbose_messages_enable:
-                            print("SAVING '"+verbose_dest_description+"' since "+str(this_key)+" not same as saved version.")
+                            print("SAVING '" + verbose_dest_description
+                                  + "' since " + str(this_key)
+                                  + " not same as saved version.")
                         break
-            #else new_dict is None so no change detected (no new information)
+            # else new_dict is None so no change detected (no
+            #   new information)
         else:
             if new_dict is not None:
                 is_changed = True
@@ -160,9 +208,17 @@ def vec2_not_in(this_vec, this_list):
 def ivec2_equals(pos1, pos2):
     return (int(pos1[0])==int(pos2[0])) and (int(pos1[1])==int(pos2[1]))
 
-def get_dict_from_conf_file(path,assignment_operator="=",comment_delimiter="#",inline_comments_enable=False):
+def get_dict_from_conf_file(path, assignment_operator="=",
+                            comment_delimiter="#",
+                            inline_comments_enable=False):
     results = None
-    results = get_dict_modified_by_conf_file(results, path, assignment_operator, comment_delimiter=comment_delimiter, inline_comments_enable=inline_comments_enable)
+    results = get_dict_modified_by_conf_file(
+        results,
+        path,
+        assignment_operator,
+        comment_delimiter=comment_delimiter,
+        inline_comments_enable=inline_comments_enable
+    )
     return results
 
 def RepresentsInt(s):
@@ -202,10 +258,12 @@ def print_file(path, min_indent=""):
                     if line:
                         print(min_indent+line)
                 ins.close()
-                #if line_count==0:
-                    #print(min_indent+"print_file WARNING: "+str(line_count)+" line(s) in '"+path+"'")
-                #else:
-                    #print(min_indent+"# "+str(line_count)+" line(s) in '"+path+"'")
+                # if line_count==0:
+                    # print(min_indent + "print_file WARNING: "
+                          # + str(line_count)+" line(s) in '"+path+"'")
+                # else:
+                    # print(min_indent + "# " + str(line_count)
+                          # + " line(s) in '"+path+"'")
             else:
                 print (min_indent+"print_file: file does not exist")
         else:
@@ -220,18 +278,20 @@ def print_file(path, min_indent=""):
 
 def singular_or_plural(singular, plural, count):
     result = plural
-    
+
     if count==1:
         result = singular
     return str(count)+" "+result
 
-def get_dict_entries_modified_count():
-    
-    return dict_entries_modified_count
+def get_entries_modified_count():
 
-def get_dict_modified_by_conf_file(this_dict, path, assignment_operator="=", comment_delimiter="#", inline_comments_enable=False):
-    global dict_entries_modified_count
-    dict_entries_modified_count = 0
+    return entries_modified_count
+
+def get_dict_modified_by_conf_file(this_dict, path,
+        assignment_operator="=", comment_delimiter="#",
+        inline_comments_enable=False):
+    global entries_modified_count
+    entries_modified_count = 0
     results = this_dict
     #print ("Checking "+str(path)+" for settings...")
     if (results is None) or (type(results) is not dict):
@@ -243,46 +303,62 @@ def get_dict_modified_by_conf_file(this_dict, path, assignment_operator="=", com
             line = ins.readline()
             if line and len(line)>0:
                 line_strip=line.strip()
-                if len(line_strip)>0 and line_strip[0]!=comment_delimiter:  # if not comment
+                if len(line_strip)>0 and \
+                        line_strip[0]!=comment_delimiter:  # not comment
                     if not line_strip[0]=="-":  # ignore yaml arrays
                         if inline_comments_enable:
-                            comment_index = line_strip.find(comment_delimiter)
+                            comment_index = \
+                                line_strip.find(comment_delimiter)
                         ao_index = line_strip.find(assignment_operator)
-                        if ao_index>=1:  # intentionally skip zero-length variable names
-                            if ao_index<len(line_strip)-1:  # skip yaml implicit nulls or yaml objects
-                                result_name = line_strip[:ao_index].strip()
-                                result_value = line_strip[ao_index+1:].strip()
-                                result_lower = result_value.lower()
-                                if result_value=="None" or result_value=="null" or result_value=="~" or result_value=="NULL":
-                                    result_value = None
+                        if ao_index>=1:  # intentionally skip
+                                         # zero-length variable names
+                            if ao_index<len(line_strip)-1:
+                                    # skip yaml implicit nulls or
+                                    # yaml objects
+                                result_name = \
+                                    line_strip[:ao_index].strip()
+                                result_val = \
+                                    line_strip[ao_index+1:].strip()
+                                result_lower = result_val.lower()
+                                if result_val=="None" or \
+                                        result_val=="null" or \
+                                        result_val=="~" or \
+                                        result_val=="NULL":
+                                    result_val = None
                                 elif result_lower=="true":
-                                    result_value = True
+                                    result_val = True
                                 elif result_lower=="false":
-                                    result_value = False
-                                elif RepresentsInt(result_value):
-                                    result_value = int(result_value)
-                                elif RepresentsFloat(result_value):
-                                    result_value = float(result_value)
-                                #print ("   CHECKING... "+result_name+":"+result_value)
-                                if (result_name not in results) or (results[result_name]!=result_value):
-                                    dict_entries_modified_count += 1
-                                    #print(str(dict_entries_modified_count))
-                                results[result_name]=result_value
+                                    result_val = False
+                                elif RepresentsInt(result_val):
+                                    result_val = int(result_val)
+                                elif RepresentsFloat(result_val):
+                                    result_val = float(result_val)
+                                # print("   CHECKING... " + result_name
+                                      # + ":"+result_val)
+                                if (result_name not in results) or \
+                                    (results[result_name]!=result_val):
+                                    entries_modified_count += 1
+                                    # print(str(entries_modified_count))
+                                results[result_name]=result_val
         ins.close()
     return results
 
-def save_conf_from_dict(path, this_dict, assignment_operator="=", save_nulls_enable=True):
+def save_conf_from_dict(path, this_dict, assignment_operator="=",
+                        save_nulls_enable=True):
     try:
         outs = open(path, 'w')
         for this_key in this_dict.keys():
             if save_nulls_enable or (this_dict[this_key] is not None):
                 if this_dict[this_key] is None:
-                    outs.write(this_key+assignment_operator+"null\n")
+                    outs.write(this_key + assignment_operator
+                               + "null\n")
                 else:
-                    outs.write(this_key+assignment_operator+str(this_dict[this_key])+"\n")
+                    outs.write(this_key + assignment_operator
+                               + str(this_dict[this_key]) + "\n")
         outs.close()
     except:
-        print("Could not finish saving chunk metadata to '"+str(path)+"': "+str(traceback.format_exc()))
+        print("Could not finish saving chunk metadata to '" + str(path)
+              + "': " + str(traceback.format_exc()))
         try:
             outs.close()
         except:
@@ -296,7 +372,8 @@ def get_list_from_hex(hex_string):
                 hex_string = hex_string[2:]
             elif hex_string[:1]=="#":
                 hex_string = hex_string[1:]
-            if len(hex_string)>0 and hex_string[len(hex_string)-1:]=="h":
+            if len(hex_string) > 0 and \
+                    hex_string[len(hex_string)-1:] == "h":
                 hex_string = hex_string[:len(hex_string)-1]
             index = 0
             while index<len(hex_string):
@@ -325,14 +402,18 @@ def get_tuple_from_notation(line, debug_src_name="<unknown object>"):
                 player_z = int(pos_strings[2])
             result = player_x, player_y, player_z
         else:
-            print("'"+debug_src_name+"' has bad position data--should be 3-length (x,y,z) in position value: "+str(pos_strings))
+            print("'" + debug_src_name + "' has bad position data--"
+                  + "should be 3-length (x,y,z) in position value: "
+                  + str(pos_strings))
     return result
 
 def is_same_fvec3(list_a, list_b):
     result = False
     if list_a is not None and list_b is not None:
         if len(list_a)>=3 and len(list_b)>=3:
-            result = (float(list_a[0]) == float(list_b[0])) and (float(list_a[1]) == float(list_b[1])) and (float(list_a[2]) == float(list_b[2]))
+            result = (float(list_a[0]) == float(list_b[0])) and \
+                     (float(list_a[1]) == float(list_b[1])) and \
+                     (float(list_a[2]) == float(list_b[2]))
     return False
 
 def lastchar(val):
@@ -363,7 +444,8 @@ def is_identifier_valid(val, is_dot_allowed):
 
 
 #formerly get_params_len
-def get_operation_chunk_len(val, start=0, step=1, line_counting_number=None):
+def get_operation_chunk_len(val, start=0, step=1,
+                            line_counting_number=None):
     result = 0
     openers = "([{"
     closers = ")]}"
@@ -406,24 +488,41 @@ def get_operation_chunk_len(val, start=0, step=1, line_counting_number=None):
                         in_quote = None
         index += step
         result += 1
-        if (in_quote is None) and (len(opens)==0) and ((index>=len(val)) or (val[index] not in identifier_and_dot_chars)):
+        if (in_quote is None) and \
+                (len(opens)==0) and \
+                ((index>=len(val)) or \
+                (val[index] not in identifier_and_dot_chars)):
             break
     return result
 
 def find_identifier(line, identifier_string, start=0):
     result = -1
     start_index = start
-    if (identifier_string is not None) and (len(identifier_string) > 0) and (line is not None) and (len(line) > 0):
+    if (identifier_string is not None) and \
+            (len(identifier_string) > 0) and \
+            (line is not None) and \
+            (len(line) > 0):
         while True:
-            try_index = find_unquoted_not_commented(line, identifier_string, start=start_index)
+            try_index = find_unquoted_not_commented(line,
+                                                    identifier_string,
+                                                    start=start_index)
             if (try_index > -1):
-                if ((try_index==0) or (line[try_index-1] not in identifier_chars)) and ((try_index+len(identifier_string)==len(line)) or (line[try_index+len(identifier_string)] not in identifier_chars)):
+                if ((try_index==0) or \
+                        (line[try_index-1] not in identifier_chars)) and \
+                   ((try_index+len(identifier_string)==len(line)) or \
+                        (line[try_index+len(identifier_string)] not in identifier_chars)):
                     result = try_index
-                    #input(identifier_string+"starts after '"+line[try_index]+"' ends before '"+line[try_index+len(identifier_string)]+"'")
+                    # input(identifier_string + "starts after '"
+                          # + line[try_index] + "' ends before '"
+                          # + line[try_index+len(identifier_string)]
+                          # + "'")
                     break
                 else:
                     #match is part of a different identifier, so skip it
-                    #input(identifier_string+" does not after '"+line[try_index]+"' ends before '"+line[try_index+len(identifier_string)]+"'")
+                    #input(identifier_string + " does not after '"
+                         # + line[try_index] + "' ends before '"
+                         # + line[try_index+len(identifier_string)]
+                         # + "'")
                     start_index = try_index + len(identifier_string)
             else:
                 break
@@ -466,7 +565,8 @@ def is_allowed_in_variable_name_char(one_char):
         if one_char in identifier_chars:
             result = True
     else:
-        print("error in is_allowed_in_variable_name_char: one_char must be 1 character")
+        print("error in is_allowed_in_variable_name_char: one_char"
+              " must be 1 character")
     return result
 
 def find_any_not(haystack, char_needles, start=None, step = 1):
@@ -482,7 +582,8 @@ def find_any_not(haystack, char_needles, start=None, step = 1):
             endbefore = -1
         index = start
 
-        while (step>0 and index<endbefore) or (step<0 and index>endbefore):
+        while (step>0 and index<endbefore) or \
+                (step<0 and index>endbefore):
             if not haystack[index:index+1] in char_needles:
                 result = index
                 break
@@ -498,16 +599,19 @@ def explode_unquoted(haystack, delimiter):
             haystack = haystack[index+1:]
         else:
             break
-    elements.append(haystack)  #rest of haystack is the param after last comma, else beginning if none
+    elements.append(haystack)  # rest of haystack is the param after
+                               # last comma, else beginning if none
     return elements
 
-#Finds needle in haystack where not quoted, taking into account escape
-# sequence for single-quoted or double-quoted string inside haystack.
-def find_unquoted_MAY_BE_COMMENTED(haystack, needle, start=0, endbefore=-1, step=1):
+# Finds needle in haystack where not quoted, taking into account escape
+#   sequence for single-quoted or double-quoted string inside haystack.
+def find_unquoted_MAY_BE_COMMENTED(haystack, needle, start=0,
+                                   endbefore=-1, step=1):
     result = -1
 
     prev_char = None
-    if (haystack is not None) and (needle is not None) and (len(needle)>0):
+    if (haystack is not None) and (needle is not None) and \
+            (len(needle)>0):
         in_quote = None
         if endbefore > len(haystack):
             endbefore = len(haystack)
@@ -517,8 +621,10 @@ def find_unquoted_MAY_BE_COMMENTED(haystack, needle, start=0, endbefore=-1, step
         if step<0:
             index = endbefore - 1
         if verbose_enable:
-            print("    find_unquoted_not_commented in "+haystack.strip()+":")
-        while (step>0 and index<=(endbefore-len(needle))) or (step<0 and (index>=0)):
+            print("    find_unquoted_not_commented in "
+                  + haystack.strip() + ":")
+        while (step>0 and index<=(endbefore-len(needle))) or \
+                (step<0 and (index>=0)):
             this_char = haystack[index:index+1]
             if verbose_enable:
                 print("      {"
@@ -543,7 +649,8 @@ def find_unquoted_MAY_BE_COMMENTED(haystack, needle, start=0, endbefore=-1, step
     return result
 
 #DISCARDS whitespace, and never matches None to None
-def find_dup(this_list, discard_whitespace_ignore_None_enable=True, ignore_list=None, ignore_numbers_enable=False):
+def find_dup(this_list, discard_whitespace_ignore_None_enable=True,
+             ignore_list=None, ignore_numbers_enable=False):
     result = -1
 
     if type(this_list) is list:
@@ -555,8 +662,14 @@ def find_dup(this_list, discard_whitespace_ignore_None_enable=True, ignore_list=
                     i1_strip = this_list[i1].strip()
                 if this_list[i2] is not None:
                     i2_strip = this_list[i2].strip()
-                if i1_strip!=None and len(i1_strip)>0 and i2_strip!=None and len(i2_strip)>0:
-                    if (i1!=i2) and (ignore_list is None or i1_strip not in ignore_list) and i1_strip==i2_strip:
+                if i1_strip!=None and \
+                        len(i1_strip)>0 and \
+                        i2_strip!=None and \
+                        len(i2_strip)>0:
+                    if (i1!=i2) and \
+                            (ignore_list is None or \
+                             i1_strip not in ignore_list) and \
+                            i1_strip==i2_strip:
                         number1 = None
                         #number2 = None
                         if ignore_numbers_enable:
@@ -567,24 +680,31 @@ def find_dup(this_list, discard_whitespace_ignore_None_enable=True, ignore_list=
                                     number1 = float(i1_strip)
                                 except:
                                     pass
-                            #only need one since they already are known to match as text
-                            #try:
-                                #number2 = int(i2_strip)
-                            #except:
-                                #try:
-                                    #number2 = float(i2_strip)
-                                #except:
-                                    #pass
-                        if (ignore_numbers_enable and number1 is None) or ((not ignore_numbers_enable)):
+                            # only need one since they already are known
+                            #   to match as text
+                            # try:
+                                # number2 = int(i2_strip)
+                            # except:
+                                # try:
+                                    # number2 = float(i2_strip)
+                                # except:
+                                    # pass
+                        if (ignore_numbers_enable and number1 is None) or \
+                                ((not ignore_numbers_enable)):
                             result = i2
                             if verbose_enable:
-                                print("["+str(i1)+"]:"+str(this_list[i1])+" matches ["+str(i2)+"]:"+str(this_list[i2]))
+                                print("[" + str(i1) + "]:"
+                                      + str(this_list[i1])
+                                      + " matches [" + str(i2) + "]:"
+                                      + str(this_list[i2]))
                             break
             if result>-1:
                 break
     else:
-        input("ERROR in has_dups: "+str(this_list)+" is not a list")
+        print("[ expertmm.py ] ERROR in has_dups: " + str(this_list)
+              + " is not a list")
     return result
+
 def has_dups(this_list):
     return find_dup(this_list)>-1
 #region formerly pcttext.py
@@ -605,20 +725,25 @@ def get_initial_value_from_conf(path, name, assignment_operator="="):
                     if ao_i>0:  # intentionall skip when 0
                         this_name = line[:ao_i].strip()
                         if this_name==name:
-                            result = line[ao_i+1:].strip()  #NOTE: blank is allowed
+                            result = line[ao_i+1:].strip()
+                                #NOTE: blank is allowed
                             break
             ins.close()
         else:
-            print("ERROR in get_initial_value_from_conf: '"+str(path)+"' is not a file.")
+            print("ERROR in get_initial_value_from_conf: '" + str(path)
+                  + "' is not a file.")
     else:
         print("ERROR in get_initial_value_from_conf: path is None.")
     return result
 
-def find_unquoted_not_commented(haystack, needle, start=0, endbefore=-1, step=1, comment_delimiter="#"):
+def find_unquoted_not_commented(haystack, needle, start=0, endbefore=-1,
+                                step=1, comment_delimiter="#"):
     result = -1
 
     prev_char = None
-    if (haystack is not None) and (needle is not None) and (len(needle)>0):
+    if (haystack is not None) and \
+            (needle is not None) and \
+            (len(needle)>0):
         in_quote = None
         if endbefore > len(haystack):
             endbefore = len(haystack)
@@ -628,8 +753,10 @@ def find_unquoted_not_commented(haystack, needle, start=0, endbefore=-1, step=1,
         if step<0:
             index = endbefore - 1
         if verbose_enable:
-            print("    find_unquoted_not_commented in "+haystack.strip()+":")
-        while (step>0 and index<=(endbefore-len(needle))) or (step<0 and (index>=0)):
+            print("    find_unquoted_not_commented in "
+                  + haystack.strip() + ":")
+        while (step>0 and index<=(endbefore-len(needle))) or \
+                (step<0 and (index>=0)):
             this_char = haystack[index:index+1]
             if verbose_enable:
                 print("      {"
@@ -638,7 +765,8 @@ def find_unquoted_not_commented(haystack, needle, start=0, endbefore=-1, step=1,
                     +"in_quote:"+str(in_quote)+";"
                     +"}")
             if in_quote is None:
-                if (this_char == comment_delimiter) or (haystack[index:index+3]=="\"\"\""):
+                if (this_char == comment_delimiter) or \
+                        (haystack[index:index+3]=="\"\"\""):
                     break
                 elif (this_char == '"') or (this_char == "'"):
                     in_quote = this_char

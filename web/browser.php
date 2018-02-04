@@ -62,6 +62,28 @@
 		WebTV
 *****************************************************************/
 
+//Expert Multimedia says:
+//eregi is deprecated in php 5.3. Migration tutorial is here: https://www.drupal.org/node/514334#comment-2852940
+function my_eregi($needle, $haystack) {
+	if (isset($needle)&&$needle!==null) {
+		$regex='/'.str_replace("/","\\/",$needle).'/i';
+		if ($regex=="0") {
+			echo "looking for $regex (based on $needle)<br/>"; //debug only
+		}
+		return preg_match($regex, $haystack); //results in Warning: preg_match(): Delimiter must not be alphanumeric or backslash
+	}
+	else {
+		$msg="my_eregi: missing needle for searching in: $haystack";
+		error_log($msg);
+		echo '<div class="alert alert-danger">', $msg, "</div>";
+		return "";
+	}
+}
+
+function my_ereg_replace($from, $to, $subject) {
+	return preg_replace($from, $to, $subject);
+}
+
 class browser{
 
 	var $Name = "Unknown";
@@ -70,7 +92,13 @@ class browser{
 	var $UserAgent = "Not reported";
 	var $AOL = false;
 
-	function browser(){
+
+	public function browser() {
+		// tell PHP 4 to call the PHP 7 constructor (change by expertmm):
+		self::__construct();
+	}
+	public function __construct() {
+
 		$agent = $_SERVER['HTTP_USER_AGENT'];
 
 		// initialize properties
@@ -80,21 +108,21 @@ class browser{
 		$this->UserAgent = $agent;
 
 		// find operating system
-		if (eregi("win", $agent))
+		if (my_eregi("win", $agent))
 			$bd['platform'] = "Windows";
-		elseif (eregi("mac", $agent))
+		elseif (my_eregi("mac", $agent))
 			$bd['platform'] = "Mac";
-		elseif (eregi("linux", $agent))
+		elseif (my_eregi("linux", $agent))
 			$bd['platform'] = "Linux";
-		elseif (eregi("OS/2", $agent))
+		elseif (my_eregi("OS/2", $agent))
 			$bd['platform'] = "OS/2";
-		elseif (eregi("BeOS", $agent))
+		elseif (my_eregi("BeOS", $agent))
 			$bd['platform'] = "BeOS";
 
-		// test for Opera		
-		if (eregi("opera",$agent)){
+		// test for Opera
+		if (my_eregi("opera",$agent)){
 			$val = stristr($agent, "opera");
-			if (eregi("/", $val)){
+			if (my_eregi("/", $val)){
 				$val = explode("/",$val);
 				$bd['browser'] = $val[0];
 				$val = explode(" ",$val[1]);
@@ -106,13 +134,13 @@ class browser{
 			}
 
 		// test for WebTV
-		}elseif(eregi("webtv",$agent)){
+		}elseif(my_eregi("webtv",$agent)){
 			$val = explode("/",stristr($agent,"webtv"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 		
 		// test for MS Internet Explorer version 1
-		}elseif(eregi("microsoft internet explorer", $agent)){
+		}elseif(my_eregi("microsoft internet explorer", $agent)){
 			$bd['browser'] = "MSIE";
 			$bd['version'] = "1.0";
 			$var = stristr($agent, "/");
@@ -121,24 +149,24 @@ class browser{
 			}
 
 		// test for NetPositive
-		}elseif(eregi("NetPositive", $agent)){
+		}elseif(my_eregi("NetPositive", $agent)){
 			$val = explode("/",stristr($agent,"NetPositive"));
 			$bd['platform'] = "BeOS";
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 
 		// test for MS Internet Explorer
-		}elseif(eregi("msie",$agent) && !eregi("opera",$agent)){
+		}elseif(my_eregi("msie",$agent) && !my_eregi("opera",$agent)){
 			$val = explode(" ",stristr($agent,"msie"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 		
 		// test for MS Pocket Internet Explorer
-		}elseif(eregi("mspie",$agent) || eregi('pocket', $agent)){
+		}elseif(my_eregi("mspie",$agent) || my_eregi('pocket', $agent)){
 			$val = explode(" ",stristr($agent,"mspie"));
 			$bd['browser'] = "MSPIE";
 			$bd['platform'] = "WindowsCE";
-			if (eregi("mspie", $agent))
+			if (my_eregi("mspie", $agent))
 				$bd['version'] = $val[1];
 			else {
 				$val = explode("/",$agent);
@@ -146,70 +174,70 @@ class browser{
 			}
 			
 		// test for Galeon
-		}elseif(eregi("galeon",$agent)){
+		}elseif(my_eregi("galeon",$agent)){
 			$val = explode(" ",stristr($agent,"galeon"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 			
 		// test for Konqueror
-		}elseif(eregi("Konqueror",$agent)){
+		}elseif(my_eregi("Konqueror",$agent)){
 			$val = explode(" ",stristr($agent,"Konqueror"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 			
 		// test for iCab
-		}elseif(eregi("icab",$agent)){
+		}elseif(my_eregi("icab",$agent)){
 			$val = explode(" ",stristr($agent,"icab"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 
 		// test for OmniWeb
-		}elseif(eregi("omniweb",$agent)){
+		}elseif(my_eregi("omniweb",$agent)){
 			$val = explode("/",stristr($agent,"omniweb"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
 
 		// test for Phoenix
-		}elseif(eregi("Phoenix", $agent)){
+		}elseif(my_eregi("Phoenix", $agent)){
 			$bd['browser'] = "Phoenix";
 			$val = explode("/", stristr($agent,"Phoenix/"));
 			$bd['version'] = $val[1];
 		
 		// test for Firebird
-		}elseif(eregi("firebird", $agent)){
+		}elseif(my_eregi("firebird", $agent)){
 			$bd['browser']="Firebird";
 			$val = stristr($agent, "Firebird");
 			$val = explode("/",$val);
 			$bd['version'] = $val[1];
 			
 		// test for Firefox
-		}elseif(eregi("Firefox", $agent)){
+		}elseif(my_eregi("Firefox", $agent)){
 			$bd['browser']="Firefox";
 			$val = stristr($agent, "Firefox");
 			$val = explode("/",$val);
 			$bd['version'] = $val[1];
 			
 	  // test for Mozilla Alpha/Beta Versions
-		}elseif(eregi("mozilla",$agent) && 
-			eregi("rv:[0-9].[0-9][a-b]",$agent) && !eregi("netscape",$agent)){
+		}elseif(my_eregi("mozilla",$agent) &&
+			my_eregi("rv:[0-9].[0-9][a-b]",$agent) && !my_eregi("netscape",$agent)){
 			$bd['browser'] = "Mozilla";
 			$val = explode(" ",stristr($agent,"rv:"));
-			eregi("rv:[0-9].[0-9][a-b]",$agent,$val);
+			my_eregi("rv:[0-9].[0-9][a-b]",$agent,$val);
 			$bd['version'] = str_replace("rv:","",$val[0]);
 			
 		// test for Mozilla Stable Versions
-		}elseif(eregi("mozilla",$agent) &&
-			eregi("rv:[0-9]\.[0-9]",$agent) && !eregi("netscape",$agent)){
+		}elseif(my_eregi("mozilla",$agent) &&
+			my_eregi("rv:[0-9]\.[0-9]",$agent) && !my_eregi("netscape",$agent)){
 			$bd['browser'] = "Mozilla";
 			$val = explode(" ",stristr($agent,"rv:"));
-			eregi("rv:[0-9]\.[0-9]\.[0-9]",$agent,$val);
+			my_eregi("rv:[0-9]\.[0-9]\.[0-9]",$agent,$val);
 			$bd['version'] = str_replace("rv:","",$val[0]);
 		
 		// test for Lynx & Amaya
-		}elseif(eregi("libwww", $agent)){
-			if (eregi("amaya", $agent)){
+		}elseif(my_eregi("libwww", $agent)){
+			if (my_eregi("amaya", $agent)){
 				$val = explode("/",stristr($agent,"amaya"));
 				$bd['browser'] = "Amaya";
 				$val = explode(" ", $val[1]);
@@ -221,17 +249,17 @@ class browser{
 			}
 		
 		// test for Safari
-		}elseif(eregi("safari", $agent)){
+		}elseif(my_eregi("safari", $agent)){
 			$bd['browser'] = "Safari";
 			$bd['version'] = "";
 
 		// remaining two tests are for Netscape
-		}elseif(eregi("netscape",$agent)){
+		}elseif(my_eregi("netscape",$agent)){
 			$val = explode(" ",stristr($agent,"netscape"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
-		}elseif(eregi("mozilla",$agent) && !eregi("rv:[0-9]\.[0-9]\.[0-9]",$agent)){
+		}elseif(my_eregi("mozilla",$agent) && !my_eregi("rv:[0-9]\.[0-9]\.[0-9]",$agent)){
 			$val = explode(" ",stristr($agent,"mozilla"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = "Netscape";
@@ -239,22 +267,23 @@ class browser{
 		}
 		
 		// clean up extraneous garbage that may be in the name
-		$bd['browser'] = ereg_replace("[^a-z,A-Z]", "", $bd['browser']);
+		$bd['browser'] = my_ereg_replace("[^a-z,A-Z]", "", $bd['browser']);
 		// clean up extraneous garbage that may be in the version		
-		$bd['version'] = ereg_replace("[^0-9,.,a-z,A-Z]", "", $bd['version']);
+		$bd['version'] = my_ereg_replace("[^0-9,.,a-z,A-Z]", "", $bd['version']);
 		
 		// check for AOL
-		if (eregi("AOL", $agent)){
+		if (my_eregi("AOL", $agent)){
 			$var = stristr($agent, "AOL");
 			$var = explode(" ", $var);
-			$bd['aol'] = ereg_replace("[^0-9,.,a-z,A-Z]", "", $var[1]);
+			$bd['aol'] = my_ereg_replace("[^0-9,.,a-z,A-Z]", "", $var[1]);
 		}
 		
 		// finally assign our properties
 		$this->Name = $bd['browser'];
 		$this->Version = $bd['version'];
 		$this->Platform = $bd['platform'];
-		$this->AOL = $bd['aol'];
+		if (array_key_exists('aol', $bd)) $this->AOL = $bd['aol'];
+		else $this->AOL=null;
 	}
 }
 ?>
