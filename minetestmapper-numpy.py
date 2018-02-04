@@ -821,8 +821,11 @@ class World:
                     print("Error at ("+str(xpos)+","+str(ypos)+","+str(zpos)+"): "+str(e))
                     traceback.print_exc()
                     sys.stdout.write("Block data: ")
-                    for c in r[0]:
-                        sys.stdout.write("%2.2x "%ord(c))
+                    try:
+                        for c in r[0]:
+                            sys.stdout.write("%2.2x "%ord(c))
+                    except:
+                        print("Could not finish writing r error since r was not initialized")
                     sys.stdout.write(os.linesep)
                     sys.stdout.write("Data after node metadata: ")
                     for c in data_after_node_metadata:
