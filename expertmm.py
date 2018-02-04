@@ -116,7 +116,7 @@ class ConfigManager:
 
     def prepare_var(self, name, default_value, description,
                     interactive_enable=True):
-        self.load_var_or_ask_console_input(
+        self.load_var(
             name,
             default_value,
             description,
@@ -137,8 +137,9 @@ class ConfigManager:
     def set_var(self, name, val):
         is_changed = False
         if name not in self._data.keys():
-            print("WARNING to developer: run prepare_var before"
-                  " set_val, so that variable has a default.")
+            print("[ ConfigManager ] WARNING to developer: run"
+                  " prepare_var before set_val, so that variable has a"
+                  " default.")
             is_changed = True
         elif self._data[name] != val:
             is_changed = True
@@ -160,7 +161,7 @@ def get_dict_deepcopy(old_dict):
     new_dict = None
     if type(old_dict) is dict:
         new_dict = {}
-        for this_key in old_dict.iterkeys():
+        for this_key in old_dict:
             new_dict[this_key] = copy.deepcopy(old_dict[this_key])
     return new_dict
 
@@ -171,7 +172,7 @@ def is_dict_subset(new_dict, old_dict, verbose_messages_enable,
         if old_dict is not None:
             if new_dict is not None:
                 old_dict_keys = old_dict.keys()
-                for this_key in new_dict.iterkeys():
+                for this_key in new_dict:
                     if (this_key not in old_dict_keys):
                         is_changed = True
                         if verbose_messages_enable:
@@ -297,6 +298,7 @@ def get_dict_modified_by_conf_file(this_dict, path,
     if (results is None) or (type(results) is not dict):
         results = {}
     if os.path.isfile(path):
+        print("[ ConfigManager ] Using existing '" + path + "'")
         ins = open(path, 'r')
         line = True
         while line:
@@ -472,10 +474,10 @@ def get_operation_chunk_len(val, start=0, step=1,
         if (len(closes)>0):
             expected_closer = lastchar(closes)
         quote_number = quotes.find(val[index])
-        if (in_quote == None) and (opener_number > -1):
+        if (in_quote is None) and (opener_number > -1):
             opens += openers[opener_number]
             closes += closers[opener_number]
-        elif (in_quote == None) and (closer_number > -1):
+        elif (in_quote is None) and (closer_number > -1):
             if closers[closer_number] == expected_closer:
                 opens = opens[:len(opens)-1]
                 closes = closes[:len(closes)-1]
@@ -662,9 +664,9 @@ def find_dup(this_list, discard_whitespace_ignore_None_enable=True,
                     i1_strip = this_list[i1].strip()
                 if this_list[i2] is not None:
                     i2_strip = this_list[i2].strip()
-                if i1_strip!=None and \
+                if i1_strip is not None and \
                         len(i1_strip)>0 and \
-                        i2_strip!=None and \
+                        i2_strip is not None and \
                         len(i2_strip)>0:
                     if (i1!=i2) and \
                             (ignore_list is None or \

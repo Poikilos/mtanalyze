@@ -402,8 +402,9 @@ class MTChunks:
                     if source_mtime_seconds>installed_mtime_seconds:
                         shutil.copyfile(source_path, installed_path) # DOES replace destination file
             else:
-                print("WARNING: cannot update file since can't find '"+source_path+"'")
-                raw_input("Press enter to continue...")
+                print("WARNING: cannot update file since can't find '"
+                      + source_path + "'")
+                exit(1)
 
 
     def deny_http_access(self, dir_path):
@@ -507,7 +508,11 @@ class MTChunks:
                         result = True
                         break
                 else:
-                    raw_input("ERROR: FLAG_COLOR (obtained from FLAG_EMPTY_HEXCOLOR in minetestinfo.py) has "+len(FLAG_COLOR)+" element(s) (3 or 4 expected)")
+                    print("ERROR: FLAG_COLOR (obtained from"
+                          + " FLAG_EMPTY_HEXCOLOR in minetestinfo.py)"
+                          + " has " + len(FLAG_COLOR) + " element(s)"
+                          + " (3 or 4 expected)")
+                    exit(2)
         return result
 
     def get_index_of_chunk_on_todo_list(self, chunky_pos, allow_current_chunk_enable=False):
@@ -581,7 +586,7 @@ class MTChunks:
                                     elif self.is_worldborder_chunk(nearby_chunky_x, nearby_chunky_z):
                                         this_is_worldborder_chunk = True
                                         self.prepare_chunk_meta(nearby_chunky_x, nearby_chunky_z)
-                                        if ("is_worldborder" not in self.chunks[nearby_chunk_luid].metadata) or (self.chunks[nearby_chunk_luid].metadata["is_worldborder"] != True):
+                                        if ("is_worldborder" not in self.chunks[nearby_chunk_luid].metadata) or (not self.chunks[nearby_chunk_luid].metadata["is_worldborder"]):
                                             self.chunks[nearby_chunk_luid].metadata["is_worldborder"] = True
                                             self.save_chunk_meta(nearby_chunky_x, nearby_chunky_z)
                                     if not this_is_worldborder_chunk:
@@ -1475,9 +1480,9 @@ class MTChunks:
             if not self.verbose_enable:
                 print(min_indent+chunk_luid+": "+result[1])
             sub_result = self._render_chunk(chunky_x, chunky_z)
-            if (sub_result==True):
+            if sub_result is True:
                 result[0] = True
-            elif sub_result==None:
+            elif sub_result is None:
                 result[0] = None
                 self.todo_positions.append((chunky_x, chunky_z))  #redo this one
                 print("Waiting to retry...")
@@ -1862,7 +1867,7 @@ class MTChunks:
             print ("SAVING '" + self.world_yaml_path + "' since nothing was loaded or it did not exist")
             is_changed = True
         else:
-            for this_key in self.mapvars.iterkeys():
+            for this_key in self.mapvars:
                 if this_key != "total_generated_count":  # don't care if generated count changed since may have been regenerated
                     if (this_key not in self.saved_mapvars.keys()):
                         is_changed = True

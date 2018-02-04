@@ -20,6 +20,11 @@
 from minetestoffline import *
 import math
 
+try:
+    input = raw_input
+except:
+    pass
+
 # (used below)
 def list_players_by_distance(single_axis_enable, start=(0,0,0)):
 
@@ -82,4 +87,4 @@ def list_players_by_distance(single_axis_enable, start=(0,0,0)):
             print(players[min_key].playerid + ","+id_padding+" \"" + str(players[min_key].get_pos())+"\"")
 
 list_players_by_distance(True)
-raw_input("Press enter to exit...")
+input("Press enter to exit...")

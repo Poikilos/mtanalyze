@@ -6,6 +6,11 @@ try:
 except ImportError:
     from mtanalyze.expertmm import *
 
+try:
+    input = raw_input
+except:
+    pass
+
 # module for finding minetest paths and other installation metadata
 # Copyright (C) 2018 Jake Gustafson
 
@@ -357,7 +362,9 @@ def init_minetestinfo():
                 if os.path.isdir(deep_path):
                     default_www_minetest_path = deep_path
                 else:
-                    default_www_minetest_path = os.path.join(try_path, "minetest")
+                    default_www_minetest_path = try_path
+                    print("(using '" + default_www_minetest_path
+                          + "' since no '" + deep_path + "'")
                 print("You can test the php website like:")
                 print("  cd '" + default_www_minetest_path + "'")
                 print("  php -S localhost:8000")
@@ -383,24 +390,45 @@ def init_minetestinfo():
     # packaged versions get priority
     # /usr/share/games/minetest: Ubuntu Xenial 0.4.15 and
     #   Zesty 0.4.16 packages.
-    # /usr/share/games/minetest: arch package
+    # /usr/share/minetest: arch package
     # /usr/local/share/minetest: compiled from source
-    try_paths = ["/usr/share/games/minetest", "/usr/share/games/minetest", "/usr/local/share/minetest"]
+    try_paths = ["/usr/share/minetest", "/usr/share/games/minetest", "/usr/local/share/minetest"]
     if "windows" in platform.system().lower():
         default_shared_minetest_path = "C:\\Games\\Minetest"
     else:
         for try_path in try_paths:
+            print("checking for '" + try_path + "'")
             if os.path.isdir(try_path):
                 default_shared_minetest_path = try_path
                 break
 
     while True:
-        minetestinfo.prepare_var("shared_minetest_path", default_shared_minetest_path, "path containing Minetest's games folder")
-        games_path = os.path.join(minetestinfo.get_var("shared_minetest_path"), "games")
+        print("default default_shared_minetest_path is '"
+              + default_shared_minetest_path + "'")
+        minetestinfo.prepare_var(
+            "shared_minetest_path",
+            default_shared_minetest_path,
+            "path containing Minetest's games folder"
+        )
+        games_path = os.path.join(
+            minetestinfo.get_var("shared_minetest_path"),
+            "games"
+        )
         if not os.path.isdir(games_path):
-            answer=raw_input("WARNING: '"+minetestinfo.get_var("shared_minetest_path")+"' does not contain a games folder. If you use this shared_minetest_path, some features may not work correctly (such as adding worldgen mod labels to chunks, and future programs that may use this metadata to install minetest games). Are you sure you want to use y/n [blank for 'n' (no)]? ")
+            answer = input(
+                "WARNING: '"
+                + minetestinfo.get_var("shared_minetest_path")
+                + "' does not contain a games folder. If you use this"
+                + " shared_minetest_path, some features may not work"
+                + " correctly (such as adding worldgen mod labels to"
+                + " chunks, and future programs that may use this"
+                + " metadata to install minetest games). Are you sure"
+                + " you want to use y/n [blank for 'n' (no)]? "
+            )
             if answer.lower()=="y" or answer.lower()=="yes":
-                print("You can change the value of shared_minetest_path later by editing '"+minetestinfo._config_path+"'.")
+                print("You can change the value of shared_minetest_path"
+                      + " later by editing '"
+                      + minetestinfo._config_path + "'.")
                 print("")
                 break
             else:
@@ -508,6 +536,28 @@ def init_minetestinfo():
         print("Finished writing "+str(len(merged_colors))+" value(s) to '"+dest_colors_txt+"'")
     else:
         print("Using colors from "+dest_colors_txt)
+    default_minetestserver_path = "/usr/bin/minetestserver"
+    server_msg = ""
+    if not os.path.isfile(default_minetestserver_path):
+        try_path = "/usr/local/bin/minetestserver"
+        if os.path.isfile(try_path):
+            default_minetestserver_path = try_path
+
+    if not os.path.isfile(default_minetestserver_path):
+        try_path = os.path.join(profile_path,
+                                "minetest/bin/minetestserver")
+        if os.path.isfile(try_path):
+            # built from source
+            default_minetestserver_path = try_path
+    if not os.path.isfile(default_minetestserver_path):
+        server_msg = " (not found in any known location)"
+        default_minetestserver_path = "minetestserver"
+
+    minetestinfo.prepare_var(
+        "minetestserver_path",
+        default_minetestserver_path,
+        "minetestserver executable" + server_msg
+    )
 
 def load_world_and_mod_data():
     #if games_path =
@@ -557,7 +607,7 @@ def load_world_and_mod_data():
         default_message = ""
         if default_world_path is not None:
             default_message = " (or world name if above; blank for ["+default_world_path+"])"
-        input_string = raw_input("World path"+default_message+": ")
+        input_string = input("World path"+default_message+": ")
         if (len(input_string)>0):
             try_path = os.path.join(minetestinfo.get_var("worlds_path"), input_string)
             this_primary_world_path = input_string
@@ -706,9 +756,9 @@ def get_modified_mod_list_from_game_path(mod_list, game_path):
                     load_mod_variable_name = "load_mod_"+sub_name
                     if (world_mt_mapvars is not None) and (load_mod_variable_name in world_mt_mapvars):
                         load_this_mod = get_world_var(load_mod_variable_name)
-                        if load_this_mod != True:
+                        if not load_this_mod:
                             user_excluded_mod_count += 1
-                    if load_this_mod == True:
+                    if load_this_mod is True:
                         if sub_name not in mod_list:
                             mod_list.append(sub_name)
     return mod_list

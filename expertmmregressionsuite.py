@@ -25,6 +25,12 @@ import keyword
 import inspect
 import traceback
 
+try:
+    input = raw_input
+except:
+    pass
+
+
 module_list = list()
 module_list.append("os")
 module_list.append("sys")
@@ -389,7 +395,7 @@ def check_coord_mismatch(file_path):
     elif len(file_path)>4 and (file_path_lower[-4:]==".pyw"):
         inline_comment_delimiter = "#"
     else:
-        answer=raw_input("what is the inline comment delimiter for the sourcecode file type of "+file_path+" [blank for "+inline_comment_delimiter+"]? ")
+        answer = input("what is the inline comment delimiter for the sourcecode file type of "+file_path+" [blank for "+inline_comment_delimiter+"]? ")
         if len(answer)>0:
             inline_comment_delimiter = answer
 
@@ -652,4 +658,4 @@ check_coord_mismatch(os.path.join("web","chunkymap.php"))
 print("Found "+str(issue_count)+" issue(s) in "+str(len(file_list))+" file(s)")
 if (issue_count>0):
     print("Please run again after these issues are fixed to check for more on same lines.")
-raw_input("Press enter to exit...")
+input("Press enter to exit...")
