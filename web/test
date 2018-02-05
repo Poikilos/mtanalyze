@@ -1,6 +1,4 @@
 #!/bin/sh
-# call built-in php web server (not for production use)
-# see http://php.net/manual/en/features.commandline.webserver.php
 
 # get dir where script resides (see al's answer at https://stackoverflow
 # .com/questions/242538/unix-shell-script-find-out-which-directory-the-
@@ -25,4 +23,13 @@ else
   echo "    $SCRIPTPATH"
   echo
 fi
+
+if [ -f "`command -v php`" ]; then
+# see http://php.net/manual/en/features.commandline.webserver.php
+echo "running built-in php web server (not for production use)..."
 php -S localhost:8000
+else
+echo "php package must be installed for testing (mod_php is not"
+echo "  required for using php's built-in web server "
+echo "  (whic is not for production use)"
+fi

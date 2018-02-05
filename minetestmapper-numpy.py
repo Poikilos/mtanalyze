@@ -825,7 +825,7 @@ class World:
                         for c in r[0]:
                             sys.stdout.write("%2.2x "%ord(c))
                     except:
-                        print("Could not finish writing r error since r was not initialized")
+                        print("<Could not finish writing r error since r was not initialized>")
                     sys.stdout.write(os.linesep)
                     sys.stdout.write("Data after node metadata: ")
                     for c in data_after_node_metadata:
