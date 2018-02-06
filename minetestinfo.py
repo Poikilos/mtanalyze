@@ -1,16 +1,4 @@
-import os
-import datetime
-import platform
-try:
-    from expertmm import *
-except ImportError:
-    # minetestinfo must have been imported from root of repo
-    from mtanalyze.expertmm import *
-
-try:
-    input = raw_input
-except:
-    pass
+#!/usr/bin/env python3
 
 # module for finding minetest paths and other installation metadata
 # Copyright (C) 2018 Jake Gustafson
@@ -30,6 +18,19 @@ except:
 # Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
+import os
+import datetime
+import platform
+try:
+    from expertmm import *
+except ImportError:
+    # minetestinfo must have been imported from root of repo
+    from mtanalyze.expertmm import *
+
+try:
+    input = raw_input
+except:
+    pass
 
 #TODO: eliminate the following variables from generator.py (and manage here centrally instead, so configuration is shared across minetest helper programs):
 #self.config (use minetestinfo.get_val instead)
