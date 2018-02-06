@@ -67,7 +67,9 @@ after_broken["default:stone_with_mese"] = "default:mese_crystal"
 after_broken["moreores:mineral_silver"] = "moreores:silver_lump"
 after_broken["default:stone_with_gold"] = "default:gold_lump"
 after_broken["default:stone_with_diamond"] = "default:diamond"
-#NOTE: this stuff could be scraped from lua such as /usr/local/share/minetest/games/fca_game_a/mods/technic/technic_worldgen/nodes.lua
+# TODO: this stuff could be scraped from lua such as from
+# /usr/local/share/minetest/games/fca_game_a/mods/technic/
+# technic_worldgen/nodes.lua
 after_broken["technic:mineral_uranium"] = "technic:uranium_lump"
 after_broken["technic:mineral_chromium"] = "technic:chromium_lump"
 after_broken["technic:mineral_zinc"] = "technic:zinc_lump"
@@ -79,10 +81,9 @@ after_broken["caverealms:stone_with_lichen"] = "default:cobble"
 after_broken["caverealms:stone_with_algae"] = "default:cobble"
 after_broken["caverealms:constant_flame"] = "Empty"
 after_broken["fire:basic_flame"] = "Empty"
-#after_broken[""] = ""
-#after_broken[""] = ""
-#after_broken[""] = ""
-#after_broken[""] = ""
+after_broken["default:water_source"] = "bucket:bucket_water"
+after_broken["default:river_water_source"] = "bucket:bucket_river_water"
+after_broken["default:lava_source"] = "bucket:bucket_lava"
 #after_broken[""] = ""
 
 
@@ -94,8 +95,8 @@ after_broken_startswith["Item pipeworks:accelerator_tube_"] = "pipeworks:acceler
 
 #TODO: crafts (scrape list of ingredients to remove from inventory)
 
-genresult_name_closer_string = "_mapper_result.txt"
-gen_error_name_closer_string = "_mapper_err.txt"
+genresult_name_end_flag = "_mapper_result.txt"
+gen_error_name_end_flag = "_mapper_err.txt"
 
 loaded_mod_list = list()
 

@@ -103,8 +103,8 @@ class ChunkymapOfflineRenderer:
         genresults_folder_path = os.path.join( os.path.join(os.path.dirname(os.path.abspath(__file__)), "chunkymap-genresults"), self.world_name)
         if not os.path.isdir(genresults_folder_path):
             os.makedirs(genresults_folder_path)
-        genresult_path = os.path.join(genresults_folder_path, "singleimage"+genresult_name_closer_string)
-        gen_error_path = os.path.join(genresults_folder_path, "singleimage"+gen_error_name_closer_string)
+        genresult_path = os.path.join(genresults_folder_path, "singleimage"+genresult_name_end_flag)
+        gen_error_path = os.path.join(genresults_folder_path, "singleimage"+gen_error_name_end_flag)
         cmd_suffix = " 1> \""+genresult_path+"\""
         cmd_suffix += " 2> \""+gen_error_path+"\""
         #if self.boundary_x_min is None:

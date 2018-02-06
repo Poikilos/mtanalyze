@@ -737,10 +737,10 @@ class MTChunks:
 
     def get_chunk_genresult_name(self, chunky_x, chunky_z):
         chunk_luid = self.get_chunk_luid(chunky_x, chunky_z)
-        return self.genresult_name_opener_string+chunk_luid+genresult_name_closer_string
+        return self.genresult_name_opener_string+chunk_luid+genresult_name_end_flag
 
     def get_chunk_luid_from_genresult_name(self, file_name):
-        return file_name[len(self.genresult_name_opener_string):-1*len(genresult_name_closer_string)]
+        return file_name[len(self.genresult_name_opener_string):-1*len(genresult_name_end_flag)]
 
     def get_chunk_genresult_tmp_folder(self, chunky_x, chunky_z):
         #coords = self.get_coords_from_luid(chunk_luid)
@@ -885,7 +885,7 @@ class MTChunks:
         genresults_folder_path = os.path.join( os.path.join(os.path.dirname(os.path.abspath(__file__)), "chunkymap-genresults"), self.world_name)
         if not os.path.isdir(genresults_folder_path):
             os.makedirs(genresults_folder_path)
-        gen_error_path = os.path.join(genresults_folder_path, "singleimage"+gen_error_name_closer_string)
+        gen_error_path = os.path.join(genresults_folder_path, "singleimage"+gen_error_name_end_flag)
         cmd_suffix = " 1> \""+genresult_path+"\""
         cmd_suffix += " 2> \""+gen_error_path+"\""
         #self.mapper_id = "minetestmapper-region"
@@ -1631,7 +1631,7 @@ class MTChunks:
                 player_position = None
                 #if (file_name[:len(badstart_string)]!=badstart_string):
                 if (file_name[:1]!="."):
-                    if len(file_name)>=len(self.genresult_name_opener_string)+4+len(genresult_name_closer_string):
+                    if len(file_name)>=len(self.genresult_name_opener_string)+4+len(genresult_name_end_flag):
                         chunk_luid = self.get_chunk_luid_from_genresult_name(file_name)
                         coords = self.get_coords_from_luid(chunk_luid)
                         if coords is not None:
