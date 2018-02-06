@@ -31,5 +31,5 @@ php -S localhost:8000
 else
 echo "php package must be installed for testing (mod_php is not"
 echo "  required for using php's built-in web server "
-echo "  (whic is not for production use)"
+echo "  (which is not for production use)"
 fi

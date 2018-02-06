@@ -4,6 +4,7 @@ import platform
 try:
     from expertmm import *
 except ImportError:
+    # minetestinfo must have been imported from root of repo
     from mtanalyze.expertmm import *
 
 try:
