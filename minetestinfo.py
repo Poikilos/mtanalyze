@@ -587,6 +587,7 @@ def load_world_and_mod_data():
         world_count = 0
         index = 0
         world_number = 0
+        default_world_name = None
         if os.path.exists(folder_path):
             for sub_name in os.listdir(folder_path):
                 sub_path = os.path.join(folder_path, sub_name)
@@ -595,7 +596,9 @@ def load_world_and_mod_data():
                     print ("  " + sub_name + (" "*(30-len(sub_name))) + " <"+datetime.datetime.fromtimestamp(os.path.getmtime(sub_path)).strftime('%Y-%m-%d %H:%M:%S')+">")
                     if sub_name[0]!=".":
                         if (sub_name!="world") or (world_number==(world_count-1)):
-                            if not auto_chosen_world:
+                            if not auto_chosen_world or \
+                                    (default_world_name=="world"):
+                                default_world_name = sub_name
                                 default_world_path = sub_path #os.path.join(base_path, sub_name) #  os.path.join(minetestinfo.get_var("worlds_path"), "try7amber")
                             auto_chosen_world = True
                         world_number += 1
