@@ -48,13 +48,16 @@ class ChunkymapOfflineRenderer:
     #mtm_bin_dir_path = None
 
     def __init__(self):
-        self.boundary_x_min = -4096  #formerly -10000
-        self.boundary_x_max = 4096  #formerly 10000
-        self.boundary_z_min = -4096  #formerly -10000
-        self.boundary_z_max = 4096  #formerly 10000
-        self.mtm_bin_enable = False  # set below automatically if present
-        #NOTE: 6144*2 = 12288
-        #NOTE: a 16464x16384 or 12288x12288 image fails to load in browser, but 6112x6592 works
+        # limit to 8192x8192 for browsers to be able to load it
+        # NOTE: a 16464x16384 or 12288x12288 image fails to load in
+        # browser, but 6112x6592 works
+        # 6144*2 = 12288
+        self.boundary_x_min = -4096  # formerly -10000
+        self.boundary_x_max = 4096  # formerly 10000
+        self.boundary_z_min = -4096  # formerly -10000
+        self.boundary_z_max = 4096  # formerly 10000
+        self.mtm_bin_enable = False  # set below automatically if
+                                     # present
 
         self.backend_string = get_world_var("backend")
 
