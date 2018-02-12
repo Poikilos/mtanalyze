@@ -417,6 +417,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 </noscript>';
 	}
 	if ($is_ready) {
+		echo '<!--world is ready-->';
 		if (isset($world_name)) {
 			$chunks_per_tile_x_count = 10;
 			$chunks_per_tile_z_count = 10;
@@ -1577,7 +1578,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 }//end echo_chunkymap_canvas
 
 
-function check_world() {
+function check_world($show_world_name_enable = false) {
 	global $chunkymapdata_thisworld_path;
 	global $world_name;
 	global $chunkymapdata_worlds_path;
@@ -1611,6 +1612,19 @@ function check_world() {
 					}
 				}
 				closedir($handle);
+				if ($world_count < 1) {
+					if ($show_missing_data_msg_enable) {
+						echo '<div style="color:red">There are 0 worlds in '."$chunkymapdata_worlds_path".' yet.</div>';
+						echo '<div style="color:gray">Server owner should run singleimage.py to generate map, and generator.py to keep update players updated (only works with player files, <i>not player database which is optionally used by Minetest 0.4.16</i>)</div>';
+						$show_missing_data_msg_enable = false;
+					}
+				}
+				else {
+					$is_ready = true;
+				}
+			}
+			else {
+				echo '<div style="color:red">Failed to open '."$chunkymapdata_worlds_path".'</div>';
 			}
 		}
 		else {
@@ -1621,12 +1635,14 @@ function check_world() {
 			}
 		}
 		if ($world_count==1) {
+			
 			$world_name = $last_world_name;
 		}
 		//elseif ($non_world_world_count==1) { //assumes you want the one not called world (not a great assumption)
 		//	$world_name = $non_world_world_name;
 		//}
 		else {
+			//else error already shown above (world_count < 1, or can't open directory, or other)
 			$is_ready = false;
 			if ($auto_choose_enable===true) {
 				if ($non_world_world_name==null) {
@@ -1639,6 +1655,9 @@ function check_world() {
 		}
 	}
 	if (isset($world_name)) {
+		if ($show_world_name_enable) {
+			echo "$world_name<br/>\n";
+		}
 		$chunkymapdata_thisworld_path = $chunkymapdata_worlds_path."/".$world_name;
 	}
 	return $is_ready;
