@@ -67,17 +67,20 @@ class ChunkymapOfflineRenderer:
         self.minetestmapper_py_path = self.minetestmapper_numpy_path
         self.mtm_bin_dir_path = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)),".."),"minetestmapper")
         self.minetestmapper_bin_path = os.path.join(self.mtm_bin_dir_path,"minetestmapper")
-        mtm_bin_paths = [
-            "/usr/local/bin/minetestmapper",
-            "/usr/bin/minetestmapper"
-        ]
+        # mtm_bin_paths = [
+            # "/usr/local/bin/minetestmapper",
+            # "/usr/bin/minetestmapper"
+        # ]
+        # ABOVE AND BELOW are COMMENTED because minetestmapper is not
+        # usable (neither provides standard output nor fixed size image
+        # --see <https://github.com/minetest/minetestmapper/issues/49>)
         if os.path.isfile(self.minetestmapper_bin_path):
             self.mtm_bin_enable = True
-        else:
-            for try_path in mtm_bin_paths:
-                if os.path.isfile(try_path):
-                    self.minetestmapper_bin_path = try_path
-                    self.mtm_bin_enable = True
+        # else:
+            # for try_path in mtm_bin_paths:
+                # if os.path.isfile(try_path):
+                    # self.minetestmapper_bin_path = try_path
+                    # self.mtm_bin_enable = True
         #region useful if version of minetestmapper.py from expertmm fork of minetest is used
         #profile_path = None
         #if 'USERPROFILE' in os.environ:
