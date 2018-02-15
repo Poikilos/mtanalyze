@@ -152,8 +152,11 @@ class ChunkymapOfflineRenderer:
             #print("Using numpy style parameters.")
             #print("  since using "+self.minetestmapper_py_path)
             #print()
+        this_colors_path = dest_colors_path
+        if os.path.isfile(self.colors_path) and not os.path.isfile(dest_colors_path):
+            this_colors_path = self.colors_path
         if self.mtm_bin_enable:
-            cmd_no_out_string = self.minetestmapper_bin_path+" --colors "+dest_colors_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
+            cmd_no_out_string = self.minetestmapper_bin_path+" --colors "+this_colors_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
         else:
             cmd_no_out_string = get_python2_exe_path() + " " + self.minetestmapper_py_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
         cmd_string = cmd_no_out_string + cmd_suffix
@@ -162,9 +165,9 @@ class ChunkymapOfflineRenderer:
         print("Running")
         print("    "+cmd_string)
         if self.mtm_bin_enable:
-            if os.path.isfile(self.colors_path) and not os.path.isfile(dest_colors_path):
-                print("Copying...'"+self.colors_path+"' to  '"+dest_colors_path+"'")
-                shutil.copyfile(self.colors_path,dest_colors_path)
+            #if os.path.isfile(self.colors_path) and not os.path.isfile(dest_colors_path):
+                #print("Copying...'"+self.colors_path+"' to  '"+dest_colors_path+"'")
+                #shutil.copyfile(self.colors_path,dest_colors_path)
             print("  mapper_path: " + self.minetestmapper_bin_path)
         else:
             print("  mapper_path: " + self.minetestmapper_py_path)
