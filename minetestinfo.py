@@ -760,6 +760,7 @@ def get_modified_mod_list_from_game_path(mod_list, game_path):
             if os.path.isdir(sub_path):
                 if (sub_name[:1]!="."):
                     load_this_mod = True
+                    # TODO: eliminate this--load_mod_* is not a thing for subgames--all of subgame's mods are loaded if subgame is loaded
                     load_mod_variable_name = "load_mod_"+sub_name
                     if (world_mt_mapvars is not None) and (load_mod_variable_name in world_mt_mapvars):
                         load_this_mod = get_world_var(load_mod_variable_name)
