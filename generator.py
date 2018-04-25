@@ -41,7 +41,25 @@ from poikilos import *
 #python_exe_path is from:
 from pythoninfo import *
 
-from PIL import Image, ImageDraw, ImageFont, ImageColor
+try:
+    from PIL import Image, ImageDraw, ImageFont, ImageColor
+except:
+    print("You must first install Pillow's PIL."
+    print("On Windows:")
+    print("Right-click windows menu, 'Command Prompt (Admin)' then:")
+    print("pip install Pillow")
+    print("")
+    print("On *nix-like systems:")
+    print("sudo python2 -m pip install --upgrade pip")
+    print("sudo python2 -m pip install --upgrade pip wheel")
+    print("#then:")
+    #print("sudo pip install Pillow")
+    print("python2 -m pip install Pillow")
+    print("#or")
+    print("#same but python3 instead")
+    #print("sudo pip install Pillow")
+    exit()
+
 #mode_to_bpp dict is from Antti Haapala. <http://stackoverflow.com/questions/28913988/is-there-a-way-to-measure-the-memory-consumption-of-a-png-image>. 7 Mar 2015. 28 Feb 2016.
 mode_to_bpp = {'1':1, 'L':8, 'P':8, 'RGB':24, 'RGBA':32, 'CMYK':32, 'YCbCr':24, 'I':32, 'F':32}
 INTERNAL_TIME_FORMAT_STRING="%Y-%m-%d %H:%M:%S"

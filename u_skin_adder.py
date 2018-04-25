@@ -5,13 +5,20 @@ from minetestinfo import *  #paths and FLAG_EMPTY_HEXCOLOR = "#010000"
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageColor
 except:
-    print("You must first install Pillow's PIL."
+    print("You must first install Pillow's PIL.")
     print("On Windows:")
     print("Right-click windows menu, 'Command Prompt (Admin)' then:")
     print("pip install Pillow")
     print("")
     print("On *nix-like systems:")
-    print("sudo pip install Pillow")
+    print("sudo python2 -m pip install --upgrade pip")
+    print("sudo python2 -m pip install --upgrade pip wheel")
+    print("#then:")
+    #print("sudo pip install Pillow")
+    print("sudo python -m pip install Pillow\n")
+    print("#or")
+    print("#same but python3 instead")
+    #print("sudo pip install Pillow")
     exit()
 import shutil
 

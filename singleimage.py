@@ -29,7 +29,24 @@ from minetestinfo import *
 #python_exe_path is from:
 from pythoninfo import *
 #from PIL import Image, ImageDraw, ImageFont, ImageColor
-from PIL import Image
+try:
+    from PIL import Image
+except:
+    print("You must first install Pillow's PIL.")
+    print("On Windows:")
+    print("Right-click windows menu, 'Command Prompt (Admin)' then:")
+    print("pip install Pillow")
+    print("")
+    print("On *nix-like systems:")
+    print("sudo python2 -m pip install --upgrade pip")
+    print("sudo python2 -m pip install --upgrade pip wheel")
+    print("#then:")
+    #print("sudo pip install Pillow")
+    print("python2 -m pip install Pillow")
+    print("#or")
+    print("#same but python3 instead")
+    #print("sudo pip install Pillow")
+    exit()
 
 class ChunkymapOfflineRenderer:
 
@@ -80,6 +97,20 @@ class ChunkymapOfflineRenderer:
         # --see <https://github.com/minetest/minetestmapper/issues/49>)
         if os.path.isfile(self.minetestmapper_bin_path):
             self.mtm_bin_enable = True
+        elif os.path.isfile(os.path.join("/usr/bin", "minetestmapper")):
+            self.minetestmapper_bin_path = os.path.join("/usr/bin", "minetestmapper")
+            self.mtm_bin_enable = True
+        elif os.path.isfile(os.path.join("/usr/local/bin", "minetestmapper")):
+            self.minetestmapper_bin_path = os.path.join("/usr/local/bin", "minetestmapper")
+            self.mtm_bin_enable = True
+        if self.mtm_bin_enable:
+            print()
+            print("minetestmapper_bin_path: " + self.minetestmapper_bin_path)
+            print()
+        else:
+            print()
+            print("WARNING: binary minetestmapper not found")
+            print()
         # else:
             # for try_path in mtm_bin_paths:
                 # if os.path.isfile(try_path):
