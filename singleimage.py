@@ -63,7 +63,7 @@ class ChunkymapOfflineRenderer:
 
         #region same as generator.py
         #self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
-        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-poikilos.py")
         git_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         print("MAPPERS search path (clone minetestmapper-python folder in here): " + git_path)
         self.minetestmapper_numpy_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper-numpy.py")
@@ -85,7 +85,7 @@ class ChunkymapOfflineRenderer:
                 # if os.path.isfile(try_path):
                     # self.minetestmapper_bin_path = try_path
                     # self.mtm_bin_enable = True
-        #region useful if version of minetestmapper.py from expertmm fork of minetest is used
+        #region useful if version of minetestmapper.py from poikilos fork of minetest is used
         #profile_path = None
         #if 'USERPROFILE' in os.environ:
         #    profile_path = os.environ['USERPROFILE']
@@ -96,7 +96,7 @@ class ChunkymapOfflineRenderer:
         #minetest_minetestmapper_path = os.path.join(minetest_util_path,"minetestmapper.py")
         #if not os.path.isfile(self.minetestmapper_py_path):
         #    self.minetestmapper_py_path = minetest_minetestmapper_path
-        #endregion useful if version of minetestmapper.py from expertmm fork of minetest is used
+        #endregion useful if version of minetestmapper.py from poikilos fork of minetest is used
 
         #if (self.backend_string!="sqlite3"):
             # minetestmapper-numpy had trouble with leveldb but this fork has it fixed so use numpy always always instead of running the following line
@@ -140,9 +140,9 @@ class ChunkymapOfflineRenderer:
 
         #geometry_string = str(min_x)+":"+str(min_z)+"+"+str(int(max_x)-int(min_x)+1)+"+"+str(int(max_z)-int(min_z)+1)  # +1 since max-min is exclusive and width must be inclusive for minetestmapper.py
         region_param = " --region "+region_string  # minetestmapper-numpy.py --region xmin xmax zmin zmax
-        geometry_param = " --geometry "+geometry_string # " --geometry -10000:-10000+20000+20000"  # minetestmapper-expertmm.py --geometry <xmin>:<zmin>+<width>+<height>
+        geometry_param = " --geometry "+geometry_string # " --geometry -10000:-10000+20000+20000"  # minetestmapper-poikilos.py --geometry <xmin>:<zmin>+<width>+<height>
         limit_param = geometry_param
-        #expertmm_region_string = str(min_x) + ":" + str(max_x) + "," + str(min_z) + ":" + str(max_z)
+        #poikilos_region_string = str(min_x) + ":" + str(max_x) + "," + str(min_z) + ":" + str(max_z)
 
         #cmd_no_out_string = python_exe_path+" "+self.minetestmapper_py_path+" --bgcolor '"+self.FLAG_EMPTY_HEXCOLOR+"' --input \""+minetestinfo.get_var("primary_world_path")+"\" --geometry "+geometry_string+" --output \""+tmp_png_path+"\""
         png_name = "singleimage.png"

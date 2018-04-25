@@ -37,7 +37,7 @@ import shutil
 import math
 
 from minetestinfo import *
-from expertmm import *
+from poikilos import *
 #python_exe_path is from:
 from pythoninfo import *
 
@@ -214,7 +214,7 @@ class MTChunks:
 
         #region same as singleimage.py
         #self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
-        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-poikilos.py")
         git_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         print("MAPPERS search path (clone minetestmapper-python folder in here): " + git_path)
         self.minetestmapper_numpy_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper-numpy.py")
@@ -911,9 +911,9 @@ class MTChunks:
             #    BUT *buntu Trusty version of it does NOT have geometry option
             #    cmd_string = "/usr/games/minetest-mapper --input \""+minetestinfo.get_var("primary_world_path")+"\" --draworigin --geometry "+geometry_value_string+" --output \""+tmp_png_path+"\""+cmd_suffix
             #    such as sudo python minetestmapper --input "/home/owner/.minetest/worlds/FCAGameAWorld" --geometry -32:-32+64+64 --output /var/www/html/minetest/try1.png
-            # OR try PYTHON version (looks for expertmm fork which has geometry option like C++ version does):
+            # OR try PYTHON version (looks for poikilos fork which has geometry option like C++ version does):
             #script_path = "$HOME/chunkymap/minetestmapper.py"
-            #region_capable_script_path = "$HOME/chunkymap/minetestmapper-expertmm.py"
+            #region_capable_script_path = "$HOME/chunkymap/minetestmapper-poikilos.py"
             #    region_capable_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper.py")
             #    if os.path.isfile(region_capable_script_path):
             #        script_path=region_capable_script_path
@@ -921,7 +921,7 @@ class MTChunks:
                 #script_path = region_capable_script_path
             geometry_string = str(min_x)+":"+str(min_z)+"+"+str(int(max_x)-int(min_x)+1)+"+"+str(int(max_z)-int(min_z)+1)  # +1 since max-min is exclusive and width must be inclusive for minetestmapper.py
             geometry_param = " --geometry "+geometry_string
-            #expertmm_region_string = str(min_x) + ":" + str(max_x) + "," + str(min_z) + ":" + str(max_z)
+            #poikilos_region_string = str(min_x) + ":" + str(max_x) + "," + str(min_z) + ":" + str(max_z)
             #cmd_string="sudo python "+script_path+" --input \""+minetestinfo.get_var("primary_world_path")+"\" --geometry "+geometry_value_string+" --output \""+tmp_png_path+"\""+cmd_suffix
             world_path = minetestinfo.get_var("primary_world_path")
             io_string = " --input \""+world_path+"\" --output \""+tmp_png_path+"\""

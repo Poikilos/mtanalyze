@@ -22,10 +22,10 @@ import os
 import datetime
 import platform
 try:
-    from expertmm import *
+    from poikilos import *
 except ImportError:
     # minetestinfo must have been imported from root of repo
-    from mtanalyze.expertmm import *
+    from mtanalyze.poikilos import *
 
 try:
     input = raw_input
@@ -209,7 +209,7 @@ class MTChunk:
                     if line:
                         line_strip = line.strip()
                         try:
-                            if ("does not exist" in line_strip):  # official minetestmapper.py says "World does not exist" but expertmm fork and minetestmapper-numpy.py say "data does not exist"
+                            if ("does not exist" in line_strip):  # official minetestmapper.py says "World does not exist" but poikilos fork and minetestmapper-numpy.py say "data does not exist"
                                 self.metadata["is_empty"] = True
                                 break
                             elif "Result image" in line_strip:

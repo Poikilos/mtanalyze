@@ -4,16 +4,16 @@
 	File name: browser.php
 	Author: Gary White
 	Last modified: November 10, 2003
-	
+
 	**************************************************************
 
 	Copyright (C) 2003  Gary White
-	
+
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
 	as published by the Free Software Foundation; either version 2
 	of the License, or (at your option) any later version.
-	
+
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,16 +23,16 @@
 	**************************************************************
 
 	Browser class
-	
+
 	Identifies the user's Operating system, browser and version
 	by parsing the HTTP_USER_AGENT string sent to the server
-	
+
 	Typical Usage:
-	
+
 		require_once($_SERVER['DOCUMENT_ROOT'].'/include/browser.php');
 		$br = new Browser;
 		echo "$br->Platform, $br->Name version $br->Version";
-	
+
 	For operating systems, it will correctly identify:
 		Microsoft Windows
 		MacIntosh
@@ -43,7 +43,7 @@
 	The only known problem here is that, if a HTTP_USER_AGENT string does not
 	contain the operating system, it will be identified as Unix. For unknown
 	browsers, this may not be correct.
-	
+
 	For browsers, it should correctly identify all versions of:
 		Amaya
 		Galeon
@@ -94,7 +94,7 @@ class browser{
 
 
 	public function browser() {
-		// tell PHP 4 to call the PHP 7 constructor (change by expertmm):
+		// tell PHP 4 to call the PHP 7 constructor (change by poikilos):
 		self::__construct();
 	}
 	public function __construct() {
@@ -138,7 +138,7 @@ class browser{
 			$val = explode("/",stristr($agent,"webtv"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
-		
+
 		// test for MS Internet Explorer version 1
 		}elseif(my_eregi("microsoft internet explorer", $agent)){
 			$bd['browser'] = "MSIE";
@@ -160,7 +160,7 @@ class browser{
 			$val = explode(" ",stristr($agent,"msie"));
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
-		
+
 		// test for MS Pocket Internet Explorer
 		}elseif(my_eregi("mspie",$agent) || my_eregi('pocket', $agent)){
 			$val = explode(" ",stristr($agent,"mspie"));
@@ -172,21 +172,21 @@ class browser{
 				$val = explode("/",$agent);
 				$bd['version'] = $val[1];
 			}
-			
+
 		// test for Galeon
 		}elseif(my_eregi("galeon",$agent)){
 			$val = explode(" ",stristr($agent,"galeon"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
-			
+
 		// test for Konqueror
 		}elseif(my_eregi("Konqueror",$agent)){
 			$val = explode(" ",stristr($agent,"Konqueror"));
 			$val = explode("/",$val[0]);
 			$bd['browser'] = $val[0];
 			$bd['version'] = $val[1];
-			
+
 		// test for iCab
 		}elseif(my_eregi("icab",$agent)){
 			$val = explode(" ",stristr($agent,"icab"));
@@ -204,21 +204,21 @@ class browser{
 			$bd['browser'] = "Phoenix";
 			$val = explode("/", stristr($agent,"Phoenix/"));
 			$bd['version'] = $val[1];
-		
+
 		// test for Firebird
 		}elseif(my_eregi("firebird", $agent)){
 			$bd['browser']="Firebird";
 			$val = stristr($agent, "Firebird");
 			$val = explode("/",$val);
 			$bd['version'] = $val[1];
-			
+
 		// test for Firefox
 		}elseif(my_eregi("Firefox", $agent)){
 			$bd['browser']="Firefox";
 			$val = stristr($agent, "Firefox");
 			$val = explode("/",$val);
 			$bd['version'] = $val[1];
-			
+
 	  // test for Mozilla Alpha/Beta Versions
 		}elseif(my_eregi("mozilla",$agent) &&
 			my_eregi("rv:[0-9].[0-9][a-b]",$agent) && !my_eregi("netscape",$agent)){
@@ -226,7 +226,7 @@ class browser{
 			$val = explode(" ",stristr($agent,"rv:"));
 			my_eregi("rv:[0-9].[0-9][a-b]",$agent,$val);
 			$bd['version'] = str_replace("rv:","",$val[0]);
-			
+
 		// test for Mozilla Stable Versions
 		}elseif(my_eregi("mozilla",$agent) &&
 			my_eregi("rv:[0-9]\.[0-9]",$agent) && !my_eregi("netscape",$agent)){
@@ -234,7 +234,7 @@ class browser{
 			$val = explode(" ",stristr($agent,"rv:"));
 			my_eregi("rv:[0-9]\.[0-9]\.[0-9]",$agent,$val);
 			$bd['version'] = str_replace("rv:","",$val[0]);
-		
+
 		// test for Lynx & Amaya
 		}elseif(my_eregi("libwww", $agent)){
 			if (my_eregi("amaya", $agent)){
@@ -247,7 +247,7 @@ class browser{
 				$bd['browser'] = "Lynx";
 				$bd['version'] = $val[1];
 			}
-		
+
 		// test for Safari
 		}elseif(my_eregi("safari", $agent)){
 			$bd['browser'] = "Safari";
@@ -265,19 +265,19 @@ class browser{
 			$bd['browser'] = "Netscape";
 			$bd['version'] = $val[1];
 		}
-		
+
 		// clean up extraneous garbage that may be in the name
 		$bd['browser'] = my_ereg_replace("[^a-z,A-Z]", "", $bd['browser']);
-		// clean up extraneous garbage that may be in the version		
+		// clean up extraneous garbage that may be in the version
 		$bd['version'] = my_ereg_replace("[^0-9,.,a-z,A-Z]", "", $bd['version']);
-		
+
 		// check for AOL
 		if (my_eregi("AOL", $agent)){
 			$var = stristr($agent, "AOL");
 			$var = explode(" ", $var);
 			$bd['aol'] = my_ereg_replace("[^0-9,.,a-z,A-Z]", "", $var[1]);
 		}
-		
+
 		// finally assign our properties
 		$this->Name = $bd['browser'];
 		$this->Version = $bd['version'];

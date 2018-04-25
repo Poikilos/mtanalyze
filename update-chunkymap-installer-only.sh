@@ -15,7 +15,7 @@ fi
 if [ -d "$HOME/Downloads/minetest-chunkymap-master" ]; then
   rm -Rf "$HOME/Downloads/minetest-chunkymap-master"
 fi
-wget https://github.com/expertmm/minetest-chunkymap/archive/master.zip
+wget https://github.com/poikilos/minetest-chunkymap/archive/master.zip
 if [ -f minetest-chunkymap.zip ]; then
   rm -f minetest-chunkymap.zip
 fi

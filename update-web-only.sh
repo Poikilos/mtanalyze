@@ -8,12 +8,12 @@ fi
 if [ -f viewchunkymap.php ]; then
   rm viewchunkymap.php
 fi
-wget https://github.com/expertmm/minetest-chunkymap/raw/master/web/viewchunkymap.php
+wget https://github.com/poikilos/minetest-chunkymap/raw/master/web/viewchunkymap.php
 sudo mv -f viewchunkymap.php $DEST_WWW_PATH/
 if [ -f chunkymap.php ]; then
   rm chunkymap.php
 fi
-wget https://github.com/expertmm/minetest-chunkymap/raw/master/web/chunkymap.php
+wget https://github.com/poikilos/minetest-chunkymap/raw/master/web/chunkymap.php
 sudo mv -f chunkymap.php $DEST_WWW_PATH/
 
 DEST_FULLNAME=$DEST_WWW_PATH/chunkymap.php

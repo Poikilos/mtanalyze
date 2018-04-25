@@ -13,7 +13,7 @@ cd "$CHUNKYMAP_DEST"
 if [ -f update-chunkymap-installer-only.sh ]; then
   rm update-chunkymap-installer-only.sh
 fi
-wget https://github.com/expertmm/minetest-chunkymap/raw/master/update-chunkymap-installer-only.sh
+wget https://github.com/poikilos/minetest-chunkymap/raw/master/update-chunkymap-installer-only.sh
 #sleep 1
 mv -f update-chunkymap-installer-only.sh $CHUNKYMAP_INSTALLER_DIR/
 #Wait to make sure nothing weirdly not finished downloading:

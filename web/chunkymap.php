@@ -313,7 +313,7 @@ function get_markers_from_dir($chunkymap_markers_path) {
 							$is_idle=false;
 							if (isset($marker_vars["utc_mtime"])) {
 								$last_player_update_time = strtotime($marker_vars["utc_mtime"]);
-								
+
 								if ($now_timestamp-$last_player_update_time > $player_file_age_expired_max_seconds) {
 									$is_expired=true;
 									//echo "expired<br/>"."\n";
@@ -355,7 +355,7 @@ function get_markers_from_dir($chunkymap_markers_path) {
 											echo_error("detected image $try_path\r\n");
 										}
 										else {
-											
+
 											$try_path = "$chunkymapdata_thisworld_path/players/".$marker_vars["index"].".png";
 											if (is_file($try_path)) {
 												$markers[$markers_count]["image"] = $try_path;
@@ -377,7 +377,7 @@ function get_markers_from_dir($chunkymap_markers_path) {
 								}
 								$markers_count+=1;
 							}
-							
+
 						}
 						else {
 							echo_error("Bad location in marker file '$file_path'");
@@ -408,7 +408,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 	global $world_name;
 	global $chunkymapdata_thisworld_path;
 	$is_ready = check_world();
-	
+
 	if ($html4_mode_enable!==true) {
 		echo '<noscript>
  For full functionality of this site it is necessary to enable JavaScript.
@@ -421,11 +421,11 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 		if (isset($world_name)) {
 			$chunks_per_tile_x_count = 10;
 			$chunks_per_tile_z_count = 10;
-			
+
 			//use decachunk jpgs by default for speed:
 			$tile_w = 160;
 			$tile_h = 160;
-			
+
 			if (isset($chunks_enable) and ($chunks_enable===true)) {
 				$tile_w = 16;
 				$tile_h = 16;
@@ -435,21 +435,21 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 			else {
 				$chunks_enable=false;
 			}
-			
+
 			$locations_per_tile_x_count = $chunks_per_tile_x_count*16;
 			$locations_per_tile_z_count = $chunks_per_tile_z_count*16;
-				
+
 			if ($zoom<$chunkymap_view_min_zoom) $zoom = $chunkymap_view_min_zoom;
 			if ($zoom>$chunkymap_view_max_zoom) $zoom = $chunkymap_view_max_zoom;
 
 			$EM_PER_WIDTH_COUNT = 800.0/12.0; //ultimately derived from 12pt font on 800x600 display--no really, this is right
-			
+
 			$camera_w = (800) * (1.0/$zoom); //screen should be 800pt wide always (so 12pt is similar on all screens and only varies with physical size of screen in inches, and since pt was invented to replace px)
 			$camera_left = $x-$camera_w/2.0;
-			
+
 			$camera_h = $camera_w; //start with square camera to make sure enough chunks are loaded and since neither screen height nor ratio can be known from php since it is only run on server-side
 			$camera_top = $z+$camera_h/2.0; //plus since cartesian until drawn [then flipped]
-			
+
 			$chunky_view_x = get_chunky_coord_from_location($x);
 			$chunky_view_z = get_chunky_coord_from_location($z);
 
@@ -458,16 +458,16 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 			$max_tiley_x = 0;
 			$min_tiley_z = -1;
 			$max_tiley_z = 0;
-			
+
 			$camera_right = $camera_left+$camera_w;
 			$camera_bottom = $camera_top-$camera_h; //minus since cartesian until drawn [then flipped]
-			
+
 			//Only whether the near edges are in the canvas matters (get bottom of max since always cartesian until drawn [then inverted]):
 			$min_tiley_x__chunk_location_right = $min_tiley_x*$locations_per_tile_x_count+$locations_per_tile_x_count;
 			$max_tiley_x__chunk_location_left = $max_tiley_x*$locations_per_tile_x_count;
 			$min_tiley_z__chunk_location_top = $min_tiley_z*$locations_per_tile_z_count;
 			$max_tiley_z__chunk_location_bottom = $max_tiley_z*$locations_per_tile_z_count+$locations_per_tile_z_count;
-			
+
 			while ($min_tiley_x__chunk_location_right>$camera_left) {
 				$min_tiley_x -= 1;
 				$min_tiley_x__chunk_location_right = $min_tiley_x*$locations_per_tile_x_count+$locations_per_tile_x_count;
@@ -484,12 +484,12 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 				$max_tiley_z += 1;
 				$max_tiley_z__chunk_location_bottom = $max_tiley_z*$locations_per_tile_z_count+$locations_per_tile_z_count;
 			}
-			
+
 			$tile_x_count = $max_tiley_x-$min_tiley_x+1;
-			$tile_z_count = $max_tiley_z-$min_tiley_z+1;	
+			$tile_z_count = $max_tiley_z-$min_tiley_z+1;
 			$si_yml_path = "$chunkymapdata_thisworld_path/singleimage.yml";
 			$si_metadata = null;
-			
+
 			$si_left = null;
 			$si_top = null;
 			$si_w = null;
@@ -524,7 +524,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					}
 				}
 			}
-			
+
 			$markers = get_markers_from_dir($chunkymapdata_thisworld_path."/markers");
 			$players = get_markers_from_dir($chunkymapdata_thisworld_path."/players");
 			$index = 0;
@@ -567,8 +567,8 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 				$index++;
 			}
 			//images are echoed further down
-			
-			
+
+
 			if ($html4_mode_enable!==true) {
 			//image-rendering: -moz-crisp-edges; image-rendering:-o-crisp-edges; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; -ms-interpolation-mode: nearest-neighbor;
 				echo '<canvas id="myCanvas"></canvas> ';
@@ -578,7 +578,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					var z='.$z.';
 					var zoom='.$zoom.';
 					//var default_player_img = document.getElementById("singleplayer_img");';
-					
+
 					$player_count = count($players);
 					echo '
 					//var player_count='.$player_count.';
@@ -616,7 +616,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						echo "\r\n";
 					}
 					echo '];'."\r\n";
-					
+
 					$marker_count = count($markers);
 					echo '
 					//var marker_count='.$marker_count.';
@@ -654,7 +654,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						echo "\r\n\r\n";
 					}
 					echo '];
-					
+
 					var chunkymap_view_max_zoom='.$chunkymap_view_max_zoom.';
 					var chunkymap_view_min_zoom='.$chunkymap_view_min_zoom.';
 					var chunkymap_zoom_delta='.$chunkymap_change_zoom_multiplier.';
@@ -713,7 +713,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					var dragging_prev_point = {x:-1, y:-1};
 					var zoomed_size_1pt_pixel_count = null;
 					var ctx = null;
-					
+
 					ctx = my_canvas.getContext("2d");
 					process_resize();
 					ctx.fillStyle = "black";
@@ -727,7 +727,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					powered_by_label.size_em = powered_by_label_size_em;
 					//powered_by_label.color_string = "rgb(12,132,245)"
 					powered_by_label.color_string = "rgb(192,192,192)"
-					
+
 					function zoom_in() {
 						zoom*=chunkymap_zoom_delta;
 						process_zoom_change();  //DOES call process_view_change
@@ -747,7 +747,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						//current_w = window.innerWidth;
 						//current_h = window.innerHeight;
 						current_ratio = current_w/current_h;
-						
+
 						if (ctx.canvas.height>ctx.canvas.width) {
 							size_1em_pixel_count = Math.round(ctx.canvas.height/EM_PER_WIDTH_COUNT);
 						}
@@ -791,10 +791,10 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						var zoom_out_img_disabled = null;
 						var tmp_zoom_out_ptr = zoom_out;
 						var tmp_zoom_in_ptr = zoom_in;
-						
+
 						if (zoom<chunkymap_view_min_zoom) {zoom = chunkymap_view_min_zoom;}
 						if (zoom>chunkymap_view_max_zoom) {zoom = chunkymap_view_max_zoom;}
-						
+
 						if (zoom==chunkymap_view_min_zoom) {
 							zoom_out_img = document.getElementById("zoom_out_disabled");
 							tmp_zoom_out_ptr = null;
@@ -812,7 +812,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						if (xy_label!=null) {
 							xy_label.text = Math.round(x)+","+Math.round(z);
 						}
-						
+
 						zoom_label_value=zoom*100;
 						if (zoom_label_value>1) {
 							zoom_label_value = Math.round(zoom_label_value, 1);
@@ -828,7 +828,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						if (label3!=null) {
 							//change_widget(label3, "size_1pt_pixel_count:"+size_1pt_pixel_count+"  zoomed_size_1pt_pixel_count:"+zoomed_size_1pt_pixel_count);
 						}
-						
+
 						if (zoom_in_button!=null) {
 							zoom_in_button.click_event=tmp_zoom_in_ptr;
 							zoom_in_button.image=zoom_in_img;
@@ -839,7 +839,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						}
 						process_view_change();
 					}
-					
+
 					function get_world_point_from_screen_point(screen_point) {
 						horz_ratio = screen_point.x/current_w;
 						vert_ratio = screen_point.y/current_h;
@@ -849,8 +849,8 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							z:camera_bottom+inverse_vert_ratio*camera_h
 						};
 					}
-					
-					function get_screen_point_from_world_coords(location_x, location_z) {					
+
+					function get_screen_point_from_world_coords(location_x, location_z) {
 						//var half_camera_w = camera_w/2.0;
 						//var half_camera_h = camera_h/2.0;
 						//subtract camera coords first (subtract both coords since location and camera are both cartesian)
@@ -861,7 +861,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							y:vert_ratio*current_h
 						};
 					}
-					
+
 					//size_em: size_width_keeping_aspect_this_many_em
 					function draw_markers(this_list, size_em, default_color_string) {
 						is_debug_shown = false;
@@ -872,7 +872,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							var pen_x = 0;
 							var pen_y = 0;
 							var w = size_em*size_1em_pixel_count;
-							
+
 							if (w<zoomed_size_1pt_pixel_count) {
 								w = zoomed_size_1pt_pixel_count;
 							}
@@ -887,7 +887,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 								pen_x += w/2;
 							}
 							else {
-								
+
 								var radius = w/4.0;
 								ctx.beginPath();
 								ctx.arc(screen_point.x, screen_point.y, radius, 0, 2 * Math.PI, false);
@@ -896,11 +896,11 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 								ctx.fill();
 								ctx.lineWidth = size_1pt_pixel_count;
 								ctx.strokeStyle = \'#003300\';
-								ctx.stroke();							
+								ctx.stroke();
 								pen_x += w;
 								pen_y += radius;
 							}
-							
+
 							if (this_marker.name!=null) {
 								if (!is_debug_shown) {
 									if ((this_marker.name!="singleplayer") || (i==(this_list.length-1)) ) {
@@ -925,12 +925,12 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							}
 						}
 					}
-					
+
 					var bw_count = 0;
 					var bawidgets = new Array();
 					var last_bawidget = null;
-					
-					
+
+
 					function create_bawidget(at_x, at_y, width, height, this_onclick, name) {
 						this_widget = Array();
 						this_widget.color_string = "rgb(255,255,255)";
@@ -946,7 +946,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						this_widget.text = null;
 						return this_widget;
 					}
-					
+
 					function add_bawidget(at_x, at_y, width, height, this_onclick, name) {
 						this_widget = create_bawidget(at_x, at_y, width, height, this_onclick, name);
 						bawidgets[bw_count] = this_widget;
@@ -965,16 +965,16 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							}
 						}
 					}
-					
-					
-					
-					
+
+
+
+
 					function draw_map() {
-						
+
 						var r = 0; //border
 						var g = 0; //exists
 						var b = 0; //
-						
+
 						var alert_string="";
 						if (current_ratio==null) {
 							alert_string+="current_ratio is null; ";
@@ -994,28 +994,28 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						if (alert_string.length>0) {
 							alert(alert_string);
 						}
-						
-						
+
+
 						process_resize();
-						
+
 						ctx.fillStyle = "black";
 						ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
-						
+
 						//ctx.fillStyle = "white";
 						//ctx.rect(20,20,150,100);
-						//ctx.stroke(); 
-						
+						//ctx.stroke();
+
 						//size_1pt_pixel_count = ctx.canvas.height/600.0;
 						var bw_index = 0;
-						
+
 						var si = document.getElementById("singleimage");
 						if ((si!==null)&&(si_left!==null)&&(si_top!==null)&&(si_w!==null)&&(si_h!==null)) {
-							
+
 							si_canvas_topleft = get_screen_point_from_world_coords(si_left, si_top);
 							si_canvas_bottomright = get_screen_point_from_world_coords(si_right, si_bottom);
 							si_canvas_w = si_canvas_bottomright.x - si_canvas_topleft.x;
 							si_canvas_h = si_canvas_bottomright.y - si_canvas_topleft.y;
-							
+
 							ctx.drawImage(si, si_canvas_topleft.x, si_canvas_topleft.y, si_canvas_w, si_canvas_h);
 							//label5.text = "--map "+si_canvas_topleft.x+":"+si_canvas_bottomright.x+","+si_canvas_topleft.y+":"+si_canvas_bottomright.y+" "+si_canvas_w+"x"+si_canvas_h+" --camera "+camera_left+":"+camera_right+","+camera_bottom+":"+camera_top;
 							//label5.text = "map world bounds: "+si_left+":"+si_right+","+si_bottom+":"+si_top;
@@ -1030,7 +1030,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						}
 						draw_widget(powered_by_label);
 					}//end draw map
-					
+
 					function change_widget(this_widget, new_text) {
 						//draw_widget_recolored(this_widget, "rgb(64,64,64)");
 						ctx.fillStyle="rgb(0,0,0)";
@@ -1041,13 +1041,13 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						this_widget.text = new_text;
 						draw_widget_recolored(this_widget, this_widget.color_string);
 					}
-					
+
 					function draw_widget(this_widget) {
 						draw_widget_recolored(this_widget, this_widget.color_string);
 					}
-					
-					
-					
+
+
+
 					function draw_widget_recolored(this_widget, color_string) {
 						if (this_widget.visible) {
 							if (this_widget.text != null) {
@@ -1061,7 +1061,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							}
 						}
 					}
-					
+
 					function do_end_drag() {
 						dragging_prev_point.x=-1;
 						dragging_prev_point.y=-1;
@@ -1071,8 +1071,8 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						// mouse_point.x = parseInt(e.clientX-my_canvas.offsetLeft);
 						// mouse_point.y = parseInt(e.clientY-my_canvas.offsetTop);
 						// mouse_point = get_relative_mouse_point(e);
-						
-						
+
+
 						// world_point = get_world_point_from_screen_point(mouse_point);
 						// if (is_mouse_down) {
 							// label0.text = mouse_point.x+","+mouse_point.y+" mousemove ";
@@ -1114,7 +1114,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						//label0.text="mouse left window";
 						draw_map();
 					}
-					
+
 					//function getMousePos(canvas, e) {
 					//	var rect = canvas.getBoundingClientRect();
 					//	return {
@@ -1122,10 +1122,10 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					//			y: e.clientY - rect.top
 					//			};
 					//}
-					
+
 					function get_relative_mouse_point(e) {
 						//formerly get_mouse_point
-						
+
 						var xOffset=Math.max(document.documentElement.scrollLeft,document.body.scrollLeft);
 						var yOffset=Math.max(document.documentElement.scrollTop,document.body.scrollTop);
 						return {
@@ -1137,7 +1137,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						//y:parseInt(e.clientY+yOffset)
 						//};
 					}
-					
+
 					window.onload = function() {
 						//my_canvas = document.getElementById("myCanvas");
 						//my_canvas.onclick = function(event) {
@@ -1145,7 +1145,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						//		click_if_contains(bawidgets[i], event.clientX, event.clientY);
 						//	}
 						//};
-						
+
 						//my_canvas.addEventListener("mousemove", handle_mousemove, false);
 						my_canvas.addEventListener("mousedown", handle_mousedown, false);
 						my_canvas.addEventListener("mouseup", handle_mouseup, false);
@@ -1158,8 +1158,8 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 							mouse_point = get_relative_mouse_point(e);
 							//var this_text = "on your screen: "+mouse_point.x+","+mouse_point.y+" mousemove";
 							//change_widget(label4, this_text);
-							
-							
+
+
 							world_point = get_world_point_from_screen_point(mouse_point);
 							if (is_mouse_down) {
 								if (dragging_prev_point.x>-1 && dragging_prev_point.y>-1) {
@@ -1208,24 +1208,24 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						//my_canvas.mouseout = function(event) {
 						//	handle_mouseout(event);
 						//};
-							
+
 						//ctx = my_canvas.getContext("2d");
 						process_resize();
-						
+
 						var pen_x = size_1em_pixel_count;
 						var pen_y = size_1em_pixel_count;
 						var tmp_w = null;
 						var tmp_h = null;
 						var compass_rose_w = size_1em_pixel_count*5;
-						
+
 						//LOCATION LABEL (no click):
 						bw_index = add_bawidget(pen_x+compass_rose_w/4, pen_y, tmp_w, tmp_h, null, "xy_label");
 						xy_label = last_bawidget;
 						xy_label.visible = false;
-						//done on each draw: last_bawidget.text = 
-						
+						//done on each draw: last_bawidget.text =
+
 						pen_y += size_1em_pixel_count + padding_h;
-						
+
 						//COMPASS ROSE (no click):
 						var compass_rose_img = document.getElementById("compass_rose");
 						var this_h_ratio = compass_rose_img.height/compass_rose_img.width;
@@ -1235,7 +1235,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						last_bawidget.image = compass_rose_img;
 						compass_rose_img.style.visibility="hidden";
 						pen_y += last_bawidget.height+padding_h;
-						
+
 						//ZOOM LABEL (no click):
 						bw_index = add_bawidget(pen_x+compass_rose_w/5, pen_y, tmp_w, tmp_h, null, "zoom_label");
 						zoom_label = last_bawidget;
@@ -1255,7 +1255,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						document.getElementById("zoom_in_disabled").style.visibility="hidden";
 						//pen_y += tmp_h+padding_h;
 						pen_x += tmp_w;
-						
+
 						//ZOOM OUT
 						var zoom_out_img = document.getElementById("zoom_out");
 						this_h_ratio = zoom_out_img.height/zoom_out_img.width;
@@ -1268,44 +1268,44 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						zoom_out_img.style.visibility="hidden";
 						document.getElementById("zoom_out_disabled").style.visibility="hidden";
 						pen_y += tmp_h+size_1em_pixel_count+padding_h;
-						pen_x -= tmp_w;			
+						pen_x -= tmp_w;
 
 						//label0 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label0");
 						label0 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
 
 						//label1 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label1");
 						label1 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
 
 						//label2 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label2");
 						label2 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
 
 						//label3 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label3");
 						label3 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
 
 						//label4 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label4");
 						label4 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
 
 						//label5 (no click):
 						bw_index = add_bawidget(pen_x, pen_y, tmp_w, tmp_h, null, "label5");
 						label5 = last_bawidget;
-						//done on each draw: last_bawidget.text = 
+						//done on each draw: last_bawidget.text =
 						pen_y += size_1em_pixel_count + padding_h;
-						
+
 						chunkymap_table = document.getElementById("chunkymap_table");
 						if (chunkymap_table!=null) {
 							chunkymap_table.style.visibility="hidden";
@@ -1314,7 +1314,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						if (singleimage_table!=null) {
 							singleimage_table.style.visibility="hidden";
 						}
-						
+
 						process_zoom_change();
 						draw_map();
 					}
@@ -1330,8 +1330,8 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 			else {
 				$td_tile_placeholder_content = $td_decachunk_placeholder_content;
 			}
-			
-			
+
+
 			$si_path = "$chunkymapdata_thisworld_path/singleimage.jpg";
 			$si_yml_path = "$chunkymapdata_thisworld_path/singleimage.yml";
 			if (is_file($si_path) and is_file($si_yml_path)) {
@@ -1350,7 +1350,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 				while ($index<$players_count) {
 					$this_player = $players[$index];
 					$public_index = $this_player["index"];
-					// z-index:999; 
+					// z-index:999;
 					$zoomed_head_w="1%";
 					$img_style="";
 					$img_border_style="border: 1px solid white;";
@@ -1393,10 +1393,10 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						$img_style.="opacity: 0.4; filter: alpha(opacity=40);";  //filter is for IE8 and below
 						$text_style="color:white; opacity: 0.4; filter: alpha(opacity=40);";   //filter is for IE8 and below
 					}
-					
+
 					$rel_x = "50%"; //TODO: NOT YET IMPLEMENTED (determine from actual location)
 					$rel_z = "50%"; //TODO: NOT YET IMPLEMENTED (determine from actual location)
-					
+
 					echo "    <div style=\"position:absolute; left:$rel_x; top:$rel_z; width: $zoomed_head_w; $img_border_style\">\r\n";
 					if ($img_enable===true) {
 						$id_string = "";
@@ -1408,14 +1408,14 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					echo "      <span style=\"$text_style\">$text</span></div>\r\n";
 					$index++;
 				}//end for player
-				
+
 				$markers_count = count($markers);
 				$index=0;
 				echo "\r\n";
 				while ($index<$markers_count) {
 					$this_marker = $markers[$index];
 					$public_index = $this_marker["index"];
-					// z-index:999; 
+					// z-index:999;
 					$zoomed_head_w="2%";
 					$img_style="";
 					$img_border_style="border: 1px solid white;";
@@ -1446,10 +1446,10 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 						$img_style.="opacity: 0.4; filter: alpha(opacity=40);";  //filter is for IE8 and below
 						$text_style="color:white; opacity: 0.4; filter: alpha(opacity=40);";   //filter is for IE8 and below
 					}
-					
+
 					$rel_x = "50%"; //TODO: NOT YET IMPLEMENTED (determine from actual location)
 					$rel_z = "50%"; //TODO: NOT YET IMPLEMENTED (determine from actual location)
-					
+
 					echo "    <div style=\"position:absolute; left:$rel_x; top:$rel_z; width: $zoomed_head_w; $img_border_style\">\r\n";
 					if ($img_enable===true) {
 						echo "      <img id=\"$img_id\" src=\"$img_src\" style=\"$img_style\"/>\r\n";
@@ -1464,7 +1464,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 			else {
 				echo '<--no '."$si_path".'-->'+"\r\n";
 			}
-			
+
 			//echo "<img id=\"singleplayer_img\" src=\"$chunkymapdata_thisworld_path/players/singleplayer.png\" style=\"visibility:hidden\"/>";
 			echo '<img id="compass_rose" src="chunkymapdata/images/compass_rose.png"/>';
 			echo '<img id="zoom_in" src="chunkymapdata/images/zoom_in.png"/>';
@@ -1489,7 +1489,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 					$cell_perc=intval(round(100.0/$tile_x_count));
 					echo '  <tr>'."\r\n";
 					echo "    <td style=\"width:5%\"><a href=\"?world_name=$world_name&zoom=$zoom&x=".($x-($camera_w*$chunkymap_camera_pan_delta))."&z=$z#chunkymap_top\">".'<img src="chunkymapdata/images/arrow_wide_left.png" style="width:90%"/>'.'</a></td>'."\r\n";
-					echo '    <td style="width:95%">'."\r\n";		
+					echo '    <td style="width:95%">'."\r\n";
 					echo '      <table id="chunk_table" cellpadding="0" cellspacing="0" style="width:100%">'."\r\n";
 					while ($this_tiley_z>=$min_tiley_z) {
 						$this_tiley_x=$min_tiley_x;
@@ -1536,7 +1536,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 				}
 			}
 			if ($html4_mode_enable===true) {
-				echo '<center><small>Powered by <a href="https://github.com/expertmm/minetest-chunkymap">Chunkymap</a></small></center>';
+				echo '<center><small>Powered by <a href="https://github.com/poikilos/minetest-chunkymap">Chunkymap</a></small></center>';
 			}
 		}
 		else { //not isset($world_name)
@@ -1572,7 +1572,7 @@ function echo_chunkymap_canvas($show_player_names_enable, $decachunks_enable, $c
 	else {
 		//error already shown by check_world()
 	}
-	
+
 	//TODO: $zoom SHOULD BE interpreted so each block (pixel) is 1pt: 1066x600 pt canvas would have 66+2/3 blocks horizontally, is 37.5 blocks vertically
 	//so, at zoom 1.0 canvas should show 60 chunks across (6 decachunks across)
 }//end echo_chunkymap_canvas
@@ -1589,7 +1589,7 @@ function check_world($show_world_name_enable = false) {
 	$non_world_world_name = null;
 	$last_world_name = null;
 	$is_ready = false;
-	
+
 	if (!isset($world_name)) {
 		if (is_dir($chunkymapdata_worlds_path)) {
 			if ($handle = opendir($chunkymapdata_worlds_path)) {
@@ -1635,7 +1635,7 @@ function check_world($show_world_name_enable = false) {
 			}
 		}
 		if ($world_count==1) {
-			
+
 			$world_name = $last_world_name;
 		}
 		//elseif ($non_world_world_count==1) { //assumes you want the one not called world (not a great assumption)

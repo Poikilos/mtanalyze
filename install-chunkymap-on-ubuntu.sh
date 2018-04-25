@@ -58,7 +58,7 @@ rm "$CHUNKYMAP_DEST/install-chunkymap-on-windows.py"
 #if [ ! -d "$CHUNKYMAP_DEST/chunkymap" ]; then
 #  mkdir "$CHUNKYMAP_DEST/chunkymap"
 #fi
-#cp -f "$CHUNKYMAP_INSTALLER_PATH/minetestmapper-expertmm.py" "$CHUNKYMAP_DEST/"
+#cp -f "$CHUNKYMAP_INSTALLER_PATH/minetestmapper-poikilos.py" "$CHUNKYMAP_DEST/"
 #cp --no-clobber $CHUNKYMAP_INSTALLER_PATH/signals* "$CHUNKYMAP_DEST/"
 #cd "$CHUNKYMAP_INSTALLER_PATH"
 cd $CHUNKYMAP_DEST

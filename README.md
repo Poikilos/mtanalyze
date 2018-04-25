@@ -134,7 +134,7 @@ chmod +x set-minutely-crontab-job.sh && ./set-minutely-crontab-job.sh
 
 
 ## Requirements:
-* A minetest version compatible with minetestmapper-numpy.py Made by Jogge, modified by celeron55, new LevelDB features fixed by expertmm
+* A minetest version compatible with minetestmapper-numpy.py Made by Jogge, modified by celeron55, new LevelDB features fixed by poikilos
 * Python 2.7 (any 2.7.x)
 * Other requirements for Windows are below; Requirements for GNU/Linux are anything installed by install-chunkymap-on-ubuntu.sh (for other distros, modify it and send me a copy as a GitHub issue as described below in the Installation section)
 
@@ -149,19 +149,19 @@ chmod +x set-minutely-crontab-job.sh && ./set-minutely-crontab-job.sh
     if [ -f rename-deprecated.sh ]; then
       rm rename-deprecated.sh
     fi
-    wget https://github.com/expertmm/minetest-chunkymap/raw/master/rename-deprecated.sh
+    wget https://github.com/poikilos/minetest-chunkymap/raw/master/rename-deprecated.sh
     sudo sh rename-deprecated.sh
 
     if [ -f install-chunkymap-on-ubuntu-from-web.sh ]; then
       rm install-chunkymap-on-ubuntu-from-web.sh
     fi
-    wget https://github.com/expertmm/minetest-chunkymap/raw/master/install-chunkymap-on-ubuntu-from-web.sh
+    wget https://github.com/poikilos/minetest-chunkymap/raw/master/install-chunkymap-on-ubuntu-from-web.sh
     chmod +x install-chunkymap-on-ubuntu-from-web.sh
     ./install-chunkymap-on-ubuntu-from-web.sh
 
     #or later run:
     #rm update-chunkymap-on-ubuntu-from-web.sh
-    #wget https://github.com/expertmm/minetest-chunkymap/raw/master/update-chunkymap-on-ubuntu-from-web.sh
+    #wget https://github.com/poikilos/minetest-chunkymap/raw/master/update-chunkymap-on-ubuntu-from-web.sh
     #chmod +x update-chunkymap-on-ubuntu-from-web.sh
     #./update-chunkymap-on-ubuntu-from-web.sh
 

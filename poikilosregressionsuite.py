@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# script for testing other expertmm modules
+# script for testing other poikilos modules
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ module_list.append("keyword")
 module_list.append("inspect")
 module_list.append("traceback")
 
-from expertmm import *
+from poikilos import *
 
 ### THE FUNCTIONS ARE USED ON minetest-chunkymap AT THE BOTTOM OF THIS SCRIPT ###
 
@@ -53,7 +53,7 @@ from expertmm import *
 # * check for methods missing 'self' as first argument name
 # PHP:
 # * using '+' next to doublequote or singlequote in php, adjacent or seperated only by whitespace (probably meant concatenate operator '.')
-# * using empty function (problematic since empty($value) evaluates to true when $value is zero -- empty_really in expertmm can be used instead)
+# * using empty function (problematic since empty($value) evaluates to true when $value is zero -- empty_really in poikilos can be used instead)
 # SHELL SCRIPT:
 # * don't use '*' inside quotes (fails)
 # * using HOME without preceding dollar sign
@@ -448,7 +448,7 @@ def check_coord_mismatch(file_path):
                                 import_string = "import "+module_string
                                 #exec exec_string
                                 try_enable = False
-                                outs = open('expertmmregressiontmp.py','w')
+                                outs = open('poikilosregressiontmp.py','w')
                                 outs.write("def get_module_contents():"+"\n")
                                 outs_indent = "    "
                                 outs.write(outs_indent+"results = None"+"\n")
@@ -473,11 +473,11 @@ def check_coord_mismatch(file_path):
                                 outs.write("\n")
                                 outs.close()
                                 if is_imported:
-                                    reload(expertmmregressiontmp)
+                                    reload(poikilosregressiontmp)
                                 else:
-                                    import expertmmregressiontmp
-                                tmp_list = expertmmregressiontmp.get_module_contents()
-                                os.remove("expertmmregressiontmp.py")
+                                    import poikilosregressiontmp
+                                tmp_list = poikilosregressiontmp.get_module_contents()
+                                os.remove("poikilosregressiontmp.py")
                                 new_list = None
                                 if tmp_list is not None:
                                     new_list = list()
@@ -491,7 +491,7 @@ def check_coord_mismatch(file_path):
                                         dup_ignore_list = function_names+independent_list+module_list
                                 else:
                                     print("unable to import module named '"+module_string+"', so some routines may not be successfully ignored:")
-                                del expertmmregressiontmp
+                                del poikilosregressiontmp
                             except:
                                 print("Could not finish importing module named '"+module_string+"', so some routines may not be successfully ignored:")
                                 view_traceback()

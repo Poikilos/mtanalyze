@@ -183,7 +183,7 @@ if python_folder_name.lower()[:7]!="python3":
                     downloaded_chunkymap_name="chunkymap.zip"
                     downloaded_chunkymap_path=os.path.join(downloads_path,downloaded_chunkymap_name)
                     run_py_path="generator.py"
-                    remote_chunkymap_path="https://github.com/expertmm/minetest-chunkymap/archive/master.zip"
+                    remote_chunkymap_path="https://github.com/poikilos/minetest-chunkymap/archive/master.zip"
                     if not os.path.isfile(run_py_path):
                         if not os.path.isfile(downloaded_chunkymap_path):
                             web_get(remote_chunkymap_path,downloaded_chunkymap_path)
