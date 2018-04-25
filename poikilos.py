@@ -40,7 +40,7 @@ digit_chars = "0123456789"
 # identifier_chars = letter_chars+"_"+digit_chars
 # identifier_and_dot_chars = identifier_chars + "."
 
-# formerly from expertmmregressionsuite:
+# formerly from poikilosregressionsuite:
 alpha_upper_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 alpha_lower_chars = alpha_upper_chars.lower()
 alpha_chars = alpha_upper_chars+alpha_lower_chars
@@ -703,7 +703,7 @@ def find_dup(this_list, discard_whitespace_ignore_None_enable=True,
             if result>-1:
                 break
     else:
-        print("[ expertmm.py ] ERROR in has_dups: " + str(this_list)
+        print("[ poikilos.py ] ERROR in has_dups: " + str(this_list)
               + " is not a list")
     return result
 
