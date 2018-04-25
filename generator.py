@@ -212,22 +212,26 @@ class MTChunks:
         else:
             print("WARNING: Database backend cannot be detected (unable to ensure image generator script will render map)")
 
-        #region the following is also in singleimage.py
-        self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
-        self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        #region same as singleimage.py
+        #self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
+        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        git_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        print("MAPPERS search path (clone minetestmapper-python folder in here): " + git_path)
+        self.minetestmapper_numpy_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper-numpy.py")
+        self.minetestmapper_custom_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper.py")
         self.minetestmapper_py_path = self.minetestmapper_numpy_path
         #if (self.backend_string!="sqlite3"):
             # minetestmapper-numpy had trouble with leveldb but this fork has it fixed so use numpy always always instead of running the following line
             #self.minetestmapper_py_path = self.minetestmapper_custom_path
         print("Chose image generator script: "+self.minetestmapper_py_path)
         if not os.path.isfile(self.minetestmapper_py_path):
-            print("ERROR: script does not exist, so exiting "+__file__+".")
-            sys.exit(2)
+            print("WARNING: script does not exist, so "+__file__+" cannot generate maps.")
+            #sys.exit(2)
         self.colors_path = os.path.join(os.path.dirname(os.path.abspath(self.minetestmapper_py_path)), "colors.txt")
         if not os.path.isfile(self.colors_path):
-            print("ERROR: missing '"+self.colors_path+"', so exiting "+__file__+".")
-            sys.exit(2)
-        #endregion the following is also in singleimage.py
+            print("WARNING: missing '"+self.colors_path+"', so "+__file__+" may not generate maps properly.")
+            #sys.exit(2)
+        #endregion same as singleimage.py
 
 
         self.chunkymap_data_path=os.path.join(minetestinfo.get_var("www_minetest_path"),"chunkymapdata")
@@ -889,10 +893,16 @@ class MTChunks:
         cmd_suffix = " 1> \""+genresult_path+"\""
         cmd_suffix += " 2> \""+gen_error_path+"\""
         #self.mapper_id = "minetestmapper-region"
-        cmd_no_out_string = python_exe_path + " \""+self.minetestmapper_py_path + "\" --region " + str(min_x) + " " + str(max_x) + " " + str(min_z) + " " + str(max_z) + " --maxheight "+str(self.mapvars["maxheight"])+" --minheight "+str(self.mapvars["minheight"])+" --pixelspernode "+str(self.mapvars["pixelspernode"])+" \""+minetestinfo.get_var("primary_world_path")+"\" \""+tmp_png_path+"\""
+        bin_string = python_exe_path + " \"" + self.minetestmapper_py_path + "\""
+        geometry_enable = False
+        if not os.path.isfile(self.minetestmapper_py_path):
+            bin_string = "minetestmapper"
+            geometry_enable = True
+        cmd_no_out_string = bin_string + " --region " + str(min_x) + " " + str(max_x) + " " + str(min_z) + " " + str(max_z) + " --maxheight "+str(self.mapvars["maxheight"])+" --minheight "+str(self.mapvars["minheight"])+" --pixelspernode "+str(self.mapvars["pixelspernode"])+" \""+minetestinfo.get_var("primary_world_path")+"\" \""+tmp_png_path+"\""
         cmd_string = cmd_no_out_string + cmd_suffix
-
-        if self.minetestmapper_py_path==self.minetestmapper_custom_path:#if self.backend_string!="sqlite3": #if self.mapper_id=="minetestmapper-region":
+        if self.minetestmapper_py_path==self.minetestmapper_custom_path: #if self.backend_string!="sqlite3": #if self.mapper_id=="minetestmapper-region":
+            geometry_enable = True
+        if geometry_enable:
             #  Since minetestmapper-numpy has trouble with leveldb:
             #    such as sudo minetest-mapper --input "/home/owner/.minetest/worlds/FCAGameAWorld" --geometry -32:-32+64+64 --output /var/www/html/minetest/try1.png
             #    where geometry option is like --geometry x:y+w+h
@@ -918,7 +928,7 @@ class MTChunks:
             #if "numpy" in self.minetestmapper_py_path:
             #    io_string = " \""+world_path+"\" \""+tmp_png_path+"\""
             #    geometry_param = " --region " + str(min_x) + " " + str(max_x) + " " + str(min_z) + " " + str(max_z)
-            cmd_no_out_string = python_exe_path+" "+self.minetestmapper_py_path+" --bgcolor '"+FLAG_EMPTY_HEXCOLOR+"'"+geometry_param+io_string
+            cmd_no_out_string = bin_string + " --bgcolor '" + FLAG_EMPTY_HEXCOLOR + "'" + geometry_param + io_string
             cmd_string = cmd_no_out_string + cmd_suffix
             #sudo python /home/owner/minetest/util/minetestmapper.py --bgcolor '#010000' --input "/home/owner/.minetest/worlds/FCAGameAWorld" --output /var/www/html/minetest/chunkymapdata/entire.png > entire-mtmresult.txt
             #sudo python /home/owner/minetest/util/chunkymap/minetestmapper.py --input "/home/owner/.minetest/worlds/FCAGameAWorld" --geometry 0:0+16+16 --output /var/www/html/minetest/chunkymapdata/chunk_x0z0.png > /home/owner/minetest/util/chunkymap-genresults/chunk_x0z0_mapper_result.txt

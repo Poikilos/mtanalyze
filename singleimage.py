@@ -61,9 +61,13 @@ class ChunkymapOfflineRenderer:
 
         self.backend_string = get_world_var("backend")
 
-        #region the following is also in singleimage.py
-        self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
-        self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        #region same as generator.py
+        #self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
+        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-expertmm.py")
+        git_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        print("MAPPERS search path (clone minetestmapper-python folder in here): " + git_path)
+        self.minetestmapper_numpy_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper-numpy.py")
+        self.minetestmapper_custom_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper.py")
         self.minetestmapper_py_path = self.minetestmapper_numpy_path
         self.mtm_bin_dir_path = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)),".."),"minetestmapper")
         self.minetestmapper_bin_path = os.path.join(self.mtm_bin_dir_path,"minetestmapper")
@@ -99,19 +103,19 @@ class ChunkymapOfflineRenderer:
             # self.minetestmapper_py_path = self.minetestmapper_custom_path
         print("Chose image generator script: " + self.minetestmapper_py_path)
         if not os.path.isfile(self.minetestmapper_py_path):
-            print("ERROR: script does not exist, so exiting "+__file__+".")
-            sys.exit(2)
+            print("WARNING: minetestmapper script does not exist, so "+__file__+" cannot generate maps.")
+            #sys.exit(2)
         self.colors_path = os.path.join(os.path.dirname(os.path.abspath(self.minetestmapper_py_path)), "colors.txt")
         if not os.path.isfile(self.colors_path):
-            print("ERROR: missing '"+self.colors_path+"', so exiting "+__file__+".")
-            sys.exit(2)
+            print("WARNING: missing '"+self.colors_path+"', so "+__file__+" cannot generate maps.")
+            #sys.exit(2)
         self.world_path = minetestinfo.get_var("primary_world_path")
         if not os.path.isdir(self.world_path):
             print("ERROR: missing world '"+self.world_path+"', so exiting "+__file__+".")
             sys.exit(2)
         else:
             self.world_name = os.path.basename(self.world_path)
-        #endregion the following is also in singleimage.py
+        #endregion same as generator.py
 
     def RenderSingleImage(self):
         dest_colors_path = os.path.join(self.mtm_bin_dir_path,"colors.txt")
