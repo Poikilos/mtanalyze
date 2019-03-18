@@ -1,3 +1,5 @@
+echo "Already done."
+exit 0
 #source code for mtanalyze (formerly minetest-chunkymap) project has been merged with [EnlivenMinetest](http://www.github.com/poikilos/EnlivenMinetest) and is maintained there.
 
 #git mtanalyze add --prefix=mtanalyze git://github.com/poikilos/mtanalyze.git master
