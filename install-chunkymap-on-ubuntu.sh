@@ -2,10 +2,11 @@
 cd $HOME
 MT_MY_WEBSITE_PATH=/var/www/html/minetest
 CHUNKYMAP_INSTALLER_PATH=$HOME/git/EnlivenMinetest/mtanalyze
-if [ ! -d "$HOME/Downloads/minetest-chunkymap" ]; then
+if [ ! -d "$CHUNKYMAP_INSTALLER_PATH" ]; then
   echo "please run install-chunkymap-on-ubuntu-from-web.sh or update-chunkymap-installer-only.sh first.";
-else
-#else run everything from here down
+  exit 1
+fi
+
 echo "running installer"
 
 #MINETEST_UTIL=$HOME/minetest/util
@@ -13,7 +14,7 @@ echo "running installer"
 CHUNKYMAP_DEST=$HOME/chunkymap
 
 
-#cd $HOME/Downloads
+#cd $HOME/git/EnlivenMinetest/mtanalyze
 #rm -f $HOME/minetestmapper-numpy.py
 #wget https://github.com/spillz/minetest/raw/master/util/minetestmapper-numpy.py
 #cp -f "$CHUNKYMAP_INSTALLER_PATH/minetestmapper-numpy.py" "$HOME/minetest/util/minetestmapper-numpy.py"
@@ -108,6 +109,4 @@ echo sh chunkymap/chunkymap-generator.sh
 echo
 # NOTE: colors.txt is generated now, so shouldn't be in $CHUNKYMAP_DEST until first run (first time minetestinfo.py is included by one of the other py files)
 
-
-fi
 
