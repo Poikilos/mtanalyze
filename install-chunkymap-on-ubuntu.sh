@@ -118,9 +118,9 @@ fi
 echo ""
 if [ -f $MT_MY_WEBSITE_PATH/chunkymap.php ]; then
     echo "Updating existing $MT_MY_WEBSITE_PATH from $CHUNKYMAP_DEST/web..."
-    cp -f $CHUNKYMAP_DEST/chunkymap.php $MT_MY_WEBSITE_PATH/
-    cp -f $CHUNKYMAP_DEST/viewchunkymap.php $MT_MY_WEBSITE_PATH/
-    cp -f $CHUNKYMAP_DEST/browser.php $MT_MY_WEBSITE_PATH/
+    cp -f $CHUNKYMAP_DEST/web/chunkymap.php $MT_MY_WEBSITE_PATH/
+    cp -f $CHUNKYMAP_DEST/web/viewchunkymap.php $MT_MY_WEBSITE_PATH/
+    cp -f $CHUNKYMAP_DEST/web/browser.php $MT_MY_WEBSITE_PATH/
 else
     echo "To see what needs to be in your website directory (first run minetestinfo.py, generator.py, or singleimage.py to confirms your website directory for automated copying from web folder below):"
     echo "cd $CHUNKYMAP_DEST/web"
