@@ -9,6 +9,8 @@ fi
 
 echo "running installer"
 
+
+
 #MINETEST_UTIL=$HOME/minetest/util
 #CHUNKYMAP_DEST=$MINETEST_UTIL
 CHUNKYMAP_DEST=$HOME/chunkymap
@@ -114,8 +116,15 @@ fi
 # /usr/lib/python3.7/site-packages
 # locate site-packages | grep -v flask | grep -v kivy | grep -v trashbin | grep -v ninja | grep -v Meld | grep -v Blender | grep -v GIMP | grep -v Kivy | grep -v Brainwy | grep -v blender | grep -v inkscape | grep -v cygwin | grep -v LibreOffice | grep -v jython | grep -v pythonforandroid | grep -v tank
 echo ""
-echo "To see what needs to be in your website directory (first run minetestinfo.py, generator.py, or singleimage.py to confirms your website directory for automated copying from web folder below):"
-echo "cd $CHUNKYMAP_DEST/web"
+if [ -f $MT_MY_WEBSITE_PATH/chunkymap.php ]; then
+    echo "Updating existing $MT_MY_WEBSITE_PATH from $CHUNKYMAP_DEST/web..."
+    cp -f $MT_MY_WEBSITE_PATH/chunkymap.php $MT_MY_WEBSITE_PATH/
+    cp -f $MT_MY_WEBSITE_PATH/viewchunkymap.php $MT_MY_WEBSITE_PATH/
+    cp -f $MT_MY_WEBSITE_PATH/browser.php $MT_MY_WEBSITE_PATH/
+else
+    echo "To see what needs to be in your website directory (first run minetestinfo.py, generator.py, or singleimage.py to confirms your website directory for automated copying from web folder below):"
+    echo "cd $CHUNKYMAP_DEST/web"
+fi
 echo ""
 echo "To view helpful scripts:"
 echo "cd $CHUNKYMAP_DEST"
@@ -124,7 +133,7 @@ echo "To learn more about chunkymap:"
 echo "nano $CHUNKYMAP_DEST/README.md"
 echo
 echo "To start now assuming configuration matches yours (nano $CHUNKYMAP_DEST/README.md before this):"
-echo sh chunkymap/chunkymap-generator.sh
+echo bash $CHUNKYMAP_DEST/chunkymap-generator.sh
 echo
 # NOTE: colors.txt is generated now, so shouldn't be in $CHUNKYMAP_DEST until first run (first time minetestinfo.py is included by one of the other py files)
 
