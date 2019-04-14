@@ -4,6 +4,10 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <title>Chunkymap</title>
 <?php
+ini_set('display_startup_errors', 1);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 $html4_mode_enable=false; //if true, does not echo canvas nor client-side scripting
 if ($html4_mode_enable===true) {
 echo '<meta http-equiv="refresh" content="45">';

@@ -1,6 +1,6 @@
 <?php
-ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('display_errors', 1);
 error_reporting(E_ALL);
 if (($_SERVER['PHP_SELF'] == "chunkymap.php") or endsWith($_SERVER['PHP_SELF'],"/chunkymap.php")) {
 	echo "<html><body style=\"font-family:calibri,arial,helvetica,sans\">This is the backend--don't call it directly. instead do include_once('chunkymap.php'); To use the map, go to <a href=\"viewchunkymap.php\">viewchunkymap.php</a> instead.</body></html>";
