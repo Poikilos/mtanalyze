@@ -13,6 +13,7 @@ filenames.append("chunkymap-generator.sh")
 
 home_path = expanduser("~")
 home_minetest_chunkymap_path = os.path.join(home_path,"chunkymap")
+print("Using chunkymap path '" + home_minetest_chunkymap_path + "'")
 #home_minetest_chunkymap_unused_path = os.path.join(home_minetest_chunkymap_path, "unused")
 #for dirname, dirnames, filenames in os.walk(home_minetest_chunkymap_path):
 if "\\" not in home_minetest_chunkymap_path:

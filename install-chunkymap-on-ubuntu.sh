@@ -28,7 +28,7 @@ fi
 
 # asterisk CANNOT be in quotes
 cp -Rf $CHUNKYMAP_INSTALLER_PATH/* "$CHUNKYMAP_DEST/"
-rm -Rf "$CHUNKYMAP_INSTALLER_PATH"
+# rm -Rf "$CHUNKYMAP_INSTALLER_PATH"
 rm $CHUNKYMAP_DEST/*.bat
 rm "$CHUNKYMAP_DEST/install-chunkymap-on-windows.py"
 
