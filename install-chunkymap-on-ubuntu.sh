@@ -93,7 +93,26 @@ cp -f "$HOME/chunkymap/update-chunkymap-on-ubuntu-from-web.sh" "$HOME/"
 #rm "$HOME/mapper-refresh-minetestserver.bat"
 #rm "$HOME/mapper-refresh-minetestserver"
 
-sudo apt-get install python-numpy python-pil python-leveldb
+py2=/usr/lib/python2.7
+if [ -z "`ls $py2/dist-packages | grep numpy`" ]; then
+    sudo apt install python-numpy
+fi
+if [ -z "`ls $py2/dist-packages | grep PIL`" ]; then
+    sudo apt install python-pil
+fi
+if [ -z "`ls $py2/dist-packages | grep leveldb`" ]; then
+    sudo apt install python-leveldb
+fi
+# see also:
+# /usr/lib/python2.7/dist-packages
+# /usr/lib/python3/dist-packages
+# ignored:
+# /usr/local/lib/python2.7/site-packages
+# /usr/lib/python2.7/site-packages
+# /usr/lib/python3/site-packages
+# /usr/lib/python3.6/site-packages
+# /usr/lib/python3.7/site-packages
+# locate site-packages | grep -v flask | grep -v kivy | grep -v trashbin | grep -v ninja | grep -v Meld | grep -v Blender | grep -v GIMP | grep -v Kivy | grep -v Brainwy | grep -v blender | grep -v inkscape | grep -v cygwin | grep -v LibreOffice | grep -v jython | grep -v pythonforandroid | grep -v tank
 echo ""
 echo "To see what needs to be in your website directory (first run minetestinfo.py, generator.py, or singleimage.py to confirms your website directory for automated copying from web folder below):"
 echo "cd $CHUNKYMAP_DEST/web"
