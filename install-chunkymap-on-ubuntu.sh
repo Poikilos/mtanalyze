@@ -1,7 +1,7 @@
 #!/bin/sh
 cd $HOME
 MT_MY_WEBSITE_PATH=/var/www/html/minetest
-CHUNKYMAP_INSTALLER_PATH=$HOME/Downloads/minetest-chunkymap
+CHUNKYMAP_INSTALLER_PATH=$HOME/git/EnlivenMinetest/mtanalyze
 if [ ! -d "$HOME/Downloads/minetest-chunkymap" ]; then
   echo "please run install-chunkymap-on-ubuntu-from-web.sh or update-chunkymap-installer-only.sh first.";
 else

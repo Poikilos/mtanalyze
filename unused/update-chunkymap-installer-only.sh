@@ -1,4 +1,6 @@
 #!/bin/sh
+echo "This script is outdated. Use git pull instead."
+exit 1
 cd $HOME
 CHUNKYMAP_INSTALLER_DIR=$HOME/Downloads/minetest-chunkymap
 if [ ! -d "$HOME/Downloads" ]; then
