@@ -44,7 +44,7 @@ from pythoninfo import *
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageColor
 except:
-    print("You must first install Pillow's PIL."
+    print("You must first install Pillow's PIL.")
     print("On Windows:")
     print("Right-click windows menu, 'Command Prompt (Admin)' then:")
     print("pip install Pillow")
@@ -178,7 +178,7 @@ class MTChunks:
         self.verbose_enable = True
         self.is_verbose_explicit = False
         self.loop_enable = True
-        self.refresh_map_enable = False
+        self.refresh_map_enable = True
         self.refresh_players_enable = True
         self.chunks = {}
 
