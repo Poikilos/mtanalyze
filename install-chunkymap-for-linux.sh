@@ -1,5 +1,25 @@
 #!/bin/sh
 cd $HOME
+install_cmd=
+package_names=
+if [ -f "`command -v dnf`" ]; then
+    install_cmd="sudo dnf -y install"
+    package_names="fedora"
+elif [ -f "`command -v yum`" ]; then
+    install_cmd="sudo yum -y install"
+    package_names="fedora"
+elif [ -f "`sudo command -v apt`" ]; then
+    sudo apt refresh
+    install_cmd="sudo apt -y install"
+    package_names="debian"
+elif [ -f "`sudo command -v apt-get`" ]; then
+    sudo apt-get refresh
+    install_cmd="apt-get -y install"
+    package_names="debian"
+else
+    echo "You're package resolver is unknown."
+fi
+
 MT_MY_WEBSITE_PATH=/var/www/html/minetest
 CHUNKYMAP_INSTALLER_PATH=$HOME/git/EnlivenMinetest/mtanalyze
 if [ ! -d "$CHUNKYMAP_INSTALLER_PATH" ]; then
@@ -95,15 +115,39 @@ cp -f "$HOME/chunkymap/update-chunkymap-on-ubuntu-from-web.sh" "$HOME/"
 #rm "$HOME/mapper-refresh-minetestserver.bat"
 #rm "$HOME/mapper-refresh-minetestserver"
 
-py2=/usr/lib/python2.7
-if [ -z "`ls $py2/dist-packages | grep numpy`" ]; then
-    sudo apt install python-numpy
-fi
-if [ -z "`ls $py2/dist-packages | grep PIL`" ]; then
-    sudo apt install python-pil
-fi
-if [ -z "`ls $py2/dist-packages | grep leveldb`" ]; then
-    sudo apt install python-leveldb
+if [ "@$package_names" = "@fedora" ]; then
+    py3=/usr/lib64/python3.7
+    if [ -z "`ls $py3/site-packages | grep numpy`" ]; then
+        echo "Installing python3-numpy..."
+        $install_cmd python3-numpy
+    fi
+    if [ -z "`ls $py3/site-packages | grep PIL`" ]; then
+        echo "Installing python3-pillow..."
+        $install_cmd python3-pillow
+    fi
+    if [ -z "`ls $py3/site-packages | grep leveldb`" ]; then
+        echo "Installing python3-leveldb..."
+        $install_cmd python3-leveldb
+    fi
+elif [ "@$package_names" = "@debian" ]; then
+    py2=/usr/lib/python2.7
+    # NOTE: fedora 29 has no python2-numpy, only python3-numpy
+    if [ -z "`ls $py2/dist-packages | grep numpy`" ]; then
+        echo "Installing python-numpy..."
+        $install_cmd python-numpy
+    fi
+    if [ -z "`ls $py2/dist-packages | grep PIL`" ]; then
+        echo "Installing python-pil..."
+        $install_cmd python-pil
+    fi
+    if [ -z "`ls $py2/dist-packages | grep leveldb`" ]; then
+        echo "Installing python-leveldb..."
+        $install_cmd python-leveldb
+    fi
+else
+    echo "Package names are unknown for your OS. You must install the"
+    echo "  following packages manually:"
+    echo "    python-numpy python-pil python-leveldb"
 fi
 # see also:
 # /usr/lib/python2.7/dist-packages
@@ -133,7 +177,14 @@ echo "To learn more about chunkymap:"
 echo "nano $CHUNKYMAP_DEST/README.md"
 echo
 echo "To start now assuming configuration matches yours (nano $CHUNKYMAP_DEST/README.md before this):"
-echo bash $CHUNKYMAP_DEST/chunkymap-generator.sh
+#echo "bash $CHUNKYMAP_DEST/chunkymap-generator.sh"
+echo "python3 $CHUNKYMAP_DEST/generator.py"
+echo
+echo "Test using:"
+echo "cd /var/www/html/minetest"
+echo "php --syntax-check viewchunkymap.php"
+echo "php -S localhost:8001 viewchunkymap.php"
+echo
 echo
 # NOTE: colors.txt is generated now, so shouldn't be in $CHUNKYMAP_DEST until first run (first time minetestinfo.py is included by one of the other py files)
 
