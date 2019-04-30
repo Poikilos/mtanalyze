@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html>
 <html style="width:100%; height:100%">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -59,21 +59,22 @@ if (is_file('chunkymap.php')) {
     if (isset($zoom)) {
         $append_vars.="&zoom=$zoom";
     }
-    // if (!isset($world_name)) {
-        // if ($handle = opendir($chunkymapdata_worlds_path)) {
-            // while (false !== ($file_name = readdir($handle))) {
-                // if (substr($file_name, 0, 1) != ".") {
-                    // $file_path = $chunkymapdata_worlds_path."/".$file_name;
-                    // if (is_dir($file_path)) {
-                        // echo "<a href=\"?world_name=$file_name$append_vars\">$file_name</a>";
-                        // //$world_name=$file_name;
-                        // //break;
-                    // }
-                // }
-            // }
-            // closedir($handle);
-        // }
-    // }
+    //this is duplicate code (bulleted list is shown later):
+     //if (!isset($world_name)) {
+         //if ($handle = opendir($chunkymapdata_worlds_path)) {
+             //while (false !== ($file_name = readdir($handle))) {
+                 //if (substr($file_name, 0, 1) != ".") {
+                     //$file_path = $chunkymapdata_worlds_path."/".$file_name;
+                     //if (is_dir($file_path)) {
+                         //echo "<a href=\"?world_name=$file_name$append_vars\">$file_name</a>";
+                         ////$world_name=$file_name;
+                         ////break;
+                     //}
+                 //}
+             //}
+             //closedir($handle);
+         //}
+     //}
     $is_ready = check_world();
     if ($is_ready) {
     	echo "Press F5 key on your keyboard to refresh player locations.<br/>";

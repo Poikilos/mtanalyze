@@ -1634,6 +1634,7 @@ function check_world($show_world_name_enable = false) {
 				$show_missing_data_msg_enable = false;
 			}
 		}
+
 		if ($world_count==1) {
 
 			$world_name = $last_world_name;
@@ -1641,24 +1642,28 @@ function check_world($show_world_name_enable = false) {
 		//elseif ($non_world_world_count==1) { //assumes you want the one not called world (not a great assumption)
 		//	$world_name = $non_world_world_name;
 		//}
-		else {
-			//else error already shown above (world_count < 1, or can't open directory, or other)
-			$is_ready = false;
-			if ($auto_choose_enable===true) {
-				if ($non_world_world_name==null) {
-					$world_name = $last_world_name;
-				}
-				else {
-					$world_name = $non_world_world_name;
-				}
-			}
-		}
+		//else {
+		//TODO: why was this here??
+			////else error already shown above (world_count < 1, or can't open directory, or other)
+			//$is_ready = false;
+			//if ($auto_choose_enable===true) {
+				//if ($non_world_world_name==null) {
+					//$world_name = $last_world_name;
+				//}
+				//else {
+					//$world_name = $non_world_world_name;
+				//}
+			//}
+		//}
 	}
 	if (isset($world_name)) {
 		if ($show_world_name_enable) {
 			echo "$world_name<br/>\n";
 		}
 		$chunkymapdata_thisworld_path = $chunkymapdata_worlds_path."/".$world_name;
+	}
+	else {
+		echo "world_name is not set.";
 	}
 	return $is_ready;
 }
