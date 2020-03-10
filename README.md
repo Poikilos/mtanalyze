@@ -62,11 +62,26 @@ screen -t chunkymapregen python $HOME/chunkymap/generator.py
         
 
 ## Changes
+* (2017-03-25) list all world folder names, and do not list subfolders (removed inaccurate use of os.walk in load_world_and_mod_data)
+* (2017-02-16) list players by distance feature added
+* (2017-02-16) Fixed some long-standing syntax and logic errors in get_pos, and missing colons in switch_player_file_contents
 * (2016-03-22) Detect exceptions in mintestmapper (such as database locked) and do NOT mark the chunk as is_empty
 * optionally hide player location
 * (2016-03-22) Make a method (in chunkymap.php) to echo the map as an html5 canvas
 
 ## Developer Notes:
+* minetestinfo.py's Chunk set_from_genresult expects the following lines (such as from minetestmapper.py or minetestmapper-numpy.py):
+Result image (w=512 h=3152) will be written to C:\Users\jgustafson\Documents\GitHub\minetest-chunkymap\chunkymap-genresults\Enliven20170213v7\singleimage.png
+Drawing image
+Saving to: C:\Users\jgustafson\Documents\GitHub\minetest-chunkymap\chunkymap-genresults\Enliven20170213v7\singleimage.png
+('PNG Region: ', [-208, 304, -688, 2464])
+('pngMinX: ', '-208')
+('pngMaxZ: ', '2464')
+('Pixels PerNode: ', 1)
+('border: ', 0)
+
+where PNG Region values are left,right,top,bottom respectively.
+where required values are Result image dimensions, and PNG Region or xmin,xmax,zmin,zmax.
 * Player username privacy: check_players in generator.py intentionally makes up an index and uses that as the filename on the destination, so that ajax can update players without knowing either their id (filename of minetest player file) or display name (listed in the player file)
 (this way, only usernames can be known if chunkymap.php allows that, or the person is logged in to the server)
 Because of the feature, generator.py must prevent duplicates based on value of id in the resulting yml files (minetest player filename as id).
@@ -187,6 +202,7 @@ chmod +x set-minutely-crontab-job.sh && ./set-minutely-crontab-job.sh
     (the installer will automatically download and install numpy and Pillow -- see also install-on-windows-manually.md)
 
 ## Known Issues
+* audit switch_player_file_contents, since had syntax errors preventing run on 2017-02-16, though hadn't worked on it for months
 * var debug_adjustment = 1.345; is needed in JavaScript to resize map markers correctly to same scale as map size (for unknown reason)
 * webapp: save selected world to a config file (click world on first visit to write initial config) instead of being silently autoselected
 * Fix chunk generation and draw decachunks to canvas (so singleimage.py is not required to be run before generator.py)
@@ -203,6 +219,11 @@ python_exe_path
     * shows player location (can optionally show only first characters of name, for privacy; there is no saved setting yet, so to adjust, you must change the value of $nonprivate_name_beginning_char_count in chunkymap.php)    
     * Ghost players if they stay in one spot long enough (see $player_file_age_idle_max_seconds in chunkymap.php)
     * Hide players if they stay in one spot long enough (see $player_file_age_expired_max_seconds in chunkymap.php) avoiding logout detection, and not requiring mods
-
+* If you prefer python3 and get the error "No module named 'PIL'" try:
+```
+sudo apt-get install python3-pil
+```
+(if can't connect, see https://ubuntuforums.org/showthread.php?t=2282646 )
+	
 ## Optional:
 * chunkymap.php should read the size of the tiles automatically (currently is hard-coded)-- see near is_file($chunk_genresult_path) in chunkymap.php

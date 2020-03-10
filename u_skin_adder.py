@@ -2,7 +2,17 @@ import os
 #from PIL import Image, ImageDraw, ImageFont, ImageColor
 from expertmm import *
 from minetestinfo import *  #paths and FLAG_EMPTY_HEXCOLOR = "#010000"
-from PIL import Image, ImageDraw, ImageFont, ImageColor
+try:
+    from PIL import Image, ImageDraw, ImageFont, ImageColor
+except:
+    print("You must first install Pillow's PIL."
+    print("On Windows:")
+    print("Right-click windows menu, 'Command Prompt (Admin)' then:")
+    print("pip install Pillow")
+    print("")
+    print("On *nix-like systems:")
+    print("sudo pip install Pillow")
+    exit()
 import shutil
 
 u_skins_mod_path = os.path.join(profile_path,"Desktop\\Backup\\fcalocal\\usr\\local\\share\\minetest\\games\\fca_game_a\\mods\\u_skins\\u_skins")
@@ -349,3 +359,4 @@ def load_new_skins_from_folder(in_path):
 
 #raw_input("Press return to exit.")
 #load_new_skins_from_folder("C:\\Users\\Owner\\ownCloud\\Pictures\\Projects\\Characters - Mine - In-Game\\Minetest Player Skins")
+#add_skin_if_new("z:\\yelby.png")
