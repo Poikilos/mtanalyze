@@ -22,16 +22,16 @@
 
 import subprocess
 import os
-#import stat
+# import stat
 import shutil
 import platform
 from minetestinfo import *
-#python_exe_path is from:
+# python_exe_path is from:
 from pythoninfo import *
-#from PIL import Image, ImageDraw, ImageFont, ImageColor
+# from PIL import Image, ImageDraw, ImageFont, ImageColor
 try:
     from PIL import Image
-except:
+except ImportError:
     print("You must first install Pillow's PIL.")
     print("On Windows:")
     print("Right-click windows menu, 'Command Prompt (Admin)' then:")
@@ -41,28 +41,39 @@ except:
     print("sudo python2 -m pip install --upgrade pip")
     print("sudo python2 -m pip install --upgrade pip wheel")
     print("#then:")
-    #print("sudo pip install Pillow")
+    # print("sudo pip install Pillow")
     print("python2 -m pip install Pillow")
     print("#or")
     print("#same but python3 instead")
-    #print("sudo pip install Pillow")
+    # print("sudo pip install Pillow")
     exit()
 
-class ChunkymapOfflineRenderer:
+from chunkymaprenderer import ChunkymapRenderer
+no_leveldb_msg = """
+To fix this error, try:
+  Ubuntu (tested on Trusty to Zesty):
+    apt install python-leveldb  # python2 version
+  Arch-based distros:
+    sudo pacman -Syu --noconfirm yaourt
+    yaourt -Syu --noconfirm --aur python2-leveldb
+"""
 
-    #minetestmapper_numpy_path = None
-    #minetestmapper_custom_path = None
-    #minetestmapper_py_path = None
-    #minetestmapper_bin_path = None
-    #backend_string = None
-    #world_path = None
-    #world_name = None
-    #boundary_x_min = None
-    #boundary_x_max = None
-    #boundary_z_min = None
-    #boundary_z_max = None
-    #mtm_bin_enable = None
-    #mtm_bin_dir_path = None
+
+class ChunkymapOfflineRenderer(ChunkymapRenderer):
+
+    # minetestmapper_numpy_path = None
+    # minetestmapper_custom_path = None
+    # minetestmapper_py_path = None
+    # minetestmapper_bin_path = None
+    # backend_string = None
+    # world_path = None
+    # world_name = None
+    # boundary_x_min = None
+    # boundary_x_max = None
+    # boundary_z_min = None
+    # boundary_z_max = None
+    # mtm_bin_enable = None
+    # mtm_bin_dir_path = None
 
     def __init__(self):
         # limit to 8192x8192 for browsers to be able to load it
@@ -73,139 +84,136 @@ class ChunkymapOfflineRenderer:
         self.boundary_x_max = 4096  # formerly 10000
         self.boundary_z_min = -4096  # formerly -10000
         self.boundary_z_max = 4096  # formerly 10000
-        self.mtm_bin_enable = False  # set below automatically if
-                                     # present
+        self.mtm_bin_enable = False
+        # ^ set below automatically if present
 
         self.backend_string = get_world_var("backend")
-
-        #region same as generator.py
-        #self.minetestmapper_numpy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-numpy.py")
-        #self.minetestmapper_custom_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "minetestmapper-poikilos.py")
-        git_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        print("MAPPERS search path (clone minetestmapper-python folder in here): " + git_path)
-        self.minetestmapper_numpy_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper-numpy.py")
-        self.minetestmapper_custom_path = os.path.join(os.path.join(git_path, "minetestmapper-python"), "minetestmapper.py")
-        self.minetestmapper_py_path = self.minetestmapper_numpy_path
-        self.mtm_bin_dir_path = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)),".."),"minetestmapper")
-        self.minetestmapper_bin_path = os.path.join(self.mtm_bin_dir_path,"minetestmapper")
-        # mtm_bin_paths = [
-            # "/usr/local/bin/minetestmapper",
-            # "/usr/bin/minetestmapper"
-        # ]
-        # ABOVE AND BELOW are COMMENTED because minetestmapper is not
-        # usable (neither provides standard output nor fixed size image
-        # --see <https://github.com/minetest/minetestmapper/issues/49>)
-        if os.path.isfile(self.minetestmapper_bin_path):
-            self.mtm_bin_enable = True
-        elif os.path.isfile(os.path.join("/usr/bin", "minetestmapper")):
-            self.minetestmapper_bin_path = os.path.join("/usr/bin", "minetestmapper")
-            self.mtm_bin_enable = True
-        elif os.path.isfile(os.path.join("/usr/local/bin", "minetestmapper")):
-            self.minetestmapper_bin_path = os.path.join("/usr/local/bin", "minetestmapper")
-            self.mtm_bin_enable = True
-        if self.mtm_bin_enable:
-            print()
-            print("minetestmapper_bin_path: " + self.minetestmapper_bin_path)
-            print()
-        else:
-            print()
-            print("WARNING: binary minetestmapper not found")
-            print()
-        # else:
-            # for try_path in mtm_bin_paths:
-                # if os.path.isfile(try_path):
-                    # self.minetestmapper_bin_path = try_path
-                    # self.mtm_bin_enable = True
-        #region useful if version of minetestmapper.py from poikilos fork of minetest is used
-        #profile_path = None
-        #if 'USERPROFILE' in os.environ:
-        #    profile_path = os.environ['USERPROFILE']
-        #elif 'HOME' in os.environ:
-        #    profile_path = os.environ['HOME']
-        #minetest_program_path = os.path.join(profile_path, "minetest")
-        #minetest_util_path = os.path.join(minetest_program_path,"util")
-        #minetest_minetestmapper_path = os.path.join(minetest_util_path,"minetestmapper.py")
-        #if not os.path.isfile(self.minetestmapper_py_path):
-        #    self.minetestmapper_py_path = minetest_minetestmapper_path
-        #endregion useful if version of minetestmapper.py from poikilos fork of minetest is used
-
-        #if (self.backend_string!="sqlite3"):
-            # minetestmapper-numpy had trouble with leveldb but this fork has it fixed so use numpy always always instead of running the following line
-            # self.minetestmapper_py_path = self.minetestmapper_custom_path
-        print("Chose image generator script: " + self.minetestmapper_py_path)
-        if not os.path.isfile(self.minetestmapper_py_path):
-            print("WARNING: minetestmapper script does not exist, so "+__file__+" cannot generate maps.")
-            #sys.exit(2)
-        self.colors_path = os.path.join(os.path.dirname(os.path.abspath(self.minetestmapper_py_path)), "colors.txt")
-        if not os.path.isfile(self.colors_path):
-            print("WARNING: missing '"+self.colors_path+"', so "+__file__+" cannot generate maps.")
-            #sys.exit(2)
+        self.prepare_env()  # from super
         self.world_path = minetestinfo.get_var("primary_world_path")
         if not os.path.isdir(self.world_path):
-            print("ERROR: missing world '"+self.world_path+"', so exiting "+__file__+".")
+            print("ERROR: missing world '" + self.world_path
+                  + "', so exiting " + __file__ + ".")
             sys.exit(2)
         else:
             self.world_name = os.path.basename(self.world_path)
-        #endregion same as generator.py
 
     def RenderSingleImage(self):
-        dest_colors_path = os.path.join(self.mtm_bin_dir_path,"colors.txt")
-        genresults_folder_path = os.path.join( os.path.join(os.path.dirname(os.path.abspath(__file__)), "chunkymap-genresults"), self.world_name)
+        dest_colors_path = os.path.join(self.mtm_bin_dir_path,
+                                        "colors.txt")
+        genresults_folder_path = os.path.join(
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "chunkymap-genresults"
+            ),
+            self.world_name
+        )
         if not os.path.isdir(genresults_folder_path):
             os.makedirs(genresults_folder_path)
-        genresult_path = os.path.join(genresults_folder_path, "singleimage"+genresult_name_end_flag)
-        gen_error_path = os.path.join(genresults_folder_path, "singleimage"+gen_error_name_end_flag)
-        cmd_suffix = " 1> \""+genresult_path+"\""
-        cmd_suffix += " 2> \""+gen_error_path+"\""
-        #if self.boundary_x_min is None:
-        #    print("ERROR: boundary_x_min is None")
-        #if self.boundary_x_max is None:
-        #    print("ERROR: boundary_x_max is None")
-        #if self.boundary_z_min is None:
-        #    print("ERROR: boundary_z_min is None")
-        #if self.boundary_z_max is None:
-        #    print("ERROR: boundary_z_max is None")
-        geometry_string = str(self.boundary_x_min)+":"+str(self.boundary_z_min)+"+"+str(self.boundary_x_max-self.boundary_x_min)+"+"+str(self.boundary_z_max-self.boundary_z_min)  # "-10000:-10000+20000+20000" #2nd two params are sizes
-        #VERY BIG since singleimage mode (if no geometry param, minetestmapper-numpy reverts to its default which is -2000 2000 -2000 2000):
-        region_string = str(self.boundary_x_min)+" "+str(self.boundary_x_max)+" "+str(self.boundary_z_min)+" "+str(self.boundary_z_max) # "-10000 10000 -10000 10000"
+        genresult_path = os.path.join(
+            genresults_folder_path,
+            "singleimage"+genresult_name_end_flag
+        )
+        gen_error_path = os.path.join(
+            genresults_folder_path,
+            "singleimage"+gen_error_name_end_flag
+        )
+        cmd_suffix = " 1> \"" + genresult_path + "\""
+        cmd_suffix += " 2> \"" + gen_error_path + "\""
+        # if self.boundary_x_min is None:
+        #     print("ERROR: boundary_x_min is None")
+        # if self.boundary_x_max is None:
+        #     print("ERROR: boundary_x_max is None")
+        # if self.boundary_z_min is None:
+        #     print("ERROR: boundary_z_min is None")
+        # if self.boundary_z_max is None:
+        #     print("ERROR: boundary_z_max is None")
+        geometry_string = (
+            str(self.boundary_x_min) + ":" + str(self.boundary_z_min)
+            + "+" + str(self.boundary_x_max-self.boundary_x_min) + "+"
+            + str(self.boundary_z_max-self.boundary_z_min)
+        )
+        # ^ "-10000:-10000+20000+20000" #2nd two params are sizes
+        # VERY BIG since singleimage mode (if no geometry param,
+        # minetestmapper-numpy reverts to its default which is
+        # -2000 2000 -2000 2000):
+        region_string = (
+            str(self.boundary_x_min) + " " + str(self.boundary_x_max)
+            + " " + str(self.boundary_z_min) + " "
+            + str(self.boundary_z_max)
+        )
+        # ^ "-10000 10000 -10000 10000"
 
-        #geometry_string = str(min_x)+":"+str(min_z)+"+"+str(int(max_x)-int(min_x)+1)+"+"+str(int(max_z)-int(min_z)+1)  # +1 since max-min is exclusive and width must be inclusive for minetestmapper.py
-        region_param = " --region "+region_string  # minetestmapper-numpy.py --region xmin xmax zmin zmax
-        geometry_param = " --geometry "+geometry_string # " --geometry -10000:-10000+20000+20000"  # minetestmapper-poikilos.py --geometry <xmin>:<zmin>+<width>+<height>
+        # geometry_string = (
+        #     str(min_x) + ":"+str(min_z) + "+"
+        #     + str(int(max_x)-int(min_x)+1) + "+"
+        #     + str(int(max_z)-int(min_z)+1)
+        # )
+        # ^ +1 since max-min is exclusive and width must be inclusive
+        #   for minetestmapper.py
+        region_param = " --region " + region_string
+        # ^ minetestmapper-numpy.py --region xmin xmax zmin zmax
+        geometry_param = " --geometry " + geometry_string
+        # ^ " --geometry -10000:-10000+20000+20000"
+        # ^^ minetestmapper-poikilos.py --geometry
+        #    <xmin>:<zmin>+<width>+<height>
         limit_param = geometry_param
-        #poikilos_region_string = str(min_x) + ":" + str(max_x) + "," + str(min_z) + ":" + str(max_z)
+        # poikilos_region_string = (str(min_x) + ":" + str(max_x) + ","
+        #                           + str(min_z) + ":" + str(max_z))
 
-        #cmd_no_out_string = python_exe_path+" "+self.minetestmapper_py_path+" --bgcolor '"+self.FLAG_EMPTY_HEXCOLOR+"' --input \""+minetestinfo.get_var("primary_world_path")+"\" --geometry "+geometry_string+" --output \""+tmp_png_path+"\""
+        # cmd_no_out_string = (
+        #     python_exe_path + " " + self.minetestmapper_py_path
+        #     + " --bgcolor '" + self.FLAG_EMPTY_HEXCOLOR
+        #     + "' --input \""
+        #     + minetestinfo.get_var("primary_world_path")
+        #     + "\" --geometry " + geometry_string + " --output \""
+        #     + tmp_png_path + "\""
+        # )
         png_name = "singleimage.png"
 
         tmp_png_path = os.path.join(genresults_folder_path, png_name)
-        squote = ""  # leave blank for windows, since doesn't process it out
+        squote = ""
+        # ^ leave blank for windows, since doesn't process it out
         if "windows" not in platform.system().lower():
             squote = "'"
-        io_string = " --input \""+self.world_path+"\" --output \""+tmp_png_path+"\""
-        if (not self.mtm_bin_enable) and ("numpy" in self.minetestmapper_py_path):
+        io_string = (" --input \"" + self.world_path + "\" --output \""
+                     + tmp_png_path + "\"")
+        if ((not self.mtm_bin_enable) and
+                ("numpy" in self.minetestmapper_py_path)):
             limit_param = region_param
-            io_string = " \""+self.world_path+"\" \""+tmp_png_path+"\""
-            #geometry_param = " --region " + str(min_x) + " " + str(max_x) + " " + str(min_z) + " " + str(max_z)
-            #print("Using numpy style parameters.")
-            #print("  since using "+self.minetestmapper_py_path)
-            #print()
+            io_string = (" \"" + self.world_path + "\" \""
+                         + tmp_png_path + "\"")
+            # geometry_param = " --region " + str(min_x) + " "
+            #   + str(max_x) + " " + str(min_z) + " " + str(max_z)
+            # print("Using numpy style parameters.")
+            # print("  since using "+self.minetestmapper_py_path)
+            # print()
         this_colors_path = dest_colors_path
-        if os.path.isfile(self.colors_path) and not os.path.isfile(dest_colors_path):
+        if (os.path.isfile(self.colors_path) and
+                not os.path.isfile(dest_colors_path)):
             this_colors_path = self.colors_path
         if self.mtm_bin_enable:
-            cmd_no_out_string = self.minetestmapper_bin_path+" --colors "+this_colors_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
+            cmd_no_out_string = (self.minetestmapper_bin_path
+                                 + " --colors " + this_colors_path
+                                 + " --bgcolor " + squote
+                                 + FLAG_EMPTY_HEXCOLOR + squote
+                                 + io_string + limit_param)
         else:
-            cmd_no_out_string = get_python2_exe_path() + " " + self.minetestmapper_py_path+" --bgcolor "+squote+FLAG_EMPTY_HEXCOLOR+squote+io_string+limit_param
+            cmd_no_out_string = (get_python2_exe_path() + " "
+                                 + self.minetestmapper_py_path
+                                 + " --bgcolor " + squote
+                                 + FLAG_EMPTY_HEXCOLOR + squote
+                                 + io_string + limit_param)
         cmd_string = cmd_no_out_string + cmd_suffix
         print("")
         print("")
         print("Running")
         print("    "+cmd_string)
         if self.mtm_bin_enable:
-            #if os.path.isfile(self.colors_path) and not os.path.isfile(dest_colors_path):
-                #print("Copying...'"+self.colors_path+"' to  '"+dest_colors_path+"'")
-                #shutil.copyfile(self.colors_path,dest_colors_path)
+            # if (os.path.isfile(self.colors_path) and
+            #         not os.path.isfile(dest_colors_path)):
+            #     print("Copying...'" + self.colors_path + "' to  '"
+            #           + dest_colors_path + "'")
+            #     shutil.copyfile(self.colors_path, dest_colors_path)
             print("  mapper_path: " + self.minetestmapper_bin_path)
         else:
             print("  mapper_path: " + self.minetestmapper_py_path)
@@ -214,28 +222,45 @@ class ChunkymapOfflineRenderer:
         print("    # (this may take a while...)")
         if os.path.isfile(tmp_png_path):
             os.remove(tmp_png_path)
-        #subprocess.call("touch \""+tmp_png_path+"\"", shell=True)
+        # subprocess.call("touch \"" + tmp_png_path + "\"", shell=True)
         subprocess.call(cmd_string, shell=True)
         final_png_path = tmp_png_path
         www_uid = None
         www_gid = None
-        www_chunkymapdata_path = os.path.join(minetestinfo.get_var("www_minetest_path"), "chunkymapdata")
-        www_chunkymapdata_worlds_path = os.path.join(www_chunkymapdata_path, "worlds")
-        www_chunkymapdata_world_path = os.path.join(www_chunkymapdata_worlds_path, self.world_name)
+        www_chunkymapdata_path = os.path.join(
+            minetestinfo.get_var("www_minetest_path"),
+            "chunkymapdata"
+        )
+        www_chunkymapdata_worlds_path = os.path.join(
+            www_chunkymapdata_path,
+            "worlds"
+        )
+        www_chunkymapdata_world_path = os.path.join(
+            www_chunkymapdata_worlds_path,
+            self.world_name
+        )
         try:
-            www_stat = os.stat(minetestinfo.get_var("www_minetest_path"))
+            www_stat = os.stat(
+                minetestinfo.get_var("www_minetest_path")
+            )
             www_uid = www_stat.st_uid
             www_gid = www_stat.st_gid
-            #import pwd
-            #www_u_name = pwd.getpwuid(uid)[0]
-            #www_g_name = pwd.getgrgid(gid)[0]
-            #import pwd
-            #import grp
-            #www_uid = pwd.getpwnam("www_data").pw_uid
-            #www_gid = grp.getgrnam("nogroup").gr_gid
-        except:
-            print("Unable to get stat on www directory \""+minetestinfo.get_var("www_minetest_path")+"\", so will not be able to automatically set owner of result jpg there. Make sure you manually set owner of singleimage.jpg in '"+www_chunkymapdata_world_path+"' to www_data user and group.")
-            print("  "+str(sys.exc_info()))
+            # import pwd
+            # www_u_name = pwd.getpwuid(uid)[0]
+            # www_g_name = pwd.getgrgid(gid)[0]
+            # import pwd
+            # import grp
+            # www_uid = pwd.getpwnam("www_data").pw_uid
+            # www_gid = grp.getgrnam("nogroup").gr_gid
+        except PermissionError:
+            print("Unable to get stat on www directory \""
+                  + minetestinfo.get_var("www_minetest_path")
+                  + "\", so will not be able to automatically set owner"
+                  " of result jpg there. Make sure you manually set"
+                  " owner of singleimage.jpg in '"
+                  + www_chunkymapdata_world_path
+                  + "' to www-data user and group.")
+            print("  " + str(sys.exc_info()))
 
         is_locked = False
         err_count = 0
@@ -245,58 +270,58 @@ class ChunkymapOfflineRenderer:
             while line:
                 line = ins.readline()
                 if line:
-                    if len(line.strip())>0:
+                    if len(line.strip()) > 0:
                         err_count += 1
                     line_lower = line.lower()
-                    if (" lock " in line_lower) or ("/lock " in line_lower):
+                    if ((" lock " in line_lower) or
+                            ("/lock " in line_lower)):
                         is_locked = True
                         lock_line = line
                         result = None
                         break
             ins.close()
-        if err_count<1:
+        if err_count < 1:
             os.remove(gen_error_path)
         if os.path.isfile(tmp_png_path):
             if not os.path.isdir(www_chunkymapdata_world_path):
                 os.makedirs(www_chunkymapdata_world_path)
             if minetestinfo.contains("www_minetest_path"):
-                dest_png_path = os.path.join(www_chunkymapdata_world_path, png_name)
+                dest_png_path = os.path.join(
+                    www_chunkymapdata_world_path,
+                    png_name
+                )
                 if os.path.isfile(dest_png_path):
                     os.remove(dest_png_path)
-                print("Moving temp image from "+tmp_png_path+" to "+dest_png_path+"...")
+                print("Moving temp image from " + tmp_png_path + " to "
+                      + dest_png_path + "...")
 
-                #move_cmd_string = "mv"
-                #if "windows" in platform.system().lower():
-                #    move_cmd_string= "move"
-                #this_move_cmd_string = move_cmd_string+" \""+tmp_png_path+"\" to \""+dest_png_path+"\"..."
-                #subprocess.call(this_move_cmd_string, shell=True)
-                shutil.move(tmp_png_path, dest_png_path)   #avoids error below according to
-
-                # os.rename(tmp_png_path, dest_png_path)  # fails with the following output:
-                # Moving temp image from /home/owner/chunkymap/chunkymap-genresults/FCAGameAWorld/singleimage.png to /var/www/html/minetest/chunkymapdata/worlds/FCAGameAWorld/singleimage.png...
-                # Traceback (most recent call last):
-                #  File "chunkymap/singleimage.py", line 157, in <module>
-                #     cmor.RenderSingleImage()
-                #   File "chunkymap/singleimage.py", line 118, in RenderSingleImage
-                #     os.rename(tmp_png_path, dest_png_path)
-                # OSError: [Errno 18] Invalid cross-device link
+                # move_cmd_string = "mv"
+                # if "windows" in platform.system().lower():
+                #     move_cmd_string= "move"
+                # this_move_cmd_string = (move_cmd_string + " \""
+                #                         + tmp_png_path + "\" to \""
+                #                         + dest_png_path + "\"...")
+                # subprocess.call(this_move_cmd_string, shell=True)
+                shutil.move(tmp_png_path, dest_png_path)
 
                 final_png_path = dest_png_path
             print("Png image saved to:")
             print("  "+final_png_path)
             print("Converting to jpg...")
             pngim = Image.open(final_png_path)
-            #jpgim = Image.new('RGB', pngim.size, (0, 0, 0))
-            #jpgim.paste(pngim.convert("RGB"), (0,0,pngim.size[0],pngim.size[0]))
+            # jpgim = Image.new('RGB', pngim.size, (0, 0, 0))
+            # jpgim.paste(pngim.convert("RGB"),
+            #             (0,0,pngim.size[0],pngim.size[0]))
             jpg_name = "singleimage.jpg"
-            dest_jpg_path = os.path.join(www_chunkymapdata_world_path, jpg_name)
+            dest_jpg_path = os.path.join(www_chunkymapdata_world_path,
+                                         jpg_name)
             if os.path.isfile(dest_jpg_path):
                 os.remove(dest_jpg_path)
                 if not os.path.isfile(dest_jpg_path):
                     print("  removed old '"+dest_jpg_path+"'")
                 else:
                     print("  failed to remove'"+dest_jpg_path+"'")
-            #jpgim.save(dest_jpg_path)
+            # jpgim.save(dest_jpg_path)
             pngim.save(dest_jpg_path, 'JPEG')
             if os.path.isfile(dest_jpg_path):
                 print("jpg image saved to:")
@@ -315,13 +340,19 @@ class ChunkymapOfflineRenderer:
                 mtchunk.set_from_genresult(genresult_path)
                 mtchunk.metadata["is_traversed"] = True
                 dest_yaml_name = "singleimage.yml"
-                dest_yaml_path = os.path.join(www_chunkymapdata_world_path, dest_yaml_name)
+                dest_yaml_path = os.path.join(
+                    www_chunkymapdata_world_path,
+                    dest_yaml_name
+                )
                 mtchunk.save_yaml(dest_yaml_path)
         else:
 
-            print("No image could be generated from '"+self.world_path+"'")
+            print("No image could be generated from '" + self.world_path
+                  + "'")
             if is_locked:
-                print("(database is locked--shutdown server first or try generator.py to render chunks individually).")
+                print("(database is locked--shutdown server first or"
+                      " try generator.py to render chunks"
+                      " individually).")
             else:
                 # ins = open(genresult_path, 'r')
                 ins = open(gen_error_path, 'r')
@@ -331,14 +362,9 @@ class ChunkymapOfflineRenderer:
                     if line:
                         print("  " + line.strip())
                         if "No module named leveldb" in line:
-                            print("")
-                            print("To fix this error, try:")
-                            print("  Ubuntu (tested on Trusty to Zesty):")
-                            print("    apt install python-leveldb  # python2 version")
-                            print("  Arch-based distros:")
-                            print("    sudo pacman -Syu --noconfirm yaourt")
-                            print("    yaourt -Syu --noconfirm --aur python2-leveldb")
+                            print(no_leveldb_msg)
                 ins.close()
+
 
 cmor = ChunkymapOfflineRenderer()
 cmor.RenderSingleImage()
