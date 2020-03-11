@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-This is a script for testing other poikilos python modules.
+Test other poikilos python modules.
 """
 # Copyright (C) 2018 Jake Gustafson
 

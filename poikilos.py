@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-
-# module for not quite trivial data processing operations and avoidance
-# of regex
+"""
+Execute common data processing operations.
+"""
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or

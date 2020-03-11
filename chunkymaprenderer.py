@@ -114,7 +114,9 @@ class ChunkymapRenderer:
         try_clrs_dirs.append(
             os.path.dirname(os.path.abspath(self.mtm_py_path))
         )
-        try_clrs_dirs.append(os.path.dirname(__file__))
+        try_clrs_dirs.append(os.path.dirname(
+            os.path.abspath(__file__)
+        ))
         for try_clrs_dir in try_clrs_dirs:
             try_clrs = os.path.join(try_clrs_dir, "colors.txt")
             if os.path.isfile(try_clrs):
