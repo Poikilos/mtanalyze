@@ -22,28 +22,40 @@ import math
 
 try:
     input = raw_input
-except:
+except NameError:
     pass
 
+tmp = os.path.join("C:\\", "Users", "jgustafson")
+bak_p = os.path.join(tmp, "\\Desktop\\Backup\\fcalocal\\home\\owner")
+bak_mt = os.path.join(bak_p, ".minetest")
+tmp_ws = os.path.join(bak_mt, "worlds")
+tmp_w = os.path.join(tmp_ws, "FCAGameAWorld")
+plrs = os.path.join(tmp_w, "players")  # TODO: remove uses & eliminate
+tmp = None
+
+
 # (used below)
-def list_players_by_distance(single_axis_enable, start=(0,0,0)):
+def list_players_by_distance(single_axis_enable, start=(0, 0, 0)):
 
-    #from ast import literal_eval # as make_tuple
+    # from ast import literal_eval # as make_tuple
 
-    #players_path = os.path.join(minetestinfo.get_var("primary_world_path"), "players")
-    players_path = "C:\\Users\\jgustafson\\Desktop\\Backup\\fcalocal\\home\\owner\\.minetest\\worlds\\FCAGameAWorld\\players"
+    # players_path = os.path.join(
+    #     mti.get_var("primary_world_path"),
+    #     "players"
+    # )
+    players_path = plrs
 
-    #extra_path = os.path.join(dest_players_path, "extra_players")
+    # extra_path = os.path.join(dest_players_path, "extra_players")
 
     players = dict()
 
     if os.path.isdir(players_path):
         folder_path = players_path
         for sub_name in os.listdir(folder_path):
-            sub_path = os.path.join(folder_path,sub_name)
+            sub_path = os.path.join(folder_path, sub_name)
             if os.path.isfile(sub_path):
-                if (sub_name[:1]!="."):
-                    #is_player_file = False
+                if (sub_name[:1] != "."):
+                    # is_player_file = False
                     print("EXAMINING "+sub_name)
                     players[sub_name] = MinetestPlayer(sub_name)
                     players[sub_name].load_from_file(sub_path)
@@ -55,7 +67,8 @@ def list_players_by_distance(single_axis_enable, start=(0,0,0)):
     is_more = True
     while is_more:
         is_more = False
-        min_abs = 32000  # ok since max worldgen limit of Minetest is 31000
+        min_abs = 32000
+        # ^ ok since max worldgen limit of Minetest is 31000
         min_dist = math.sqrt(32000**2 * 32000**2)
         min_key = None
         for key in players:
@@ -66,25 +79,29 @@ def list_players_by_distance(single_axis_enable, start=(0,0,0)):
                     this_max_abs = abs(pos[0])
                     # get max axis intentionally, to sort properly
                     # skip y (height axis) intentionally
-                    if abs(pos[2])>this_max_abs:
+                    if abs(pos[2]) > this_max_abs:
                         this_max_abs = abs(pos[2])
-                    if this_max_abs<=min_abs:
+                    if this_max_abs <= min_abs:
                         min_abs = this_max_abs
                         min_key = key
-                    #if abs(pos[2])<=min_abs:
-                    #    min_abs = pos[2]
-                    #    min_key = key
+                    # if abs(pos[2])<=min_abs:
+                    #     min_abs = pos[2]
+                    #     min_key = key
                 else:
-                    dist = math.sqrt((pos[0]-start[0])**2 * (pos[2]-start[2])**2)
-                    if dist<=min_dist:
+                    dist = math.sqrt((pos[0]-start[0])**2
+                                     * (pos[2]-start[2])**2)
+                    if dist <= min_dist:
                         min_dist = dist
                         min_key = key
         if min_key is not None:
             players[min_key].tag = False
             id_padding = ""
-            if (len(players[min_key].playerid)<playerid_max_len):
-                id_padding = ' '*(playerid_max_len-len(players[min_key].playerid))
-            print(players[min_key].playerid + ","+id_padding+" \"" + str(players[min_key].get_pos())+"\"")
+            if (len(players[min_key].playerid) < playerid_max_len):
+                rem = playerid_max_len - len(players[min_key].playerid)
+                id_padding = ' ' * rem
+            print(players[min_key].playerid + "," + id_padding + " \""
+                  + str(players[min_key].get_pos()) + "\"")
+
 
 list_players_by_distance(True)
 input("Press enter to exit...")

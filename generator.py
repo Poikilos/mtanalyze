@@ -111,7 +111,7 @@ INTERNAL_TIME_FORMAT_STRING = "%Y-%m-%d %H:%M:%S"
 #        return len(self.items)
 
 
-class MTChunks:
+class MTChunks(ChunkymapRenderer):
     first_mtime_string = None
     chunkymap_data_path = None
     chunkymapdata_worlds_path = None
@@ -175,7 +175,7 @@ class MTChunks:
         # ^ mtm_bin_enable will be set below automatically if present.
 
         input_string = ""
-        w_path = minetestinfo.get_var("primary_world_path")
+        w_path = mti.get_var("primary_world_path")
         self.world_path = w_path
         if self.world_path is not None:
             if os.path.isdir(w_path):
@@ -188,7 +188,7 @@ class MTChunks:
         # if not os.path.isdir(w_path):
         #     print("(ERROR: missing, so please close immediately and"
         #           " update primary_world_path in '"
-        #           + minetestinfo._config_path + "' before next run)")
+        #           + mti._config_path + "' before next run)")
         # print("")
 
         worldmt_path = os.path.join(w_path, "world.mt")
@@ -225,7 +225,7 @@ class MTChunks:
         self.prepare_env()  # from super
 
         self.chunkymap_data_path = os.path.join(
-            minetestinfo.get_var("www_minetest_path"),
+            mti.get_var("www_minetest_path"),
             "chunkymapdata"
         )
         self.chunkymapdata_worlds_path = os.path.join(
@@ -399,9 +399,9 @@ class MTChunks:
             source_web_chunkymapdata_path,
             "images"
         )
-        dest_web_path = minetestinfo.get_var("www_minetest_path")
+        dest_web_path = mti.get_var("www_minetest_path")
         dest_web_chunkymapdata_path = os.path.join(
-            minetestinfo.get_var("www_minetest_path"),
+            mti.get_var("www_minetest_path"),
             "chunkymapdata"
         )
         dest_web_chunkymapdata_images_path = os.path.join(
@@ -1163,9 +1163,11 @@ class MTChunks:
             if os.path.isfile(yaml_path):
                 self.chunks[chunk_luid].load_yaml(yaml_path)
 
-    # normally call checkC instead, which renders chunk only if
-    # necessary
     def _render_chunk(self, qX, qZ):
+        """
+        Normally, call checkC instead which renders chunk only if
+        necessary.
+        """
         mv = self.mapvars
         min_indent = "  "  # increased below
         result = False
@@ -1210,9 +1212,9 @@ class MTChunks:
         cmd_suffix += " 2> \""+gen_error_path+"\""
         # self.mapper_id = "minetestmapper-region"
         bin_string = (python_exe_path + " \""
-                      + self.minetestmapper_py_path + "\"")
+                      + self.mtm_py_path + "\"")
         geometry_enable = False
-        if not os.path.isfile(self.minetestmapper_py_path):
+        if not os.path.isfile(self.mtm_py_path):
             bin_string = "minetestmapper"
             geometry_enable = True
         w_path = self.world_path
@@ -1227,7 +1229,7 @@ class MTChunks:
                              + " \"" + w_path + "\" \"" + tmp_png_path
                              + "\"")
         cmd_string = cmd_no_out_string + cmd_suffix
-        if self.minetestmapper_py_path == self.minetestmapper_custom_path:
+        if self.mtm_py_path == self.mtm_custom_path:
             # if self.backend_string != "sqlite3":
             # if self.mapper_id == "minetestmapper-region":
             geometry_enable = True
@@ -1283,7 +1285,7 @@ class MTChunks:
             #               + tmp_png_path + "\"" + cmd_suffix)
             io_string = (" --input \"" + w_path + "\" --output \""
                          + tmp_png_path + "\"")
-            # if "numpy" in self.minetestmapper_py_path:
+            # if "numpy" in self.mtm_py_path:
             #     io_string = (" \"" + w_path + "\" \"" + tmp_png_path
             #                  + "\"")
             #     geometry_param = (" --region " + str(min_x) + " "
@@ -1633,12 +1635,12 @@ class MTChunks:
                 # mtime = time.gmtime(os.path.getmtime(file_path))
                 # NOTE: time.gmtime converts long timestamp to 9-long
                 #   tuple
-                this_mtime_string = time.strftime(
+                this_mtime_s = time.strftime(
                     INTERNAL_TIME_FORMAT_STRING,
                     moved_mtime
                 )
                 # mtime = os.path.getmtime(file_path)
-                # this_mtime_string = datetime.strftime(
+                # this_mtime_s = datetime.strftime(
                 #     mtime,
                 #     INTERNAL_TIME_FORMAT_STRING
                 # )
@@ -1646,13 +1648,13 @@ class MTChunks:
                     # this_player = self.players[file_name]
                     if ("utc_mtime" not in self.players[file_name]):
                         # or (self.players[file_name]["utc_mtime"] != \
-                        #     this_mtime_string):
+                        #     this_mtime_s):
                         if self.verbose_enable:
                             print("no modified time for player '"
                                   + file_name
                                   + "' so marking for resave.")
                         self.players[file_name]["utc_mtime"] = \
-                            this_mtime_string
+                            this_mtime_s
                         is_changed = True
                         # not necessarily moved--even if resaved by
                         # server, may not have moved a whole block or at
@@ -1679,7 +1681,7 @@ class MTChunks:
                           + file_name + "'")
                     self.players[file_name]["index"] = player_index
                     self.players[file_name]["playerid"] = file_name
-                    self.players[file_name]["utc_mtime"] = this_mtime_string
+                    self.players[file_name]["utc_mtime"] = this_mtime_s
                     if player_name is not None:
                         self.players[file_name]["name"] = player_name
                     is_changed = True
@@ -1691,7 +1693,8 @@ class MTChunks:
                     )
                 else:
                     print(min_indent + "ERROR: player_index is still"
-                          " None for '"+file_name+"' (this should never"
+                          " None for '" + file_name
+                          + "' (this should never"
                           " happen), so skipped writing map entry")
                 player_x = None
                 player_y = None
@@ -1699,14 +1702,13 @@ class MTChunks:
                 chunk_x = None
                 chunk_y = None
                 chunk_z = None
-                plPos = get_tuple_from_notation(player_position,
-                                                file_name)
-                # ^ get_tuple_from_notation is from minetestoffline.py
+                plPos = s_to_tuple(player_position, file_name)
+                # ^ s_to_tuple is from minetestoffline.py
                 if plPos is not None:
                     # Divide by 10 because I don't know why (minetest
                     # issue, maybe to avoid float rounding errors upon
                     # save/load)
-                    plPos = plPos[0]/10.0, plPos[1]/10.0, plPos[2]/10.0
+                    plPos = irr_to_mt(plPos)
                     player_x, player_y, player_z = plPos
                     player_x = float(player_x)
                     player_y = float(player_y)
@@ -1797,7 +1799,7 @@ class MTChunks:
                 #     (int(saved_player_z) != int(player_z))):
                 if is_changed:
                     if self.verbose_enable:
-                        print(min_indent+player_name+" changed.")
+                        print(min_indent + player_name + " changed.")
                     # don't check y since y is elevation in minetest,
                     # don't use float since subblock position doesn't
                     # matter to map
@@ -1820,10 +1822,10 @@ class MTChunks:
                                   + str(player_y) + ", "
                                   + str(player_z))
                         self.last_player_move_mtime_string = \
-                            this_mtime_string
+                            this_mtime_s
                         players_moved_count += 1
                         self.players[file_name]["utc_mtime"] = \
-                            this_mtime_string
+                            this_mtime_s
                     else:
                         if self.verbose_enable:
                             print(min_indent + "SAVING map entry for"
@@ -2321,7 +2323,9 @@ class MTChunks:
         return result
 
     def _checkChunks(self, chunk_path):
-        """Check an x chunks path that is inside of a z path"""
+        """
+        Check a chunk in an z chunks path that is inside of an x path.
+        """
         # file_path = os.path.join(
         #     self.chunkymap_thisworld_data_path,
         #     file_name
@@ -2340,7 +2344,7 @@ class MTChunks:
         if "chunk_size" not in self.mapvars:
             print("ERROR: '" + chunk_luid + "' has missing"
                   " mapvars among {" + str(self.mapvars) + "}")
-            break
+            return False
         print("Checking chunk " + str(coords) + " *"
               + str(self.mapvars["chunk_size"]) + "")
         self.prepareC(qX, qZ)
@@ -2374,7 +2378,8 @@ class MTChunks:
                 coords = self.coordsOfLUID(chunk_luid)
                 if coords is None:
                     continue
-                self._checkChunks(chunk_path)
+                if not self._checkChunks(chunk_path):
+                    break
 
     def _checkDirs(self):
         for decachunk_x_name in os.listdir(self.data_16px_path):
@@ -2396,7 +2401,7 @@ class MTChunks:
             self.todo_index = -1
         if self.todo_index < 0:
             print("PROCESSING MAP DATA (BRANCH PATTERN)")
-            if (os.path.isfile(self.minetestmapper_py_path) and
+            if (os.path.isfile(self.mtm_py_path) and
                     os.path.isfile(self.colors_path)):
                 self.rendered_count = 0
                 # self.todo_positions = list()
@@ -2526,7 +2531,7 @@ class MTChunks:
         return False
 
     def check_map_inefficient_squarepattern(self):
-        if (os.path.isfile(self.minetestmapper_py_path) and
+        if (os.path.isfile(self.mtm_py_path) and
                 os.path.isfile(self.colors_path)):
             self.rendered_count = 0
             self.mapvars = get_dict_from_conf_file(self.world_yaml_path,
@@ -2725,7 +2730,10 @@ class MTChunks:
                                                  self.world_name))
             self.read_then_remove_signals()
             late = 0.3  # map_render_latency
-            pW = best_timer() - self.plSec  # TODO: use `late` as below?
+            pW = None
+            if self.plSec is not None:
+                pW = best_timer() - self.plSec
+                # TODO: use `late` as below?
             if self.loop_enable:
                 if self.refresh_players_enable:
                     if self.plSec is None or (pW > self.players_delay):
@@ -2740,7 +2748,9 @@ class MTChunks:
                 if self.refresh_map_enable:
                     is_first_run = True
                     is_done_iterating = self.todo_index < 0
-                    passed = best_timer() - self.mapSec
+                    passed = None
+                    if self.mapSec is not None:
+                        passed = best_timer() - self.mapSec
                     if ((not is_first_iteration) or
                             (self.mapSec is None) or
                             (passed > self.mapDelay) or

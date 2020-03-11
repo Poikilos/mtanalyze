@@ -62,9 +62,9 @@ To fix this error, try:
 class ChunkymapOfflineRenderer(ChunkymapRenderer):
 
     # minetestmapper_numpy_path = None
-    # minetestmapper_custom_path = None
-    # minetestmapper_py_path = None
-    # minetestmapper_bin_path = None
+    # mtm_custom_path = None
+    # mtm_py_path = None
+    # mtm_bin_path = None
     # backend_string = None
     # world_path = None
     # world_name = None
@@ -89,7 +89,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
 
         self.backend_string = get_world_var("backend")
         self.prepare_env()  # from super
-        self.world_path = minetestinfo.get_var("primary_world_path")
+        self.world_path = mti.get_var("primary_world_path")
         if not os.path.isdir(self.world_path):
             print("ERROR: missing world '" + self.world_path
                   + "', so exiting " + __file__ + ".")
@@ -100,6 +100,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
     def RenderSingleImage(self):
         dest_colors_path = os.path.join(self.mtm_bin_dir_path,
                                         "colors.txt")
+
         genresults_folder_path = os.path.join(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
@@ -161,10 +162,10 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         #                           + str(min_z) + ":" + str(max_z))
 
         # cmd_no_out_string = (
-        #     python_exe_path + " " + self.minetestmapper_py_path
+        #     python_exe_path + " " + self.mtm_py_path
         #     + " --bgcolor '" + self.FLAG_EMPTY_HEXCOLOR
         #     + "' --input \""
-        #     + minetestinfo.get_var("primary_world_path")
+        #     + mti.get_var("primary_world_path")
         #     + "\" --geometry " + geometry_string + " --output \""
         #     + tmp_png_path + "\""
         # )
@@ -178,28 +179,28 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         io_string = (" --input \"" + self.world_path + "\" --output \""
                      + tmp_png_path + "\"")
         if ((not self.mtm_bin_enable) and
-                ("numpy" in self.minetestmapper_py_path)):
+                ("numpy" in self.mtm_py_path)):
             limit_param = region_param
             io_string = (" \"" + self.world_path + "\" \""
                          + tmp_png_path + "\"")
             # geometry_param = " --region " + str(min_x) + " "
             #   + str(max_x) + " " + str(min_z) + " " + str(max_z)
             # print("Using numpy style parameters.")
-            # print("  since using "+self.minetestmapper_py_path)
+            # print("  since using "+self.mtm_py_path)
             # print()
         this_colors_path = dest_colors_path
         if (os.path.isfile(self.colors_path) and
                 not os.path.isfile(dest_colors_path)):
             this_colors_path = self.colors_path
         if self.mtm_bin_enable:
-            cmd_no_out_string = (self.minetestmapper_bin_path
+            cmd_no_out_string = (self.mtm_bin_path
                                  + " --colors " + this_colors_path
                                  + " --bgcolor " + squote
                                  + FLAG_EMPTY_HEXCOLOR + squote
                                  + io_string + limit_param)
         else:
             cmd_no_out_string = (get_python2_exe_path() + " "
-                                 + self.minetestmapper_py_path
+                                 + self.mtm_py_path
                                  + " --bgcolor " + squote
                                  + FLAG_EMPTY_HEXCOLOR + squote
                                  + io_string + limit_param)
@@ -214,9 +215,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
             #     print("Copying...'" + self.colors_path + "' to  '"
             #           + dest_colors_path + "'")
             #     shutil.copyfile(self.colors_path, dest_colors_path)
-            print("  mapper_path: " + self.minetestmapper_bin_path)
+            print("  mapper_path: " + self.mtm_bin_path)
         else:
-            print("  mapper_path: " + self.minetestmapper_py_path)
+            print("  mapper_path: " + self.mtm_py_path)
         print("  colors_path: "+self.colors_path)
         print("  backend: " + self.backend_string)
         print("    # (this may take a while...)")
@@ -228,7 +229,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         www_uid = None
         www_gid = None
         www_chunkymapdata_path = os.path.join(
-            minetestinfo.get_var("www_minetest_path"),
+            mti.get_var("www_minetest_path"),
             "chunkymapdata"
         )
         www_chunkymapdata_worlds_path = os.path.join(
@@ -241,7 +242,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         )
         try:
             www_stat = os.stat(
-                minetestinfo.get_var("www_minetest_path")
+                mti.get_var("www_minetest_path")
             )
             www_uid = www_stat.st_uid
             www_gid = www_stat.st_gid
@@ -254,7 +255,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
             # www_gid = grp.getgrnam("nogroup").gr_gid
         except PermissionError:
             print("Unable to get stat on www directory \""
-                  + minetestinfo.get_var("www_minetest_path")
+                  + mti.get_var("www_minetest_path")
                   + "\", so will not be able to automatically set owner"
                   " of result jpg there. Make sure you manually set"
                   " owner of singleimage.jpg in '"
@@ -285,7 +286,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         if os.path.isfile(tmp_png_path):
             if not os.path.isdir(www_chunkymapdata_world_path):
                 os.makedirs(www_chunkymapdata_world_path)
-            if minetestinfo.contains("www_minetest_path"):
+            if mti.contains("www_minetest_path"):
                 dest_png_path = os.path.join(
                     www_chunkymapdata_world_path,
                     png_name
