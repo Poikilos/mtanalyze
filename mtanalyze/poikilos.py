@@ -50,7 +50,6 @@ alpha_chars = alpha_upper_chars+alpha_lower_chars
 alnum_chars = alpha_chars+digit_chars
 identifier_chars = alnum_chars+"_"
 identifier_and_dot_chars = identifier_chars+"."
-min_indent = ""
 entries_modified_count = 0
 
 
@@ -245,7 +244,7 @@ def RepresentsFloat(s):
         return False
 
 
-def view_traceback():
+def view_traceback(min_indent=""):
     ex_type, ex, tb = sys.exc_info()
     print(min_indent+str(ex_type))
     print(min_indent+str(ex))
