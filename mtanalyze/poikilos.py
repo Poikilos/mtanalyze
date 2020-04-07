@@ -757,7 +757,6 @@ def find_dup(this_list, discard_whitespace_ignore_None_enable=True,
 
 def has_dups(this_list):
     return find_dup(this_list) > -1
-# region formerly pcttext.py
 
 
 def get_initial_value_from_conf(path, name, assignment_operator="="):
@@ -837,5 +836,3 @@ def find_unquoted_not_commented(haystack, needle, start=0, endbefore=-1,
             prev_char = this_char
             index += step
     return result
-
-# endregion formerly pcttext.py
