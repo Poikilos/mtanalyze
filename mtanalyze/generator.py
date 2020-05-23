@@ -39,7 +39,7 @@ import shutil
 import math
 
 from minetestinfo import *
-from poikilos import *
+from parsing import *
 # python_exe_path is from:
 from pythoninfo import *
 
@@ -1254,11 +1254,12 @@ class MTChunks(ChunkymapRenderer):
             #      /.minetest/worlds/FCAGameAWorld" --geometry
             #      -32:-32+64+64 --output
             #      /var/www/html/minetest/try1.png
-            # OR try PYTHON version (looks for poikilos fork which has
-            #   geometry option like C++ version does):
-            # script_path = "$HOME/chunkymap/minetestmapper.py"
-            # region_capable_script_path = "$HOME/chunkymap/
-            #  minetestmapper-poikilos.py"
+            # OR try PYTHON version (looks for the Poikilos fork which
+            #   has the geometry option like C++ version does):
+            # script_path = ("$HOME/git/minetestmapper-python/"
+            #                "minetestmapper.py")
+            # region_capable_script_path = "$HOME/git/
+            #  minetestmapper-python/minetestmapper.py"
             #    region_capable_script_path = os.path.join(
             #        self.mydir,
             #        "minetestmapper.py"
@@ -1277,7 +1278,7 @@ class MTChunks(ChunkymapRenderer):
             # +1 since max-min is exclusive and width must be inclusive
             # for minetestmapper.py
             geometry_param = " --geometry " + geometry_string
-            # poikilos_region_string = (str(min_x) + ":" + str(max_x)
+            # region_string = (str(min_x) + ":" + str(max_x)
             #     + ", " + str(min_z) + ":" + str(max_z))
             # cmd_string = ("sudo python " + script_path + " --input \""
             #               + w_path + "\" --geometry "

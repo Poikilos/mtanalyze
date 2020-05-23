@@ -13,7 +13,7 @@ class ChunkymapRenderer:
         # )
         # self.mtm_custom_path = os.path.join(
         #     os.path.dirname(os.path.abspath(__file__)),
-        #     "minetestmapper-poikilos.py"
+        #     "minetestmapper.py"
         # )
         git_path = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,8 +79,8 @@ class ChunkymapRenderer:
         #         if os.path.isfile(try_path):
         #             self.mtm_bin_path = try_path
         #             self.mtm_bin_enable = True
-        # region useful if version of minetestmapper.py from poikilos
-        # fork of minetest is used
+        # region useful if version of minetestmapper.py from Poikilos'
+        # minetestmapper-python is used
         # profile_path = None
         # if 'USERPROFILE' in os.environ:
         #     profile_path = os.environ['USERPROFILE']
@@ -95,8 +95,9 @@ class ChunkymapRenderer:
         # )
         # if not os.path.isfile(self.mtm_py_path):
         #     self.mtm_py_path = minetest_minetestmapper_path
-        # endregion useful if version of minetestmapper.py from poikilos
-        # fork of minetest is used
+        # endregion useful if version of minetestmapper.py from
+        # Poikilos' fork minetestmapper-python is used (formerly in
+        # the minetest repo)
 
         # if (self.backend_string!="sqlite3"):
         #      minetestmapper-numpy had trouble with leveldb but this

@@ -1,6 +1,10 @@
 import os
 # from PIL import Image, ImageDraw, ImageFont, ImageColor
-from poikilos import *
+try:
+    from parsing import *
+except ImportError:
+    print("This script requires parsing from PythonCodeTranslators")
+    exit(1)
 from minetestinfo import *  # paths and FLAG_EMPTY_HEXCOLOR = "#010000"
 try:
     input = input

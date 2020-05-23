@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Test other poikilos python modules.
+Test other Poikilos python modules.
+
+This module requires the parsing module from
+https://github.com/poikilos/PythonCodeTranslators
 """
 # Copyright (C) 2018 Jake Gustafson
 
@@ -31,7 +34,7 @@ try:
 except NameError:
     pass
 
-from poikilos import *
+from parsing import *
 
 
 modules = []
@@ -64,7 +67,7 @@ dModules = []  # dynamically-loaded modules
 #   seperated only by whitespace (probably meant concatenate operator
 #   '.')
 # * using empty function (problematic since empty($value) evaluates to
-#   true when $value is zero -- empty_really in poikilos can be used
+#   true when $value is zero -- empty_really in parsing can be used
 #   instead)
 # SHELL SCRIPT:
 # * don't use '*' inside quotes (fails)

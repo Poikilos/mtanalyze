@@ -150,15 +150,15 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         #     + str(int(max_z)-int(min_z)+1)
         # )
         # ^ +1 since max-min is exclusive and width must be inclusive
-        #   for minetestmapper.py
+        #   for old minetestmapper.py
         region_param = " --region " + region_string
         # ^ minetestmapper-numpy.py --region xmin xmax zmin zmax
         geometry_param = " --geometry " + geometry_string
         # ^ " --geometry -10000:-10000+20000+20000"
-        # ^^ minetestmapper-poikilos.py --geometry
+        # ^^ minetestmapper-python/minetestmapper.py --geometry
         #    <xmin>:<zmin>+<width>+<height>
         limit_param = geometry_param
-        # poikilos_region_string = (str(min_x) + ":" + str(max_x) + ","
+        # region_string = (str(min_x) + ":" + str(max_x) + ","
         #                           + str(min_z) + ":" + str(max_z))
 
         # cmd_no_out_string = (

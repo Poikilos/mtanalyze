@@ -1,5 +1,9 @@
 import os
-from poikilos import *
+try:
+    from parsing import *
+except:
+    print("This script requires parsing from PythonCodeTranslators")
+    exit(1)
 
 
 def get_python3_exe_path():

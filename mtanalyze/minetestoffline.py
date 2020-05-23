@@ -25,7 +25,11 @@ import shutil
 import os
 from datetime import datetime
 
-from poikilos import *
+try:
+    from parsing import *
+except ImportError:
+    print("This script requires parsing from PythonCodeTranslators")
+    exit(1)
 from minetestinfo import *
 
 import time

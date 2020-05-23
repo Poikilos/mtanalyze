@@ -22,10 +22,10 @@ import os
 from datetime import datetime
 import platform
 try:
-    from poikilos import *
+    from parsing import *
 except ImportError:
-    # minetestinfo must have been imported from root of repo
-    from mtanalyze.poikilos import *
+    print("This script requires parsing from PythonCodeTranslators")
+    exit(1)
 
 try:
     input = raw_input
@@ -252,7 +252,7 @@ class MTChunk:
                     strp = line.strip()
                     if ("does not exist" in strp):
                         # ^ official minetestmapper.py says
-                        #   "World does not exist" but poikilos
+                        #   "World does not exist" but Poikilos
                         #   fork and minetestmapper-numpy.py
                         #   says "data does not exist"
                         meta["is_empty"] = True
