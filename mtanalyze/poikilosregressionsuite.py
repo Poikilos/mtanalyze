@@ -1,9 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+from __future__ import print_function
+
 """
 Test other Poikilos python modules.
 
 This module requires the parsing module from
-https://github.com/poikilos/PythonCodeTranslators
+https://github.com/poikilos/pycodetool
 """
 # Copyright (C) 2018 Jake Gustafson
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-
-# Process minetest plr files when server is not running
-# such as assist in data recovery where original filename is not known
+from __future__ import print_function
+'''
+Process minetest player files when server is not running
+such as assist in data recovery where original filename is not known
+'''
 # (such as where player_id does not match filename of plr file,
 # as caused by data recovery or other corruption)
 # Copyright (C) 2018 Jake Gustafson
@@ -25,11 +27,28 @@ import shutil
 import os
 from datetime import datetime
 
+myPath = os.path.realpath(__file__)
+myPackage = os.path.split(myPath)[0]
+myRepo = os.path.split(myPackage)[0]
+repos = os.path.split(myRepo)[0]
+me = 'minetestoffline.py'
+
 try:
-    from parsing import *
+    try:
+        from parsing import *
+    except ImportError as ex:
+        from pycodetool.parsing import *
 except ImportError:
-    print("This script requires parsing from PythonCodeTranslators")
+    print("This script requires parsing from poikilos/pycodetool")
+    print("Try (in a Terminal):")
+    print()
+    print("cd \"{}\"".format(repos))
+    print("git clone https://github.com/poikilos/pycodetool.git"
+          " pycodetool")
+    print()
+    print()
     exit(1)
+
 from minetestinfo import *
 
 import time

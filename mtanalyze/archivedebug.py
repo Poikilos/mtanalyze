@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
 import os
 import datetime
+
 from minetestinfo import *
 if os.path.isdir(mti.get_var("profile_minetest_path")):
     print(__file__+"...")

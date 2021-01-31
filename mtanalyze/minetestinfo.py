@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+from __future__ import print_function
 
 # module for finding minetest paths and other installation metadata
 # Copyright (C) 2018 Jake Gustafson
@@ -19,13 +20,38 @@
 # Boston, MA 02110-1301 USA
 
 import os
+import sys
 from datetime import datetime
 import platform
+
+myPath = os.path.realpath(__file__)
+myPackage = os.path.split(myPath)[0]
+myRepo = os.path.split(myPackage)[0]
+repos = os.path.split(myRepo)[0]
+me = 'minetestinfo.py'
+
+if not os.path.isfile(os.path.join(myPackage, me)):
+    raise RuntimeError('{} is not in package {}.'.format(me, myPackage))
 try:
-    from parsing import *
+    from pycodetool.parsing import *
 except ImportError:
-    print("This script requires parsing from PythonCodeTranslators")
-    exit(1)
+    pctPackageRel = os.path.join('pycodetool', 'pycodetool')
+    pctPackage = os.path.join(repos, pctPackageRel)
+    pctRepo = os.path.split(pctPackage)[0]
+    if os.path.isfile(os.path.join(pctPackage, 'parsing.py')):
+        sys.path.append(pctRepo)
+    try:
+        from pycodetool.parsing import *
+    except ImportError:
+        print("This script requires parsing from poikilos/pycodetool")
+        print("Try (in a Terminal):")
+        print()
+        print("cd \"{}\"".format(repos))
+        print("git clone https://github.com/poikilos/pycodetool.git"
+              " pycodetool")
+        print()
+        print()
+        exit(1)
 
 try:
     input = raw_input
@@ -126,13 +152,18 @@ if "windows" in platform.system().lower():
         appdatas_path = os.path.join(profile_path, "AppData")
         appdata_path = os.path.join(appdatas_path, "Local")
     else:
-        print("ERROR: missing HOME variable")
+        raise ValueError("ERROR: The USERPROFILE variable is missing"
+                         " though platform.system() is {}."
+                         "".format(platform.system()))
 else:
     if 'HOME' in os.environ:
         profile_path = os.environ['HOME']
         appdata_path = os.path.join(profile_path, ".config")
     else:
-        print("ERROR: missing HOME variable")
+        raise ValueError("ERROR: The HOME variable is missing"
+                         " though the platform {} is not Windows."
+                         "".format(platform.system()))
+
 
 configs_path = os.path.join(appdata_path, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -765,6 +796,7 @@ def init_minetestinfo():
         default_minetestserver_path,
         "minetestserver executable" + server_msg
     )
+    print("[ {} ] generating minetestinfo is complete.".format(me))
 
 
 def load_world_and_mod_data():
@@ -984,10 +1016,10 @@ def load_world_and_mod_data():
                 prepackaged_gameid = "minetest_game"
                 prepackaged_game_path = os.path.join(games_path,
                                                      prepackaged_gameid)
-                print("WARNING: neither minetest_game nor minetest"
-                      + " in " + games_path + ", so reverting to"
-                      + " default location for it: "
-                      + prepackaged_game_path)
+                print("WARNING: Neither a minetest_game nor a minetest"
+                      + " dir is in " + games_path + ", so"
+                      + " \"" + prepackaged_game_path + "\""
+                      + " will be used.")
     print("")
     if len(prepackaged_game_mod_list) < 1:
         prepackaged_game_mod_list = \
@@ -1109,7 +1141,10 @@ def check_world_mt():
 
 
 init_minetestinfo()
-print("[ minetestinfo.py ] generating minetestinfo is complete.")
+
+
 
 if __name__ == '__main__':
-    print(" Import this into your py file via `import minetestinfo` ")
+    print()
+    print("Import this into your py file via"
+          " `import mtanalyze.minetestinfo` ")

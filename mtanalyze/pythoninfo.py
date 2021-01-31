@@ -1,8 +1,28 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
 import os
+
+myPath = os.path.realpath(__file__)
+myPackage = os.path.split(myPath)[0]
+myRepo = os.path.split(myPackage)[0]
+repos = os.path.split(myRepo)[0]
+me = 'pythoninfo.py'
+
 try:
-    from parsing import *
-except:
-    print("This script requires parsing from PythonCodeTranslators")
+    try:
+        from parsing import *
+    except ImportError as ex:
+        from pycodetool.parsing import *
+except ImportError:
+    print("This script requires parsing from poikilos/pycodetool")
+    print("Try (in a Terminal):")
+    print()
+    print("cd \"{}\"".format(repos))
+    print("git clone https://github.com/poikilos/pycodetool.git"
+          " pycodetool")
+    print()
+    print()
     exit(1)
 
 

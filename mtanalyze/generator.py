@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+from __future__ import print_function
 
 # (deprecated) module for generating map chunks and/or player locations
 # for mtanalyze/web. Both this module and mtanalyze/web are deprecated

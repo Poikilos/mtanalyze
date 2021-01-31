@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+from __future__ import print_function
 
 # executable script for creating a single image (though size is limited
 # by techincal reasons) of the largest possible region of the minetest
