@@ -23,17 +23,29 @@ import os
 import sys
 from datetime import datetime
 import platform
+import json
+
+
+def error(msg):
+    sys.stderr.write("{}\n".format(msg))
+    sys.stderr.flush()
 
 myPath = os.path.realpath(__file__)
 myPackage = os.path.split(myPath)[0]
 myRepo = os.path.split(myPackage)[0]
 repos = os.path.split(myRepo)[0]
-me = 'minetestinfo.py'
+me = '__init__.py'
 
 if not os.path.isfile(os.path.join(myPackage, me)):
     raise RuntimeError('{} is not in package {}.'.format(me, myPackage))
+
 try:
-    from pycodetool.parsing import *
+    from pycodetool.parsing import ( #import *
+        # ConfigParser,
+        save_conf_from_dict,
+        get_dict_modified_by_conf_file,
+        get_dict_from_conf_file,
+    )
 except ImportError:
     pctPackageRel = os.path.join('pycodetool', 'pycodetool')
     pctPackage = os.path.join(repos, pctPackageRel)
@@ -53,6 +65,19 @@ except ImportError:
         print()
         exit(1)
 
+'''
+# NOTE: parsing.py is from
+# <https://raw.githubusercontent.com/poikilos/pycodetool
+# /master/pycodetool/parsing.py>
+from mtanalyze.parsing import (
+    # ConfigParser,
+    save_conf_from_dict,
+    get_dict_modified_by_conf_file,
+    get_dict_from_conf_file,
+)
+'''
+
+
 try:
     input = raw_input
 except NameError:
@@ -61,10 +86,9 @@ except NameError:
 # TODO: eliminate the following variables from generator.py (and manage
 #   here centrally instead, so configuration is shared across minetest
 #   helper programs):
-# self.config (use mti.get_val instead)
+# self.config (instead use mtanalyze.*config* helper functions or mti)
 # profile_path
 # minetest_player_pos_multiplier = 10.0
-
 
 worldgen_mod_list = []
 worldgen_mod_list.append("caverealms")
@@ -168,10 +192,62 @@ else:
 configs_path = os.path.join(appdata_path, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #                          "minetestmeta.yml")
-conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "minetestmeta.yml")
-mti = ConfigManager(conf_path, ":")
-# ^ formerly minetestinfo (which was confusing).
+_OLD_conf_path = os.path.join(myPackage, "minetestmeta.yml")
+config_path = os.path.join(appdata_path, "minetestmeta.json")
+
+mti = {}  # The configuration for mtanalyze is stored in config_path.
+mti_help = {}
+
+
+def save_config():
+    with open(config_path, 'w') as ins:
+        json.dump(mti, ins, indent=2, sort_keys=True)
+
+def set_var(key, value):
+    '''
+    Use this function instead of accessing mti directly so that the
+    metadata is saved immediately.
+    '''
+    mti[key] = value
+    save_config
+
+def load_config():
+    global mti
+    if os.path.isfile(config_path):
+        if os.path.getsize(config_path) == 0:
+            print("WARNING: The empty config file \"{}\" will be"
+                  " deleted.".format(config_path))
+            os.remove(config_path)
+    if os.path.isfile(config_path):
+        # mti = ConfigManager(config_path, ":")
+        # ^ formerly minetestinfo (which was confusing).
+        # ^ ConfigManager is from poikilos pycodetool.parsing
+        with open(config_path, 'r') as ins:
+            try:
+                mti = json.load(ins)
+            except json.decoder.JSONDecodeError:
+                raise ValueError("The configuration file \"{}\""
+                                 " is not valid json."
+                                 "".format(config_path))
+    elif os.path.isfile(_OLD_conf_path):
+        print("WARNING: The old config \"{}\" will be ignored"
+              " and \"{}\" will be generated."
+              "".format(_OLD_conf_path, config_path))
+
+
+def define_conf_var(key, value, help_msg):
+    '''
+    Define a variable. Only set it if it doesn't already have a value.
+    Get the existing value otherwise the default (defined by "value").
+    (This function replaces `mti.prevare_var`--mti was a class but is
+    now a dict.)
+    '''
+    if help_msg is None:
+        raise ValueError("help_msg is None for {}".format(key))
+    mti_help[key] = help_msg
+    return mti.setdefault(key, value)
+
+load_config()
 
 game_path_from_gameid_dict = {}
 FLAG_EMPTY_HEXCOLOR = "#010000"
@@ -439,8 +515,7 @@ def get_game_name_from_game_path(path):
 def get_game_path_from_gameid(gameid):
     """This is case-insensitive."""
     result = None
-    games_path = os.path.join(mti.get_var("shared_minetest_path"),
-                              "games")
+    games_path = os.path.join(mti.get("shared_minetest_path"), "games")
     if gameid is not None:
         if os.path.isdir(games_path):
             game_count = 0
@@ -477,10 +552,15 @@ def get_game_path_from_gameid(gameid):
     return result
 
 
-def init_minetestinfo():
+def init_minetestinfo(**kwargs):
+    '''
+    Keyword arguments:
+    shared_minetest_path -- Specify the path to the installed minetest
+      binaries and shared data such as .
+    '''
     global dict_entries_modified_count
     global profile_path
-    if not mti.contains("www_minetest_path"):
+    if not mti.get("www_minetest_path") is not None:
         default_www_minetest_path = "/var/www/html/minetest"
         if "windows" in platform.system().lower():
             default_www_minetest_path = None
@@ -515,11 +595,9 @@ def init_minetestinfo():
                       " server with php 5 or higher to use minetest"
                       " website scripts. You can change"
                       " www_minetest_path to your server's website root"
-                      " later by editing '" + mti._config_path
-                      + "'")
-                default_www_minetest_path = os.path.dirname(
-                    os.path.abspath(__file__)
-                )
+                      " later by editing \"{}\" or using"
+                      " mtanalyze.set_var".format(config_path))
+                default_www_minetest_path = myPackage
         else:
             try_path = os.path.join(profile_path, "public_html")
             if os.path.isdir(try_path):
@@ -536,31 +614,34 @@ def init_minetestinfo():
                 print("  # but for production use a full web server")
                 print("  # see http://php.net/manual/en/features."
                       "commandline.webserver.php")
-        mti.prepare_var("www_minetest_path", default_www_minetest_path,
+        define_conf_var("www_minetest_path", default_www_minetest_path,
                         "your web server directory (or other folder"
                         " where minetest website features and data"
                         " should be placed)")
 
     default_profile_minetest_path = os.path.join(profile_path,
                                                  ".minetest")
-    if "windows" in platform.system().lower():
+    if platform.system() == "Windows":
         default_profile_minetest_path = "C:\\games\\Minetest"
-    mti.prepare_var("profile_minetest_path",
+    define_conf_var("user_minetest_path",
                     default_profile_minetest_path,
-                    ("user minetest path containing worlds"
-                     " folder and debug.txt"))
-    if not os.path.isdir(mti.get_var("profile_minetest_path")):
+                    ("user minetest path (formerly"
+                     " profile_minetest_path) containing worlds"
+                     " folder and debug.txt or bin/debug.txt"))
+    if mti.get("user_minetest_path") is None:
+        raise ValueError("'user_minetest_path' is not set.")
+    elif not os.path.isdir(mti.get("user_minetest_path")):
         print("(WARNING: missing "
-              + mti.get_var("profile_minetest_path")
-              + ", so please close and update profile_minetest_path"
-              " in '" + mti._config_path
+              + mti.get("user_minetest_path")
+              + ", so please close and update user_minetest_path"
+              " in '" + config_path
               + "' before next run)")
     print("")
 
-    if not mti.contains("worlds_path"):
-        pmp = mti.get_var("profile_minetest_path")
-        mti._data["worlds_path"] = os.path.join(pmp, "worlds")
-        mti.save_yaml()
+    if mti.get("worlds_path") is None:
+        pmp = mti.get("user_minetest_path")
+        set_var("worlds_path", os.path.join(pmp, "worlds"))
+        save_config()
 
     default_shared_minetest_path = "/usr/share/games/minetest"
 
@@ -583,38 +664,38 @@ def init_minetestinfo():
     while True:
         print("default default_shared_minetest_path is '"
               + default_shared_minetest_path + "'")
-        mti.prepare_var(
+        define_conf_var(
             "shared_minetest_path",
             default_shared_minetest_path,
             "path containing Minetest's games folder"
         )
         games_path = os.path.join(
-            mti.get_var("shared_minetest_path"),
+            mti.get("shared_minetest_path"),
             "games"
         )
         if not os.path.isdir(games_path):
-            answer = input(
+            error(
                 "WARNING: '"
-                + mti.get_var("shared_minetest_path")
+                + mti.get("shared_minetest_path")
                 + "' does not contain a games folder. If you use this"
                 + " shared_minetest_path, some features may not work"
                 + " correctly (such as adding worldgen mod labels to"
                 + " chunks, and future programs that may use this"
-                + " metadata to install minetest games). Are you sure"
-                + " you want to use y/n [blank for 'n' (no)]? "
+                + " metadata to install minetest games)."
             )
+            answer = "y"
             if is_yes(answer):
-                print("You can change the value of shared_minetest_path"
+                error("You can change the value of shared_minetest_path"
                       + " later by editing '"
-                      + mti._config_path + "'.")
-                print("")
+                      + config_path + "' or using mtanalyze.set_var.")
+                error("")
                 break
             else:
                 mti.remove_var("shared_minetest_path")
         else:
             break
     load_world_and_mod_data()
-    print("")
+    error("")
     lib_path = os.path.join(profile_path, "minetest")
     util_path = os.path.join(lib_path, "util")
     base_colors_txt = os.path.join(util_path, "colors.txt")
@@ -791,7 +872,7 @@ def init_minetestinfo():
         server_msg = " (not found in any known location)"
         default_minetestserver_path = "minetestserver"
 
-    mti.prepare_var(
+    define_conf_var(
         "minetestserver_path",
         default_minetestserver_path,
         "minetestserver executable" + server_msg
@@ -811,17 +892,17 @@ def load_world_and_mod_data():
     is_missing_world = False
 
     default_world_path = None
-    if mti.contains("primary_world_path"):
-        if not os.path.isdir(mti.get_var("primary_world_path")):
+    if mti.get("primary_world_path") is not None:
+        if not os.path.isdir(mti.get("primary_world_path")):
             is_missing_world = True
             print("primary_world_path ERROR: '"
-                  + mti.get_var("primary_world_path")
+                  + mti.get("primary_world_path")
                   + "' is not a folder.")
 
-    if (not mti.contains("primary_world_path")) or is_missing_world:
+    if (mti.get("primary_world_path") is None) or is_missing_world:
         print("LOOKING FOR WORLDS IN "
-              + mti.get_var("worlds_path"))
-        folder_path = mti.get_var("worlds_path")
+              + mti.get("worlds_path"))
+        folder_path = mti.get("worlds_path")
         # if os.path.isdir(folder_path):
         world_count = 0
         index = 0
@@ -846,7 +927,7 @@ def load_world_and_mod_data():
                             default_world_path = sub_path
                             # was os.path.join(base_path, sub_name)
                             # was os.path.join(
-                            #     mti.get_var(
+                            #     mti.get(
                             #         "worlds_path"
                             #     ),
                             #     "try7amber"
@@ -862,47 +943,49 @@ def load_world_and_mod_data():
 
         if is_missing_world:
             print("MISSING WORLD '"
-                  + mti.get_var("primary_world_path") + "'")
+                  + mti.get("primary_world_path") + "'")
             if default_world_path is not None:
                 print("(so a default was picked below that you can"
                       " change)")
             else:
                 print("(and no world could be found in worlds_path '"
-                      + mti.get_var("worlds_path") + "')")
+                      + mti.get("worlds_path") + "')")
 
         default_message = ""
         if default_world_path is not None:
-            default_message = (" (or world name if above; blank for ["
+            default_message = (" set to default: ["
                                + default_world_path + "])")
-        input_string = input("World path" + default_message + ": ")
+        # input_string = input("World path" + default_message + ": ")
+        error("World path" + default_message)
+        input_string = default_world_path
         if len(input_string) > 0:
             try_path = os.path.join(
-                mti.get_var("worlds_path"),
+                mti.get("worlds_path"),
                 input_string
             )
             this_pwp = input_string  # this primary world path
             pw_exists = os.path.isdir(this_pwp)
             if (not pw_exists) and os.path.isdir(try_path):
                 this_pwp = try_path
-            mti._data["primary_world_path"] = this_pwp
+            set_var("primary_world_path", this_pwp)
             auto_chosen_world = False
         else:
             if default_world_path is not None:
-                mti._data["primary_world_path"] = default_world_path
-        mti.save_yaml()
-    print("Using world at '"+mti.get_var("primary_world_path")+"'")
+                set_var("primary_world_path", default_world_path)
+        save_config()
+    print("Using world at '"+mti.get("primary_world_path")+"'")
     # game_name = None
-    # if mti.contains("game_path"):
-    #     game_name = os.path.basename(mti.get_var("game_path"))
+    # if mti.get("game_path") is not None:
+    #     game_name = os.path.basename(mti.get("game_path"))
     tmp_gameid = get_world_var("gameid")
     tmp_game_gameid = get_gameid_from_game_path(
-        mti.get_var("game_path")
+        mti.get("game_path")
     )
     if tmp_game_gameid is not None:
         # print("World gameid is "+str(tmp_gameid))
         print(" (game.conf in game_path has 'gameid' "
               + str(tmp_game_gameid) + ")")
-    if mti.contains("game_path"):
+    if mti.get("game_path") is not None:
         if (tmp_gameid is None):
             is_world_changed = True
         elif tmp_gameid.lower() != tmp_game_gameid.lower():
@@ -910,21 +993,21 @@ def load_world_and_mod_data():
 
     default_gameid = None
     games_path = os.path.join(
-        mti.get_var("shared_minetest_path"),
+        mti.get("shared_minetest_path"),
         "games"
     )
-    if (not mti.contains("game_path")) or is_world_changed:
-        if mti.contains("game_path"):
+    if (mti.get("game_path") is None) or is_world_changed:
+        if mti.get("game_path") is not None:
             default_gameid = get_gameid_from_game_path(
-                mti.get_var("game_path")
+                mti.get("game_path")
             )
         if default_gameid is None:
             default_gameid = get_world_var("gameid")
         if default_gameid is not None:
             explained_string = ""
-            if mti.contains("game_path"):
+            if mti.get("game_path") is not None:
                 explained_string = (" is different than game_path in "
-                                    + mti._config_path
+                                    + config_path
                                     + " so game_path must be confirmed")
             print("")
             print("gameid '" + default_gameid + "' detected in world"
@@ -970,31 +1053,34 @@ def load_world_and_mod_data():
                 for try_gameid in games_list:
                     print("  "+try_gameid)
                 path_msg = " (or gameid if listed above)"
-            mti.prepare_var(
+            define_conf_var(
                 "game_path",
                 default_game_path,
                 "game (your subgame) path"+path_msg
             )
-            if mti.get_var("game_path") in games_list:
+            if mti.get("game_path") is None:
+                error("Warning: You must set game_path using set_var"
+                      " before using related operations.")
+            elif mti.get("game_path") in games_list:
                 # convert game_path to a game path (this is why
                 # intentionally used as param for
                 # get_game_path_from_gameid)
                 try_path = get_game_path_from_gameid(
-                    mti.get_var("game_path")
+                    mti.get("game_path")
                 )
                 if try_path is not None:
                     if os.path.isdir(try_path):
-                        mti.set_var("game_path", try_path)
-            elif (not os.path.isdir(mti.get_var("game_path"))):
+                        set_var("game_path", try_path)
+            elif (not os.path.isdir(mti.get("game_path"))):
                 try_path = os.path.join(
                     games_path,
-                    mti.get_var("game_path")
+                    mti.get("game_path")
                 )
                 if os.path.isdir(try_path):
-                    mti.set_var("game_path", try_path)
+                    set_var("game_path", try_path)
         else:
             print("WARNING: could not get default gameid--perhaps"
-                  " 'games_path' in '" + mti._config_path
+                  " 'games_path' in '" + config_path
                   + "' is wrong.")
 
     mods_path = None
@@ -1031,11 +1117,11 @@ def load_world_and_mod_data():
               + str(len(prepackaged_game_mod_list)) + " mod(s): "
               + ','.join(prepackaged_game_mod_list))
 
-    if (mti.contains("game_path") and
-            os.path.isdir(mti.get_var("game_path"))):
+    if ((mti.get("game_path") is not None) and
+            os.path.isdir(mti.get("game_path"))):
         loaded_mod_list = get_modified_mod_list_from_game_path(
             loaded_mod_list,
-            mti.get_var("game_path")
+            mti.get("game_path")
         )
         # print("Mod list for current game: "+','.join(loaded_mod_list))
 
@@ -1045,21 +1131,20 @@ def load_world_and_mod_data():
         new_mod_list_msg = ""
         if len(new_mod_list) > 0:
             new_mod_list_msg = ": "+','.join(new_mod_list)
-        gameid = os.path.basename(mti.get_var("game_path"))
-        print("")
-        print(gameid + " has " + str(len(new_mod_list))
+        gameid = os.path.basename(mti.get("game_path"))
+        error("")
+        error(gameid + " has " + str(len(new_mod_list))
               + " mod(s) beyond "
               + prepackaged_gameid + new_mod_list_msg + ")")
         if (user_excluded_mod_count > 0):
-            print("  (not including " + str(user_excluded_mod_count)
+            error("  (not including " + str(user_excluded_mod_count)
                   + " mods(s) excluded by world.mt)")
     else:
-        print("Could not find game folder '"
-              + mti.get_var("game_path")
-              + "'. Please fix game_path in '"
-              + mti._config_path + "' to point to your"
-              " subgame, so that game and mod management features will"
-              " work.")
+        error("Could not find game folder '{}'."
+              " Please fix game_path in '{}' to point to your"
+              " game, so that game and mod management features will"
+              " work. You can also set it via mtanalyze.set_var"
+              "".format(mti.get("game_path"), config_path))
 
 
 def get_modified_mod_list_from_game_path(mod_list, game_path):
@@ -1117,7 +1202,7 @@ def get_world_var(name):
 
 def check_world_mt():
     global world_mt_mapvars_world_path
-    world_path = mti.get_var("primary_world_path")
+    world_path = mti.get("primary_world_path")
     # world_mt_mapvars = None
     global world_mt_mapvars
     if ((world_mt_mapvars is not None) and
