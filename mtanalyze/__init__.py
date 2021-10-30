@@ -55,14 +55,14 @@ except ImportError:
     try:
         from pycodetool.parsing import *
     except ImportError:
-        print("This script requires parsing from poikilos/pycodetool")
-        print("Try (in a Terminal):")
-        print()
-        print("cd \"{}\"".format(repos))
-        print("git clone https://github.com/poikilos/pycodetool.git"
+        error("This script requires parsing from poikilos/pycodetool")
+        error("Try (in a Terminal):")
+        error()
+        error("cd \"{}\"".format(repos))
+        error("git clone https://github.com/poikilos/pycodetool.git"
               " pycodetool")
-        print()
-        print()
+        error()
+        error()
         exit(1)
 
 '''
@@ -215,7 +215,7 @@ def load_config():
     global mti
     if os.path.isfile(config_path):
         if os.path.getsize(config_path) == 0:
-            print("WARNING: The empty config file \"{}\" will be"
+            error("WARNING: The empty config file \"{}\" will be"
                   " deleted.".format(config_path))
             os.remove(config_path)
     if os.path.isfile(config_path):
@@ -230,7 +230,7 @@ def load_config():
                                  " is not valid json."
                                  "".format(config_path))
     elif os.path.isfile(_OLD_conf_path):
-        print("WARNING: The old config \"{}\" will be ignored"
+        error("WARNING: The old config \"{}\" will be ignored"
               " and \"{}\" will be generated."
               "".format(_OLD_conf_path, config_path))
 
@@ -379,13 +379,13 @@ class MTChunk:
                                 # if len(ops) == 2:
                                 for op_s in ops:
                                     if "=" not in op_s:
-                                        print("Bad assignment"
+                                        error("Bad assignment"
                                               " (operator) so ignoring"
                                               " command '" + op_s + "'")
                                         continue
                                     chunks = op_s.split("=")
                                     if len(chunks) != 2:
-                                        print("Bad assignment"
+                                        error("Bad assignment"
                                               " (not 2 sides) so"
                                               " ignoring command '"
                                               + op_s+"'")
@@ -398,12 +398,12 @@ class MTChunk:
                                         c1 = chunks[1]
                                         meta["image_h"] = int(c1)
                                     else:
-                                        print("Bad name for image"
+                                        error("Bad name for image"
                                               " variable so ignoring"
                                               " variable named '"
                                               + str(chunks[0])+"'")
                                 # else:
-                                #     print("Bad assignment count so"
+                                #     error("Bad assignment count so"
                                 #           " ignoring operations"
                                 #           " string '"+ops_s+"'")
                     elif "PNG Region" in strp:
@@ -423,7 +423,7 @@ class MTChunk:
                                     meta["image_top"] = int(rv_l[2])
                                     meta["image_bottom"] = int(rv_l[3])
                                 else:
-                                    print("Bad map rect, so ignoring: "
+                                    error("Bad map rect, so ignoring: "
                                           + rv_l_s)
                     elif (len(strp) > 5) and (strp[:5] == "xmin:"):
                         self.metadata["image_left"] = int(strp[5:].strip())
@@ -503,12 +503,12 @@ def get_game_name_from_game_path(path):
                 result = game_conf_dict["name"]
                 if (result is None) or (len(result.strip()) < 1):
                     result = None
-                    print("WARNING: missing 'name' in game.conf in '"
+                    error("WARNING: missing 'name' in game.conf in '"
                           + path + "'")
                 else:
                     result = result.strip()
         else:
-            print("WARNING: no game.conf in '"+path+"'")
+            error("WARNING: no game.conf in '"+path+"'")
     return result
 
 
@@ -527,7 +527,7 @@ def get_game_path_from_gameid(gameid):
                 if not os.path.isdir(this_game_path):
                     continue
                 this_gameid = get_gameid_from_game_path(this_game_path)
-                # print("get_game_path_from_gameid is seeing if '"
+                # error("get_game_path_from_gameid is seeing if '"
                 #       + str(this_gameid) + "' is the desired '"
                 #       + gameid + "'")
                 if this_gameid is None:
@@ -536,18 +536,18 @@ def get_game_path_from_gameid(gameid):
                     result = this_game_path
                     break
                 # else:
-                #     print("skipping '"+this_game_path+"'")
+                #     error("skipping '"+this_game_path+"'")
             if game_count <= 0:
-                print("WARNING: " + str(game_count) + " games in '"
+                error("WARNING: " + str(game_count) + " games in '"
                       + games_path + "'.")
         else:
-            print("ERROR: cannot get game_path from gameid since"
+            error("ERROR: cannot get game_path from gameid since"
                   " games path is not ready yet (or '" + games_path
                   + "' does not exist for some other reason such as"
                   " shared_minetest_path is wrong and does not contain"
                   " games folder)")
     else:
-        print("ERROR: can't try get_game_path_from_gameid since"
+        error("ERROR: can't try get_game_path_from_gameid since"
               " gameid param is None.")
     return result
 
@@ -590,7 +590,7 @@ def init_minetestinfo(**kwargs):
                         default_www_minetest_path = try_path
                     break
             if default_www_minetest_path is None:
-                print("WARNING: could not detect website directory"
+                error("WARNING: could not detect website directory"
                       " automatically. You need WAMP or similar web"
                       " server with php 5 or higher to use minetest"
                       " website scripts. You can change"
@@ -606,13 +606,13 @@ def init_minetestinfo(**kwargs):
                     default_www_minetest_path = deep_path
                 else:
                     default_www_minetest_path = try_path
-                    print("(using '" + default_www_minetest_path
+                    error("(using '" + default_www_minetest_path
                           + "' since no '" + deep_path + "'")
-                print("You can test the php website like:")
-                print("  cd '" + default_www_minetest_path + "'")
-                print("  php -S localhost:8000")
-                print("  # but for production use a full web server")
-                print("  # see http://php.net/manual/en/features."
+                error("You can test the php website like:")
+                error("  cd '" + default_www_minetest_path + "'")
+                error("  php -S localhost:8000")
+                error("  # but for production use a full web server")
+                error("  # see http://php.net/manual/en/features."
                       "commandline.webserver.php")
         define_conf_var("www_minetest_path", default_www_minetest_path,
                         "your web server directory (or other folder"
@@ -631,12 +631,12 @@ def init_minetestinfo(**kwargs):
     if mti.get("user_minetest_path") is None:
         raise ValueError("'user_minetest_path' is not set.")
     elif not os.path.isdir(mti.get("user_minetest_path")):
-        print("(WARNING: missing "
+        error("(WARNING: missing "
               + mti.get("user_minetest_path")
               + ", so please close and update user_minetest_path"
               " in '" + config_path
               + "' before next run)")
-    print("")
+    error("")
 
     if mti.get("worlds_path") is None:
         pmp = mti.get("user_minetest_path")
@@ -656,13 +656,13 @@ def init_minetestinfo(**kwargs):
         default_shared_minetest_path = "C:\\Games\\Minetest"
     else:
         for try_path in try_paths:
-            print("checking for '" + try_path + "'")
+            error("checking for '" + try_path + "'")
             if os.path.isdir(try_path):
                 default_shared_minetest_path = try_path
                 break
 
     while True:
-        print("default default_shared_minetest_path is '"
+        error("default default_shared_minetest_path is '"
               + default_shared_minetest_path + "'")
         define_conf_var(
             "shared_minetest_path",
@@ -723,16 +723,16 @@ def init_minetestinfo(**kwargs):
         "colors.txt"
     )
     if not os.path.isfile(dest_colors_txt):
-        print("")
-        print("Generating colors ("+dest_colors_txt+")...")
+        error("")
+        error("Generating colors ("+dest_colors_txt+")...")
         base_colors = get_dict_from_conf_file(
             base_colors_txt,
             assignment_operator=" ",
             inline_comments_enable=True
         )
         merged_colors = get_dict_deepcopy(base_colors)
-        print("")
-        print(base_colors_txt + " has " + str(len(merged_colors))
+        error("")
+        error(base_colors_txt + " has " + str(len(merged_colors))
               + " color(s)")
         if os.path.isfile(head_colors_txt):
             head_colors = get_dict_from_conf_file(
@@ -740,7 +740,7 @@ def init_minetestinfo(**kwargs):
                 assignment_operator=" ",
                 inline_comments_enable=True
             )
-            print(os.path.basename(head_colors_txt) + " has "
+            error(os.path.basename(head_colors_txt) + " has "
                   + str(len(head_colors)) + " color(s)")
             # merged_colors = get_dict_modified_by_conf_file(
             #     merged_colors,
@@ -757,7 +757,7 @@ def init_minetestinfo(**kwargs):
                 elif merged_colors[this_key] != head_colors[this_key]:
                     merged_colors[this_key] = head_colors[this_key]
                     entries_changed_count += 1
-            print("  " + singular_or_plural("entry",
+            error("  " + singular_or_plural("entry",
                                             "entries",
                                             (entries_new_count
                                              + entries_changed_count))
@@ -766,7 +766,7 @@ def init_minetestinfo(**kwargs):
                   + " changed) merged from "
                   + os.path.basename(head_colors_txt))
         else:
-            print("Missing '"+head_colors_txt+"'")
+            error("Missing '"+head_colors_txt+"'")
         this_name = "sfan5.txt"
         show_max_count = 7
         this_path = os.path.join(colors_repos_folder_path, this_name)
@@ -777,29 +777,29 @@ def init_minetestinfo(**kwargs):
         )
         if os.path.isfile(this_path):
             appended_count = 0
-            print("")
-            print("Reading "+this_path+"...")
+            error("")
+            error("Reading "+this_path+"...")
             for this_key in append_colors.keys():
                 if this_key not in merged_colors:
                     merged_colors[this_key] = append_colors[this_key]
                     if appended_count < show_max_count:
-                        print("  "+this_key+" "+merged_colors[this_key])
+                        error("  "+this_key+" "+merged_colors[this_key])
                     elif appended_count == show_max_count:
-                        print("  ...")
+                        error("  ...")
                     appended_count += 1
-            print("  " + singular_or_plural("entry",
+            error("  " + singular_or_plural("entry",
                                             "entries",
                                             appended_count)
                   + " appended from " + this_name)
         else:
-            print("Missing "+this_path)
+            error("Missing "+this_path)
         folder_path = colors_fragments_folder_path
         if os.path.isdir(folder_path):
             for sub_name in os.listdir(folder_path):
                 sub_path = os.path.join(folder_path, sub_name)
                 if sub_name[:1] != "." and os.path.isfile(sub_path):
-                    print("")
-                    print("Reading "+sub_path+"...")
+                    error("")
+                    error("Reading "+sub_path+"...")
                     appended_count = 0
                     append_colors = get_dict_from_conf_file(
                         sub_path,
@@ -811,12 +811,12 @@ def init_minetestinfo(**kwargs):
                             merged_colors[this_key] = \
                                 append_colors[this_key]
                             if appended_count < show_max_count:
-                                print("  " + this_key + " "
+                                error("  " + this_key + " "
                                       + merged_colors[this_key])
                             elif appended_count == show_max_count:
-                                print("  ...")
+                                error("  ...")
                             appended_count += 1
-                    print("  " + singular_or_plural("entry",
+                    error("  " + singular_or_plural("entry",
                                                     "entries",
                                                     appended_count)
                           + " appended from " + sub_name)
@@ -839,22 +839,22 @@ def init_minetestinfo(**kwargs):
                         exclusions_list.append(strp)
 
             ins.close()
-            print("Listed " + str(len(exclusions_list))
+            error("Listed " + str(len(exclusions_list))
                   + " invisible blocks to exclude using '"
                   + exclusions_name + "'.")
         else:
-            print("Missing "+exclusions_path)
+            error("Missing "+exclusions_path)
         for this_key in merged_colors.keys():
             if this_key in exclusions_list:
                 merged_colors.remove(this_key)
-                print("Removed invisible block '"+this_key+"'")
+                error("Removed invisible block '"+this_key+"'")
 
         save_conf_from_dict(dest_colors_txt, merged_colors,
                             assignment_operator=" ")
-        print("Finished writing " + str(len(merged_colors))
+        error("Finished writing " + str(len(merged_colors))
               + " value(s) to '" + dest_colors_txt + "'")
     else:
-        print("Using colors from " + dest_colors_txt)
+        error("Using colors from " + dest_colors_txt)
     default_minetestserver_path = "/usr/bin/minetestserver"
     server_msg = ""
     if not os.path.isfile(default_minetestserver_path):
@@ -877,7 +877,7 @@ def init_minetestinfo(**kwargs):
         default_minetestserver_path,
         "minetestserver executable" + server_msg
     )
-    print("[ {} ] generating minetestinfo is complete.".format(me))
+    error("[ {} ] generating minetestinfo is complete.".format(me))
 
 
 def load_world_and_mod_data():
@@ -895,12 +895,12 @@ def load_world_and_mod_data():
     if mti.get("primary_world_path") is not None:
         if not os.path.isdir(mti.get("primary_world_path")):
             is_missing_world = True
-            print("primary_world_path ERROR: '"
+            error("primary_world_path ERROR: '"
                   + mti.get("primary_world_path")
                   + "' is not a folder.")
 
     if (mti.get("primary_world_path") is None) or is_missing_world:
-        print("LOOKING FOR WORLDS IN "
+        error("LOOKING FOR WORLDS IN "
               + mti.get("worlds_path"))
         folder_path = mti.get("worlds_path")
         # if os.path.isdir(folder_path):
@@ -916,7 +916,7 @@ def load_world_and_mod_data():
                     this_dt = datetime.fromtimestamp(
                         os.path.getmtime(sub_path)
                     )
-                    print("  " + sub_name + (" "*(30-len(sub_name)))
+                    error("  " + sub_name + (" "*(30-len(sub_name)))
                           + " <" + this_dt.strftime('%Y-%m-%d %H:%M:%S')
                           + ">")
                     wn = world_number
@@ -942,13 +942,13 @@ def load_world_and_mod_data():
                     index += 1
 
         if is_missing_world:
-            print("MISSING WORLD '"
+            error("MISSING WORLD '"
                   + mti.get("primary_world_path") + "'")
             if default_world_path is not None:
-                print("(so a default was picked below that you can"
+                error("(so a default was picked below that you can"
                       " change)")
             else:
-                print("(and no world could be found in worlds_path '"
+                error("(and no world could be found in worlds_path '"
                       + mti.get("worlds_path") + "')")
 
         default_message = ""
@@ -973,7 +973,7 @@ def load_world_and_mod_data():
             if default_world_path is not None:
                 set_var("primary_world_path", default_world_path)
         save_config()
-    print("Using world at '"+mti.get("primary_world_path")+"'")
+    error("Using world at '"+mti.get("primary_world_path")+"'")
     # game_name = None
     # if mti.get("game_path") is not None:
     #     game_name = os.path.basename(mti.get("game_path"))
@@ -982,8 +982,8 @@ def load_world_and_mod_data():
         mti.get("game_path")
     )
     if tmp_game_gameid is not None:
-        # print("World gameid is "+str(tmp_gameid))
-        print(" (game.conf in game_path has 'gameid' "
+        # error("World gameid is "+str(tmp_gameid))
+        error(" (game.conf in game_path has 'gameid' "
               + str(tmp_game_gameid) + ")")
     if mti.get("game_path") is not None:
         if (tmp_gameid is None):
@@ -1009,8 +1009,8 @@ def load_world_and_mod_data():
                 explained_string = (" is different than game_path in "
                                     + config_path
                                     + " so game_path must be confirmed")
-            print("")
-            print("gameid '" + default_gameid + "' detected in world"
+            error("")
+            error("gameid '" + default_gameid + "' detected in world"
                   + explained_string + ".")
         game_folder_name_blacklist = []
         # is only used if there is no game defined in world
@@ -1046,12 +1046,12 @@ def load_world_and_mod_data():
                 default_gameid
             )
             if default_game_path is None:
-                print("ERROR: got default gameid '" + default_gameid
+                error("ERROR: got default gameid '" + default_gameid
                       + "' but there is no matching game path that has"
                       " this in game.conf.")
             if len(games_list) > 0:
                 for try_gameid in games_list:
-                    print("  "+try_gameid)
+                    error("  "+try_gameid)
                 path_msg = " (or gameid if listed above)"
             define_conf_var(
                 "game_path",
@@ -1079,7 +1079,7 @@ def load_world_and_mod_data():
                 if os.path.isdir(try_path):
                     set_var("game_path", try_path)
         else:
-            print("WARNING: could not get default gameid--perhaps"
+            error("WARNING: could not get default gameid--perhaps"
                   " 'games_path' in '" + config_path
                   + "' is wrong.")
 
@@ -1102,18 +1102,18 @@ def load_world_and_mod_data():
                 prepackaged_gameid = "minetest_game"
                 prepackaged_game_path = os.path.join(games_path,
                                                      prepackaged_gameid)
-                print("WARNING: Neither a minetest_game nor a minetest"
+                error("WARNING: Neither a minetest_game nor a minetest"
                       + " dir is in " + games_path + ", so"
                       + " \"" + prepackaged_game_path + "\""
                       + " will be used.")
-    print("")
+    error("")
     if len(prepackaged_game_mod_list) < 1:
         prepackaged_game_mod_list = \
             get_modified_mod_list_from_game_path(
                 prepackaged_game_mod_list,
                 prepackaged_game_path
             )
-        print(prepackaged_gameid + " has "
+        error(prepackaged_gameid + " has "
               + str(len(prepackaged_game_mod_list)) + " mod(s): "
               + ','.join(prepackaged_game_mod_list))
 
@@ -1123,7 +1123,7 @@ def load_world_and_mod_data():
             loaded_mod_list,
             mti.get("game_path")
         )
-        # print("Mod list for current game: "+','.join(loaded_mod_list))
+        # error("Mod list for current game: "+','.join(loaded_mod_list))
 
         for this_mod in loaded_mod_list:
             if this_mod not in prepackaged_game_mod_list:
@@ -1195,7 +1195,7 @@ def get_world_var(name):
         if name in world_mt_mapvars:
             result = world_mt_mapvars[name]
         else:
-            print("WARNING: Tried to get '" + name + "' from world but"
+            error("WARNING: Tried to get '" + name + "' from world but"
                   " this world.mt does not have the variable")
     return result
 
@@ -1209,19 +1209,19 @@ def check_world_mt():
             (world_path == world_mt_mapvars_world_path)):
         return
     if world_mt_mapvars is not None:
-        print("WARNING: reloading world.mt since was using '"
+        error("WARNING: reloading world.mt since was using '"
               + world_mt_mapvars_world_path + "' but now using '"
               + world_path + "'")
     world_mt_mapvars_world_path = world_path
     if world_path is None:
-        print("ERROR: Tried to get '" + name + "' but"
+        error("ERROR: Tried to get '" + name + "' but"
               " primary_world_path is None")
         return
     this_world_mt_path = os.path.join(world_path, "world.mt")
     # DO convert strings to autodetected types:
     world_mt_mapvars = get_dict_from_conf_file(this_world_mt_path, "=")
     if world_mt_mapvars is None:
-        print("ERROR: Tried to get world.mt settings but couldn't"
+        error("ERROR: Tried to get world.mt settings but couldn't"
               " read '" + this_world_mt_path + "'")
 
 
@@ -1230,6 +1230,6 @@ init_minetestinfo()
 
 
 if __name__ == '__main__':
-    print()
-    print("Import this into your py file via"
+    error()
+    error("Import this into your py file via"
           " `import mtanalyze.minetestinfo` ")
