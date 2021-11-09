@@ -140,3 +140,11 @@ if __name__ == '__main__':
         printNonMatchingStream(args.input, args.input, "channel_layout", "mono")
     else:
         printNonMatchingStream(args.input, args.input, "channel_layout", "mono", patch_prefix=args.patch)
+        parts = os.path.split(args.patch)
+        patch_name = parts[-1]
+        if len(parts) > 1:
+            parentParts = os.path.split(parts[0])
+            if parentParts[-1] == "Bucket_Game-branches":
+                print("Set BUCKET_GAME to Bucket_Game dir then: cd EnlivenMinetest && git pull && rsync -rt Bucket_Game-branches/{}/ $BUCKET_GAME".format(patch_name))
+            else:
+                print("parentParts: {}".format(parentParts))
