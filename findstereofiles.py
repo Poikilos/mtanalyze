@@ -7,7 +7,35 @@ ffprobe-json-example.json in the doc directory of the mtanalyze repo.
 
 Examples:
 ~/git/mtanalyze/findstereofiles.py ~/minetest/games/Bucket_Game
+
 ~/git/mtanalyze/findstereofiles.py ~/minetest/games/Bucket_Game --patch ~/git/EnlivenMinetest/Bucket_Game-branches/stereo_to_mono-vs-211107c
+
+~/git/mtanalyze/findstereofiles.py ~/minetest/games/Bucket_Game --patch ~/git/EnlivenMinetest/Bucket_Game-branches/stereo_to_mono-vs-211107c-qscale_a_1
+# ^ Such as if hard-coded "-qscale:a 1" in findstereofiles.py.
+# Then analyze difference in size using meld like:
+cd ~/git/EnlivenMinetest/Bucket_Game-branches/stereo_to_mono-vs-211107c-qscale_a_1
+find -type f -exec ls -lh {} \; > ../stereo_to_mono-vs-211107c-qscale_a_1.stats.txt
+cd ..
+meld stereo_to_mono-vs-211107c-qscale_a_1.stats.txt stereo_to_mono-vs-211107c.stats.txt
+
+
+Known issues:
+- This script doesn't detect
+  "Error initializing output stream 0:0 -- Error while opening encoder
+  for output stream #0:0 - maybe incorrect parameters such as bit_rate,
+  rate, width or height"
+  such as for sounds in coderbuild/castle/src/original/ropes/sounds/
+  (which don't need to be changed anyway since they are originals)
+  - This may only occur when -ab 192K is used.
+- This script doesn't use compression options, but that is probably
+  going to not change (unless the option of passing arguments along
+  to ffmpeg is implemented)
+  - Bitrate options were not as successful as ffmpeg's defaults in:
+    ffmpeg version 4.3.2-0+deb11u2
+    built with gcc 10 (Debian 10.2.1-6)
+    See <https://github.com/poikilos/EnlivenMinetest/issues/407> for
+    file size outcomes of various compression options vs no compression
+    options.
 '''
 import argparse
 from pathlib import Path

@@ -35,6 +35,7 @@ textNames = [
     "TODO",
     "castle_tapestries_README",
     "castle_tapestries_LICENSE",
+    "mergefoods",
 ]
 
 typeExtensions = {}
