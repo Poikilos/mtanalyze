@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-# module for finding minetest paths and other installation metadata
+# mtanalyze: module for using minetest data
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or
@@ -24,11 +24,25 @@ import sys
 from datetime import datetime
 import platform
 import json
+import from minetestsettings import MinetestSettings
+'''
+import from minetestassumptions import (
+    default_after_broken,
+)
+'''
+
+settings = MinetestSettings()
 
 
-def error(msg):
-    sys.stderr.write("{}\n".format(msg))
+def error(*args):
+    if len(args) > 1:
+        raise NotImplementedError("multiple args in error function")
+    elif len(args) > 0:
+        sys.stderr.write("{}\n".format(args[0]))
+    else:
+        sys.stderr.write("\n")
     sys.stderr.flush()
+
 
 myPath = os.path.realpath(__file__)
 myPackage = os.path.split(myPath)[0]
@@ -40,125 +54,13 @@ if not os.path.isfile(os.path.join(myPackage, me)):
     raise RuntimeError('{} is not in package {}.'.format(me, myPackage))
 
 try:
-    from pycodetool.parsing import ( #import *
-        # ConfigParser,
-        save_conf_from_dict,
-        get_dict_modified_by_conf_file,
-        get_dict_from_conf_file,
-    )
-except ImportError:
-    pctPackageRel = os.path.join('pycodetool', 'pycodetool')
-    pctPackage = os.path.join(repos, pctPackageRel)
-    pctRepo = os.path.split(pctPackage)[0]
-    if os.path.isfile(os.path.join(pctPackage, 'parsing.py')):
-        sys.path.append(pctRepo)
-    try:
-        from pycodetool.parsing import *
-    except ImportError:
-        error("This script requires parsing from poikilos/pycodetool")
-        error("Try (in a Terminal):")
-        error()
-        error("cd \"{}\"".format(repos))
-        error("git clone https://github.com/poikilos/pycodetool.git"
-              " pycodetool")
-        error()
-        error()
-        exit(1)
-
-'''
-# NOTE: parsing.py is from
-# <https://raw.githubusercontent.com/poikilos/pycodetool
-# /master/pycodetool/parsing.py>
-from mtanalyze.parsing import (
-    # ConfigParser,
-    save_conf_from_dict,
-    get_dict_modified_by_conf_file,
-    get_dict_from_conf_file,
-)
-'''
-
-
-try:
     input = raw_input
 except NameError:
     pass
 
-# TODO: eliminate the following variables from generator.py (and manage
-#   here centrally instead, so configuration is shared across minetest
-#   helper programs):
-# self.config (instead use mtanalyze.*config* helper functions or mti)
-# profile_path
-# minetest_player_pos_multiplier = 10.0
-
-worldgen_mod_list = []
-worldgen_mod_list.append("caverealms")
-worldgen_mod_list.append("ethereal")
-worldgen_mod_list.append("lapis")
-worldgen_mod_list.append("mines")
-worldgen_mod_list.append("mg")
-# ^ NOTE: experimental worldgen mod delays/prevents chunk generation and
-#   sometimes crashes in 0.4.13 release (tested on Windows 10)
-worldgen_mod_list.append("moretrees")
-worldgen_mod_list.append("moreores")
-# worldgen_mod_list.append("nature_classic")
-# ^ NOTE: plantlife_modpack has this and other stuff, but detecting this
-#   could help since it is unique to the modpack
-worldgen_mod_list.append("plantlife_modpack")
-# ^ ok if installed as modpack instead of putting individual mods in
-#   mods folder
-worldgen_mod_list.append("pyramids")
-worldgen_mod_list.append("railcorridors")
-worldgen_mod_list.append("sea")
-worldgen_mod_list.append("technic")
-worldgen_mod_list.append("technic_worldgen")
-worldgen_mod_list.append("tsm_mines")
-worldgen_mod_list.append("tsm_pyramids")
-worldgen_mod_list.append("tsm_railcorridors")
-
-after_broken = {}
-after_broken["default:stone"] = "default:cobble"
-after_broken["default:stone_with_iron"] = "default:iron_lump"
-after_broken["default:stone_with_copper"] = "default:copper_lump"
-after_broken["default:stone_with_coal"] = "default:coal_lump"
-after_broken["default:dirt_with_grass"] = "default:dirt"
-after_broken["moreores:mineral_tin"] = "moreores:tin_lump"
-after_broken["default:stone_with_mese"] = "default:mese_crystal"
-after_broken["moreores:mineral_silver"] = "moreores:silver_lump"
-after_broken["default:stone_with_gold"] = "default:gold_lump"
-after_broken["default:stone_with_diamond"] = "default:diamond"
-# TODO: this stuff could be scraped from lua such as from
-# /usr/local/share/minetest/games/fca_game_a/mods/technic/
-# technic_worldgen/nodes.lua
-after_broken["technic:mineral_uranium"] = "technic:uranium_lump"
-after_broken["technic:mineral_chromium"] = "technic:chromium_lump"
-after_broken["technic:mineral_zinc"] = "technic:zinc_lump"
-after_broken["technic:mineral_lead"] = "technic:lead_lump"
-after_broken["technic:mineral_sulfur"] = "technic:sulfur_lump"
-after_broken["caverealms:hanging_thin_ice"] = "caverealms:thin_ice"
-after_broken["caverealms:stone_with_moss"] = "default:cobble"
-after_broken["caverealms:stone_with_lichen"] = "default:cobble"
-after_broken["caverealms:stone_with_algae"] = "default:cobble"
-after_broken["caverealms:constant_flame"] = "Empty"
-after_broken["fire:basic_flame"] = "Empty"
-after_broken["default:water_source"] = "bucket:bucket_water"
-after_broken["default:river_water_source"] = "bucket:bucket_river_water"
-after_broken["default:lava_source"] = "bucket:bucket_lava"
-# after_broken[""] = ""
-
-
-after_broken_startswith = {}
-after_broken_startswith["pipeworks:mese_tube_"] = \
-    "pipeworks:mese_tube_000000"
-after_broken_startswith["pipeworks:conductor_tube_off_"] = \
-    "pipeworks:conductor_tube_off_1"
-after_broken_startswith["pipeworks:tube_"] = "pipeworks:tube_1"
-after_broken_startswith["Item pipeworks:accelerator_tube_"] = \
-    "pipeworks:accelerator_tube_1"
+UPM = 10.0  # (unused, for reference) Engine units per Minetest meter
 
 # TODO: crafts (scrape list of ingredients to remove from inventory)
-
-genresult_name_end_flag = "_mapper_result.txt"
-gen_error_name_end_flag = "_mapper_err.txt"
 
 loaded_mod_list = []
 
@@ -192,269 +94,27 @@ else:
 configs_path = os.path.join(appdata_path, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #                          "minetestmeta.yml")
-_OLD_conf_path = os.path.join(myPackage, "minetestmeta.yml")
-config_path = os.path.join(appdata_path, "minetestmeta.json")
-
-mti = {}  # The configuration for mtanalyze is stored in config_path.
-mti_help = {}
-
-
-def save_config():
-    with open(config_path, 'w') as ins:
-        json.dump(mti, ins, indent=2, sort_keys=True)
-
-def set_var(key, value):
-    '''
-    Use this function instead of accessing mti directly so that the
-    metadata is saved immediately.
-    '''
-    mti[key] = value
-    save_config
-
-def load_config():
-    global mti
-    if os.path.isfile(config_path):
-        if os.path.getsize(config_path) == 0:
-            error("WARNING: The empty config file \"{}\" will be"
-                  " deleted.".format(config_path))
-            os.remove(config_path)
-    if os.path.isfile(config_path):
-        # mti = ConfigManager(config_path, ":")
-        # ^ formerly minetestinfo (which was confusing).
-        # ^ ConfigManager is from poikilos pycodetool.parsing
-        with open(config_path, 'r') as ins:
-            try:
-                mti = json.load(ins)
-            except json.decoder.JSONDecodeError:
-                raise ValueError("The configuration file \"{}\""
-                                 " is not valid json."
-                                 "".format(config_path))
-    elif os.path.isfile(_OLD_conf_path):
-        error("WARNING: The old config \"{}\" will be ignored"
-              " and \"{}\" will be generated."
-              "".format(_OLD_conf_path, config_path))
-
-
-def define_conf_var(key, value, help_msg):
-    '''
-    Define a variable. Only set it if it doesn't already have a value.
-    Get the existing value otherwise the default (defined by "value").
-    (This function replaces `mti.prevare_var`--mti was a class but is
-    now a dict.)
-    '''
-    if help_msg is None:
-        raise ValueError("help_msg is None for {}".format(key))
-    mti_help[key] = help_msg
-    return mti.setdefault(key, value)
-
-load_config()
-
-game_path_from_gameid_dict = {}
-FLAG_EMPTY_HEXCOLOR = "#010000"
-
-
-def is_yes(s):
-    if s.lower() == "y":
-        return True
-    if s.lower() == "yes":
-        return True
-    return False
-
-
-class MTDecaChunk:
-
-    metadata = None
-    last_changed_utc_second = None
-
-    def __init__(self):
-        self.metadata = {}
-        self.metadata["last_saved_utc_second"] = None
-        self.metadata["luid_list"] = None
-        # ^ what chunks this decachunk contains (as saved to 160px
-        #   image)
-
-    def load_yaml(self, yml_path):
-        self.metadata = get_dict_modified_by_conf_file(self.metadata,
-                                                       yml_path,
-                                                       ":")
-
-    def save_yaml(self, yml_path):
-        save_conf_from_dict(yml_path, self.metadata,
-                            assignment_operator=":",
-                            save_nulls_enable=False)
-
-
-class MTChunk:
-    # x = None
-    # z = None
-    metadata = None
-    is_fresh = None
-    # luid = None
-
-    def __init__(self):
-        # NOTE: variables that need to be saved (and only they) should
-        # be stored in dict
-        self.metadata = {}
-        self.is_fresh = False
-
-        self.metadata["is_empty"] = False  # formerly is_marked_empty
-        self.metadata["is_marked"] = False
-        self.metadata["width"] = None
-        self.metadata["height"] = None
-        self.metadata["image_w"] = None
-        self.metadata["image_h"] = None
-        self.metadata["image_left"] = None
-        self.metadata["image_top"] = None
-        self.metadata["image_right"] = None
-        self.metadata["image_bottom"] = None
-        self.metadata["is_traversed"] = False
-        self.metadata["tags"] = None
-
-    def load_yaml(self, yml_path):
-        self.metadata = get_dict_modified_by_conf_file(
-            self.metadata,
-            yml_path,
-            ":"
-        )
-
-    def save_yaml(self, yml_path):
-        save_conf_from_dict(
-            yml_path,
-            self.metadata,
-            assignment_operator=":",
-            save_nulls_enable=False
-        )
-
-    # requires output such as from minetestmapper-numpy.py
-    # returns whether save is needed (whether metadata was changed)
-    def set_from_genresult(self, this_genresult_path):
-        # this_genresult_path = \
-        #     mtchunks.get_chunk_genresult_path(chunk_luid)
-        participle = "getting copy of dict"
-        is_changed = False
-        old_meta = get_dict_deepcopy(self.metadata)
-        meta = self.metadata
-        if os.path.isfile(this_genresult_path):
-            # may have data such as:
-            # Result image (w=16 h=16) will be written to
-            #   chunk_x0z0.png
-            # Unknown node names: meze:meze default:stone_with_iron
-            #   air default:dirt_with_snow default:stone_with_copper
-            #   default:snow
-            # Unknown node ids: 0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7
-            # Drawing image
-            # Saving to: chunk_x0z0.png
-            # ('PNG Region: ', [0, 64, 0, 64])
-            # ('Pixels PerNode: ', 1)
-            # ('border: ', 0)
-            meta["is_marked"] = True
-            participle = "opening '"+this_genresult_path+"'"
-            ins = open(this_genresult_path, 'r')
-            line = True
-            counting_number = 1
-            while line:
-                participle = "reading line "+str(counting_number)
-                line = ins.readline()
-                if line:
-                    strp = line.strip()
-                    if ("does not exist" in strp):
-                        # ^ official minetestmapper.py says
-                        #   "World does not exist" but Poikilos
-                        #   fork and minetestmapper-numpy.py
-                        #   says "data does not exist"
-                        meta["is_empty"] = True
-                        break
-                    elif "Result image" in strp:
-                        oparen_index = strp.find("(")
-                        if (oparen_index > -1):
-                            cparen_index = strp.find(
-                                ")",
-                                oparen_index+1
-                            )
-                            if (cparen_index > -1):
-                                osta = oparen_index+1
-                                oend = cparen_index
-                                ops_s = strp[osta:oend]
-                                ops = ops_s.split(" ")
-                                # if len(ops) == 2:
-                                for op_s in ops:
-                                    if "=" not in op_s:
-                                        error("Bad assignment"
-                                              " (operator) so ignoring"
-                                              " command '" + op_s + "'")
-                                        continue
-                                    chunks = op_s.split("=")
-                                    if len(chunks) != 2:
-                                        error("Bad assignment"
-                                              " (not 2 sides) so"
-                                              " ignoring command '"
-                                              + op_s+"'")
-                                        continue
-                                    # TODO: check for ValueError (?)
-                                    if chunks[0].strip() == "w":
-                                        c1 = chunks[1]
-                                        meta["image_w"] = int(c1)
-                                    elif chunks[0].strip() == "h":
-                                        c1 = chunks[1]
-                                        meta["image_h"] = int(c1)
-                                    else:
-                                        error("Bad name for image"
-                                              " variable so ignoring"
-                                              " variable named '"
-                                              + str(chunks[0])+"'")
-                                # else:
-                                #     error("Bad assignment count so"
-                                #           " ignoring operations"
-                                #           " string '"+ops_s+"'")
-                    elif "PNG Region" in strp:
-                        ob_i = strp.find("[")
-                        if ob_i > -1:
-                            cb_i = strp.find("]", ob_i+1)
-                            if cb_i > -1:
-                                rv_l_s = strp[ob_i+1:cb_i]
-                                rv_l = rv_l_s.split(",")
-                                if len(rv_l) == 4:
-                                    meta = meta
-                                    # pngregion = [pngminx, pngmaxx,
-                                    #              pngminz, pngmaxz]
-                                    # # ^ from minetestmapper-numpy.py
-                                    meta["image_left"] = int(rv_l[0])
-                                    meta["image_right"] = int(rv_l[1])
-                                    meta["image_top"] = int(rv_l[2])
-                                    meta["image_bottom"] = int(rv_l[3])
-                                else:
-                                    error("Bad map rect, so ignoring: "
-                                          + rv_l_s)
-                    elif (len(strp) > 5) and (strp[:5] == "xmin:"):
-                        self.metadata["image_left"] = int(strp[5:].strip())
-                    elif (len(strp) > 5) and (strp[:5] == "xmax:"):
-                        self.metadata["image_right"] = int(strp[5:].strip())
-                    elif (len(strp) > 5) and (strp[:5] == "zmin:"):
-                        # (zmin is bottom since cartesian)
-                        self.metadata["image_bottom"] = int(strp[5:].strip())
-                    elif (len(strp) > 5) and (strp[:5] == "zmax:"):
-                        # (zmax is top since cartesian)
-                        self.metadata["image_top"] = int(strp[5:].strip())
-                counting_number += 1
-            ins.close()
-        participle = "checking for changes"
-        is_changed = is_dict_subset(self.metadata, old_meta, False)
-        return is_changed
-
+_OLD_yaml_path = os.path.join(myPackage, "minetestmeta.yml")
+# ^ formerly _OLD_conf_path formerly conf_path (or _OLD_json_path?)
+_OLD_json_path = os.path.join(appdata_path, "minetestmeta.json")
+# ^ formerly config_path
 
 def irr_to_mt(irr_pos):
-    i = None
+    '''
+    Convert from engine units to Minetest meters.
+    '''
+    c = None
     try:
-        i = len(irr_pos)
+        c = len(irr_pos)
     except TypeError:
         # if isinstance(irr_pos, int):
         #     return irr_pos / 10.0
         return irr_pos / 10.0
-    if i == 3:
+    if c == 3:
         return (irr_pos[0] / 10.0, irr_pos[1] / 10.0, irr_pos[2] / 10.0)
-    elif i == 2:
+    elif c == 2:
         return (irr_pos[0] / 10.0, irr_pos[1] / 10.0)
-    elif i == 1:
+    elif c == 1:
         return (irr_pos[0] / 10.0,)
     else:
         raise ValueError("Converting Irrlicht tuples of this size is"
@@ -463,22 +123,28 @@ def irr_to_mt(irr_pos):
 
 
 def irr_to_mt_s(irr_pos):
+    '''
+    Convert from engine units to Minetest meters then to a string.
+    '''
     return ','.join(irr_to_mt(irr_pos))
 
 
 def mt_to_irr(mt_pos):
-    i = None
+    '''
+    Convert from Minetest meters to engine units.
+    '''
+    c = None
     try:
-        i = len(mt_pos)
+        c = len(mt_pos)
     except TypeError:
         # if isinstance(mt_pos, int):
         #     return float(mt_pos) * 10.0
         return mt_pos * 10.0
-    if i == 3:
+    if c == 3:
         return (mt_pos[0] * 10.0, mt_pos[1] * 10.0, mt_pos[2] * 10.0)
-    elif i == 2:
+    elif c == 2:
         return (mt_pos[0] * 10.0, mt_pos[1] * 10.0)
-    elif i == 1:
+    elif c == 1:
         return (mt_pos[0] * 10.0,)
     else:
         raise ValueError("Converting Minetest tuples of this size is"
@@ -486,747 +152,21 @@ def mt_to_irr(mt_pos):
     return None
 
 
-def get_gameid_from_game_path(path):
-    result = None
-    if path is not None:
-        result = os.path.basename(path)
-    return result
-
-
-def get_game_name_from_game_path(path):
-    result = None
-    if path is not None:
-        game_conf_path = os.path.join(path, "game.conf")
-        if os.path.isfile(game_conf_path):
-            game_conf_dict = get_dict_from_conf_file(game_conf_path)
-            if "name" in game_conf_dict:
-                result = game_conf_dict["name"]
-                if (result is None) or (len(result.strip()) < 1):
-                    result = None
-                    error("WARNING: missing 'name' in game.conf in '"
-                          + path + "'")
-                else:
-                    result = result.strip()
-        else:
-            error("WARNING: no game.conf in '"+path+"'")
-    return result
-
-
-def get_game_path_from_gameid(gameid):
-    """This is case-insensitive."""
-    result = None
-    games_path = os.path.join(mti.get("shared_minetest_path"), "games")
-    if gameid is not None:
-        if os.path.isdir(games_path):
-            game_count = 0
-            for this_game_name in os.listdir(games_path):
-                game_count += 1
-                this_game_path = os.path.join(games_path, this_game_name)
-                if this_game_name.startswith("."):
-                    continue
-                if not os.path.isdir(this_game_path):
-                    continue
-                this_gameid = get_gameid_from_game_path(this_game_path)
-                # error("get_game_path_from_gameid is seeing if '"
-                #       + str(this_gameid) + "' is the desired '"
-                #       + gameid + "'")
-                if this_gameid is None:
-                    continue
-                if this_gameid.lower() == gameid.lower():
-                    result = this_game_path
-                    break
-                # else:
-                #     error("skipping '"+this_game_path+"'")
-            if game_count <= 0:
-                error("WARNING: " + str(game_count) + " games in '"
-                      + games_path + "'.")
-        else:
-            error("ERROR: cannot get game_path from gameid since"
-                  " games path is not ready yet (or '" + games_path
-                  + "' does not exist for some other reason such as"
-                  " shared_minetest_path is wrong and does not contain"
-                  " games folder)")
-    else:
-        error("ERROR: can't try get_game_path_from_gameid since"
-              " gameid param is None.")
-    return result
-
-
-def init_minetestinfo(**kwargs):
+def deprecate_minetestinfo():
     '''
-    Keyword arguments:
-    shared_minetest_path -- Specify the path to the installed minetest
-      binaries and shared data such as .
+    This is called instead of init_minetestinfo to ensure that the old
+    config is ignored since it is entirely irrelevant.
     '''
-    global dict_entries_modified_count
-    global profile_path
-    if not mti.get("www_minetest_path") is not None:
-        default_www_minetest_path = "/var/www/html/minetest"
-        if "windows" in platform.system().lower():
-            default_www_minetest_path = None
-            prioritized_try_paths = []
-            prioritized_try_paths.append("C:\\wamp\\www")
-            prioritized_try_paths.append("C:\\www")
-            prioritized_try_paths.append(
-                os.path.join("C:\\", "Program Files",
-                             "Apache Software Foundation",
-                             "Apache2.2", "htdocs")
-            )
-
-            prioritized_try_paths.append("C:\\Inetpub\\Wwwroot")
-
-            # prioritized_try_paths.append(
-            #     os.path.join("C:\\", "Program Files",
-            #                  "Apache Software Foundation",
-            #                  "Apache2.2", "htdocs", "folder_test",
-            #                  "website")
-            # )
-            for try_path in prioritized_try_paths:
-                if os.path.isdir(try_path):
-                    deep_path = os.path.join(try_path, "minetest")
-                    if os.path.isdir(deep_path):
-                        default_www_minetest_path = deep_path
-                    else:
-                        default_www_minetest_path = try_path
-                    break
-            if default_www_minetest_path is None:
-                error("WARNING: could not detect website directory"
-                      " automatically. You need WAMP or similar web"
-                      " server with php 5 or higher to use minetest"
-                      " website scripts. You can change"
-                      " www_minetest_path to your server's website root"
-                      " later by editing \"{}\" or using"
-                      " mtanalyze.set_var".format(config_path))
-                default_www_minetest_path = myPackage
-        else:
-            try_path = os.path.join(profile_path, "public_html")
-            if os.path.isdir(try_path):
-                deep_path = os.path.join(try_path, "minetest")
-                if os.path.isdir(deep_path):
-                    default_www_minetest_path = deep_path
-                else:
-                    default_www_minetest_path = try_path
-                    error("(using '" + default_www_minetest_path
-                          + "' since no '" + deep_path + "'")
-                error("You can test the php website like:")
-                error("  cd '" + default_www_minetest_path + "'")
-                error("  php -S localhost:8000")
-                error("  # but for production use a full web server")
-                error("  # see http://php.net/manual/en/features."
-                      "commandline.webserver.php")
-        define_conf_var("www_minetest_path", default_www_minetest_path,
-                        "your web server directory (or other folder"
-                        " where minetest website features and data"
-                        " should be placed)")
-
-    default_profile_minetest_path = os.path.join(profile_path,
-                                                 ".minetest")
-    if platform.system() == "Windows":
-        default_profile_minetest_path = "C:\\games\\Minetest"
-    define_conf_var("user_minetest_path",
-                    default_profile_minetest_path,
-                    ("user minetest path (formerly"
-                     " profile_minetest_path) containing worlds"
-                     " folder and debug.txt or bin/debug.txt"))
-    if mti.get("user_minetest_path") is None:
-        raise ValueError("'user_minetest_path' is not set.")
-    elif not os.path.isdir(mti.get("user_minetest_path")):
-        error("(WARNING: missing "
-              + mti.get("user_minetest_path")
-              + ", so please close and update user_minetest_path"
-              " in '" + config_path
-              + "' before next run)")
-    error("")
-
-    if mti.get("worlds_path") is None:
-        pmp = mti.get("user_minetest_path")
-        set_var("worlds_path", os.path.join(pmp, "worlds"))
-        save_config()
-
-    default_shared_minetest_path = "/usr/share/games/minetest"
-
-    # packaged versions get priority
-    # /usr/share/games/minetest: Ubuntu Xenial 0.4.15 and
-    #   Zesty 0.4.16 packages.
-    # /usr/share/minetest: arch package
-    # /usr/local/share/minetest: compiled from source
-    try_paths = ["/usr/share/minetest", "/usr/share/games/minetest",
-                 "/usr/local/share/minetest"]
-    if "windows" in platform.system().lower():
-        default_shared_minetest_path = "C:\\Games\\Minetest"
-    else:
-        for try_path in try_paths:
-            error("checking for '" + try_path + "'")
-            if os.path.isdir(try_path):
-                default_shared_minetest_path = try_path
-                break
-
-    while True:
-        error("default default_shared_minetest_path is '"
-              + default_shared_minetest_path + "'")
-        define_conf_var(
-            "shared_minetest_path",
-            default_shared_minetest_path,
-            "path containing Minetest's games folder"
-        )
-        games_path = os.path.join(
-            mti.get("shared_minetest_path"),
-            "games"
-        )
-        if not os.path.isdir(games_path):
-            error(
-                "WARNING: '"
-                + mti.get("shared_minetest_path")
-                + "' does not contain a games folder. If you use this"
-                + " shared_minetest_path, some features may not work"
-                + " correctly (such as adding worldgen mod labels to"
-                + " chunks, and future programs that may use this"
-                + " metadata to install minetest games)."
-            )
-            answer = "y"
-            if is_yes(answer):
-                error("You can change the value of shared_minetest_path"
-                      + " later by editing '"
-                      + config_path + "' or using mtanalyze.set_var.")
-                error("")
-                break
-            else:
-                mti.remove_var("shared_minetest_path")
-        else:
-            break
-    load_world_and_mod_data()
-    error("")
-    lib_path = os.path.join(profile_path, "minetest")
-    util_path = os.path.join(lib_path, "util")
-    base_colors_txt = os.path.join(util_path, "colors.txt")
-    if not os.path.isfile(base_colors_txt):
-        base_colors_txt = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "colors (base).txt"
-        )
-    colors_folder_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "colors"
-    )
-    colors_repos_folder_path = os.path.join(colors_folder_path, "repos")
-    colors_fragments_folder_path = os.path.join(
-        colors_folder_path,
-        "fragments"
-    )
-    head_colors_txt = os.path.join(
-        colors_repos_folder_path,
-        "VenessaE.txt"
-    )
-
-    dest_colors_txt = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "colors.txt"
-    )
-    if not os.path.isfile(dest_colors_txt):
-        error("")
-        error("Generating colors ("+dest_colors_txt+")...")
-        base_colors = get_dict_from_conf_file(
-            base_colors_txt,
-            assignment_operator=" ",
-            inline_comments_enable=True
-        )
-        merged_colors = get_dict_deepcopy(base_colors)
-        error("")
-        error(base_colors_txt + " has " + str(len(merged_colors))
-              + " color(s)")
-        if os.path.isfile(head_colors_txt):
-            head_colors = get_dict_from_conf_file(
-                head_colors_txt,
-                assignment_operator=" ",
-                inline_comments_enable=True
-            )
-            error(os.path.basename(head_colors_txt) + " has "
-                  + str(len(head_colors)) + " color(s)")
-            # merged_colors = get_dict_modified_by_conf_file(
-            #     merged_colors,
-            #     head_colors_txt,
-            #     assignment_operator=" ",
-            #     inline_comments_enable=True
-            # )
-            entries_changed_count = 0
-            entries_new_count = 0
-            for this_key in head_colors:
-                if this_key not in merged_colors:
-                    merged_colors[this_key] = head_colors[this_key]
-                    entries_new_count += 1
-                elif merged_colors[this_key] != head_colors[this_key]:
-                    merged_colors[this_key] = head_colors[this_key]
-                    entries_changed_count += 1
-            error("  " + singular_or_plural("entry",
-                                            "entries",
-                                            (entries_new_count
-                                             + entries_changed_count))
-                  + " (" + str(entries_new_count) + " new, "
-                  + str(entries_changed_count)
-                  + " changed) merged from "
-                  + os.path.basename(head_colors_txt))
-        else:
-            error("Missing '"+head_colors_txt+"'")
-        this_name = "sfan5.txt"
-        show_max_count = 7
-        this_path = os.path.join(colors_repos_folder_path, this_name)
-        append_colors = get_dict_from_conf_file(
-            this_path,
-            assignment_operator=" ",
-            inline_comments_enable=True
-        )
-        if os.path.isfile(this_path):
-            appended_count = 0
-            error("")
-            error("Reading "+this_path+"...")
-            for this_key in append_colors.keys():
-                if this_key not in merged_colors:
-                    merged_colors[this_key] = append_colors[this_key]
-                    if appended_count < show_max_count:
-                        error("  "+this_key+" "+merged_colors[this_key])
-                    elif appended_count == show_max_count:
-                        error("  ...")
-                    appended_count += 1
-            error("  " + singular_or_plural("entry",
-                                            "entries",
-                                            appended_count)
-                  + " appended from " + this_name)
-        else:
-            error("Missing "+this_path)
-        folder_path = colors_fragments_folder_path
-        if os.path.isdir(folder_path):
-            for sub_name in os.listdir(folder_path):
-                sub_path = os.path.join(folder_path, sub_name)
-                if sub_name[:1] != "." and os.path.isfile(sub_path):
-                    error("")
-                    error("Reading "+sub_path+"...")
-                    appended_count = 0
-                    append_colors = get_dict_from_conf_file(
-                        sub_path,
-                        assignment_operator=" ",
-                        inline_comments_enable=True
-                    )
-                    for this_key in append_colors.keys():
-                        if this_key not in merged_colors:
-                            merged_colors[this_key] = \
-                                append_colors[this_key]
-                            if appended_count < show_max_count:
-                                error("  " + this_key + " "
-                                      + merged_colors[this_key])
-                            elif appended_count == show_max_count:
-                                error("  ...")
-                            appended_count += 1
-                    error("  " + singular_or_plural("entry",
-                                                    "entries",
-                                                    appended_count)
-                          + " appended from " + sub_name)
-        exclusions_name = "colors - invisible.txt"
-        exclusions_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            exclusions_name
-        )
-        exclusions_list = []
-        if os.path.isfile(exclusions_path):
-            ins = open(exclusions_path, 'r')
-            line = True
-            counting_number = 1
-            while line:
-                participle = "reading line "+str(counting_number)
-                line = ins.readline()
-                if line:
-                    strp = line.strip()
-                    if len(strp) > 0:
-                        exclusions_list.append(strp)
-
-            ins.close()
-            error("Listed " + str(len(exclusions_list))
-                  + " invisible blocks to exclude using '"
-                  + exclusions_name + "'.")
-        else:
-            error("Missing "+exclusions_path)
-        for this_key in merged_colors.keys():
-            if this_key in exclusions_list:
-                merged_colors.remove(this_key)
-                error("Removed invisible block '"+this_key+"'")
-
-        save_conf_from_dict(dest_colors_txt, merged_colors,
-                            assignment_operator=" ")
-        error("Finished writing " + str(len(merged_colors))
-              + " value(s) to '" + dest_colors_txt + "'")
-    else:
-        error("Using colors from " + dest_colors_txt)
-    default_minetestserver_path = "/usr/bin/minetestserver"
-    server_msg = ""
-    if not os.path.isfile(default_minetestserver_path):
-        try_path = "/usr/local/bin/minetestserver"
-        if os.path.isfile(try_path):
-            default_minetestserver_path = try_path
-
-    if not os.path.isfile(default_minetestserver_path):
-        try_path = os.path.join(profile_path,
-                                "minetest/bin/minetestserver")
-        if os.path.isfile(try_path):
-            # built from source
-            default_minetestserver_path = try_path
-    if not os.path.isfile(default_minetestserver_path):
-        server_msg = " (not found in any known location)"
-        default_minetestserver_path = "minetestserver"
-
-    define_conf_var(
-        "minetestserver_path",
-        default_minetestserver_path,
-        "minetestserver executable" + server_msg
-    )
-    error("[ {} ] generating minetestinfo is complete.".format(me))
+    if os.path.isfile(_OLD_yaml_path):
+        print("{} is deprecated and will be ignored."
+              "".format(_OLD_yaml_path))
+    if os.path.isfile(_OLD_json_path):
+        print("{} is deprecated and will be ignored."
+              "".format(_OLD_json_path))
 
 
-def load_world_and_mod_data():
-    # if games_path =
-    global loaded_mod_list
-    global prepackaged_game_mod_list
-    loaded_mod_list.clear()
-    prepackaged_game_mod_list.clear()
-    new_mod_list.clear()
-    is_world_changed = False
-    auto_chosen_world = False
-    is_missing_world = False
-
-    default_world_path = None
-    if mti.get("primary_world_path") is not None:
-        if not os.path.isdir(mti.get("primary_world_path")):
-            is_missing_world = True
-            error("primary_world_path ERROR: '"
-                  + mti.get("primary_world_path")
-                  + "' is not a folder.")
-
-    if (mti.get("primary_world_path") is None) or is_missing_world:
-        error("LOOKING FOR WORLDS IN "
-              + mti.get("worlds_path"))
-        folder_path = mti.get("worlds_path")
-        # if os.path.isdir(folder_path):
-        world_count = 0
-        index = 0
-        world_number = 0
-        default_world_name = None
-        if os.path.exists(folder_path):
-            for sub_name in os.listdir(folder_path):
-                sub_path = os.path.join(folder_path, sub_name)
-                if sub_name[:1] != "." and os.path.isdir(sub_path):
-                    world_count += 1
-                    this_dt = datetime.fromtimestamp(
-                        os.path.getmtime(sub_path)
-                    )
-                    error("  " + sub_name + (" "*(30-len(sub_name)))
-                          + " <" + this_dt.strftime('%Y-%m-%d %H:%M:%S')
-                          + ">")
-                    wn = world_number
-                    wc = world_count
-                    if (sub_name != "world") or (wn == (wc-1)):
-                        if not auto_chosen_world:
-                            default_world_name = sub_name
-                            default_world_path = sub_path
-                            # was os.path.join(base_path, sub_name)
-                            # was os.path.join(
-                            #     mti.get(
-                            #         "worlds_path"
-                            #     ),
-                            #     "try7amber"
-                            # )
-                        auto_chosen_world = True
-                    elif default_world_name == "world":
-                        if not auto_chosen_world:
-                            default_world_name = sub_name
-                            default_world_path = sub_path
-                        auto_chosen_world = True
-                    world_number += 1
-                    index += 1
-
-        if is_missing_world:
-            error("MISSING WORLD '"
-                  + mti.get("primary_world_path") + "'")
-            if default_world_path is not None:
-                error("(so a default was picked below that you can"
-                      " change)")
-            else:
-                error("(and no world could be found in worlds_path '"
-                      + mti.get("worlds_path") + "')")
-
-        default_message = ""
-        if default_world_path is not None:
-            default_message = (" set to default: ["
-                               + default_world_path + "])")
-        # input_string = input("World path" + default_message + ": ")
-        error("World path" + default_message)
-        input_string = default_world_path
-        if len(input_string) > 0:
-            try_path = os.path.join(
-                mti.get("worlds_path"),
-                input_string
-            )
-            this_pwp = input_string  # this primary world path
-            pw_exists = os.path.isdir(this_pwp)
-            if (not pw_exists) and os.path.isdir(try_path):
-                this_pwp = try_path
-            set_var("primary_world_path", this_pwp)
-            auto_chosen_world = False
-        else:
-            if default_world_path is not None:
-                set_var("primary_world_path", default_world_path)
-        save_config()
-    error("Using world at '"+mti.get("primary_world_path")+"'")
-    # game_name = None
-    # if mti.get("game_path") is not None:
-    #     game_name = os.path.basename(mti.get("game_path"))
-    tmp_gameid = get_world_var("gameid")
-    tmp_game_gameid = get_gameid_from_game_path(
-        mti.get("game_path")
-    )
-    if tmp_game_gameid is not None:
-        # error("World gameid is "+str(tmp_gameid))
-        error(" (game.conf in game_path has 'gameid' "
-              + str(tmp_game_gameid) + ")")
-    if mti.get("game_path") is not None:
-        if (tmp_gameid is None):
-            is_world_changed = True
-        elif tmp_gameid.lower() != tmp_game_gameid.lower():
-            is_world_changed = True
-
-    default_gameid = None
-    games_path = os.path.join(
-        mti.get("shared_minetest_path"),
-        "games"
-    )
-    if (mti.get("game_path") is None) or is_world_changed:
-        if mti.get("game_path") is not None:
-            default_gameid = get_gameid_from_game_path(
-                mti.get("game_path")
-            )
-        if default_gameid is None:
-            default_gameid = get_world_var("gameid")
-        if default_gameid is not None:
-            explained_string = ""
-            if mti.get("game_path") is not None:
-                explained_string = (" is different than game_path in "
-                                    + config_path
-                                    + " so game_path must be confirmed")
-            error("")
-            error("gameid '" + default_gameid + "' detected in world"
-                  + explained_string + ".")
-        game_folder_name_blacklist = []
-        # is only used if there is no game defined in world
-        game_folder_name_blacklist.append("minetest_game")
-        game_folder_name_blacklist.append("minetest")
-        # on arch, 0.4.16 uses the directory name minetest instead
-        games_list = []
-        if default_gameid is None:
-            folder_path = games_path
-            if os.path.isdir(folder_path):
-                sub_names = os.listdir(folder_path)
-                real_count = 0
-                for sub_name in sub_names:
-                    if (sub_name[:1] != "."):
-                        real_count += 1
-                real_index = 0
-                for sub_name in sub_names:
-                    sub_path = os.path.join(folder_path, sub_name)
-                    if os.path.isdir(sub_path) and sub_name[:1] != ".":
-                        blacklisted = \
-                            sub_name in game_folder_name_blacklist
-                        if ((not blacklisted) or
-                                (real_index >= real_count-1)):
-                            this_gameid = \
-                                get_gameid_from_game_path(sub_path)
-                            if default_gameid is None:
-                                default_gameid = this_gameid
-                            games_list.append(this_gameid)
-                    real_index += 1
-        if default_gameid is not None:
-            path_msg = ""
-            default_game_path = get_game_path_from_gameid(
-                default_gameid
-            )
-            if default_game_path is None:
-                error("ERROR: got default gameid '" + default_gameid
-                      + "' but there is no matching game path that has"
-                      " this in game.conf.")
-            if len(games_list) > 0:
-                for try_gameid in games_list:
-                    error("  "+try_gameid)
-                path_msg = " (or gameid if listed above)"
-            define_conf_var(
-                "game_path",
-                default_game_path,
-                "game (your subgame) path"+path_msg
-            )
-            if mti.get("game_path") is None:
-                error("Warning: You must set game_path using set_var"
-                      " before using related operations.")
-            elif mti.get("game_path") in games_list:
-                # convert game_path to a game path (this is why
-                # intentionally used as param for
-                # get_game_path_from_gameid)
-                try_path = get_game_path_from_gameid(
-                    mti.get("game_path")
-                )
-                if try_path is not None:
-                    if os.path.isdir(try_path):
-                        set_var("game_path", try_path)
-            elif (not os.path.isdir(mti.get("game_path"))):
-                try_path = os.path.join(
-                    games_path,
-                    mti.get("game_path")
-                )
-                if os.path.isdir(try_path):
-                    set_var("game_path", try_path)
-        else:
-            error("WARNING: could not get default gameid--perhaps"
-                  " 'games_path' in '" + config_path
-                  + "' is wrong.")
-
-    mods_path = None
-    prepackaged_game_path = None
-    if games_path is not None:
-        # from release 0.4.16 on, directory is just called minetest
-        try_id = "minetest_game"
-        try_path = os.path.join(games_path, try_id)
-        if os.path.isdir(try_path):
-            prepackaged_game_path = try_path
-            prepackaged_gameid = try_id
-        else:
-            try_id = "minetest"  # on arch, 0.4.16 uses this name
-            try_path = os.path.join(games_path, try_id)
-            if os.path.isdir(try_path):
-                prepackaged_game_path = try_path
-                prepackaged_gameid = try_id
-            else:
-                prepackaged_gameid = "minetest_game"
-                prepackaged_game_path = os.path.join(games_path,
-                                                     prepackaged_gameid)
-                error("WARNING: Neither a minetest_game nor a minetest"
-                      + " dir is in " + games_path + ", so"
-                      + " \"" + prepackaged_game_path + "\""
-                      + " will be used.")
-    error("")
-    if len(prepackaged_game_mod_list) < 1:
-        prepackaged_game_mod_list = \
-            get_modified_mod_list_from_game_path(
-                prepackaged_game_mod_list,
-                prepackaged_game_path
-            )
-        error(prepackaged_gameid + " has "
-              + str(len(prepackaged_game_mod_list)) + " mod(s): "
-              + ','.join(prepackaged_game_mod_list))
-
-    if ((mti.get("game_path") is not None) and
-            os.path.isdir(mti.get("game_path"))):
-        loaded_mod_list = get_modified_mod_list_from_game_path(
-            loaded_mod_list,
-            mti.get("game_path")
-        )
-        # error("Mod list for current game: "+','.join(loaded_mod_list))
-
-        for this_mod in loaded_mod_list:
-            if this_mod not in prepackaged_game_mod_list:
-                new_mod_list.append(this_mod)
-        new_mod_list_msg = ""
-        if len(new_mod_list) > 0:
-            new_mod_list_msg = ": "+','.join(new_mod_list)
-        gameid = os.path.basename(mti.get("game_path"))
-        error("")
-        error(gameid + " has " + str(len(new_mod_list))
-              + " mod(s) beyond "
-              + prepackaged_gameid + new_mod_list_msg + ")")
-        if (user_excluded_mod_count > 0):
-            error("  (not including " + str(user_excluded_mod_count)
-                  + " mods(s) excluded by world.mt)")
-    else:
-        error("Could not find game folder '{}'."
-              " Please fix game_path in '{}' to point to your"
-              " game, so that game and mod management features will"
-              " work. You can also set it via mtanalyze.set_var"
-              "".format(mti.get("game_path"), config_path))
-
-
-def get_modified_mod_list_from_game_path(mod_list, game_path):
-    global user_excluded_mod_count
-    if mod_list is None:
-        mod_list = []
-    if game_path is not None and os.path.isdir(game_path):
-        mods_path = os.path.join(game_path, "mods")
-        folder_path = mods_path
-        missing_load_mod_setting_count = 0
-        check_world_mt()
-        user_excluded_mod_count = 0
-        for sub_name in os.listdir(folder_path):
-            sub_path = os.path.join(folder_path, sub_name)
-            if os.path.isdir(sub_path) and not sub_name.startswith("."):
-                load_this_mod = True
-                # TODO: eliminate this--load_mod_* is not a thing
-                # for subgames--all of subgame's mods are loaded if
-                # subgame is loaded
-                lmvn = "load_mod_" + sub_name
-                # ^ load mod variable name
-                if world_has_var(lmvn):
-                    load_this_mod = get_world_var(lmvn)
-                    if not load_this_mod:
-                        user_excluded_mod_count += 1
-                if load_this_mod is True:
-                    if sub_name not in mod_list:
-                        mod_list.append(sub_name)
-    return mod_list
-
-
-def world_has_var(name):
-    if world_mt_mapvars is None:
-        return False
-    return name in world_mt_mapvars
-
-
-world_mt_mapvars = None
-world_mt_mapvars_world_path = None
-
-
-def get_world_var(name):
-    result = None
-    check_world_mt()
-    if world_mt_mapvars is not None:
-        # Don't do .get(name) -- show warning only if not present
-        # (allow None)
-        if name in world_mt_mapvars:
-            result = world_mt_mapvars[name]
-        else:
-            error("WARNING: Tried to get '" + name + "' from world but"
-                  " this world.mt does not have the variable")
-    return result
-
-
-def check_world_mt():
-    global world_mt_mapvars_world_path
-    world_path = mti.get("primary_world_path")
-    # world_mt_mapvars = None
-    global world_mt_mapvars
-    if ((world_mt_mapvars is not None) and
-            (world_path == world_mt_mapvars_world_path)):
-        return
-    if world_mt_mapvars is not None:
-        error("WARNING: reloading world.mt since was using '"
-              + world_mt_mapvars_world_path + "' but now using '"
-              + world_path + "'")
-    world_mt_mapvars_world_path = world_path
-    if world_path is None:
-        error("ERROR: Tried to get '" + name + "' but"
-              " primary_world_path is None")
-        return
-    this_world_mt_path = os.path.join(world_path, "world.mt")
-    # DO convert strings to autodetected types:
-    world_mt_mapvars = get_dict_from_conf_file(this_world_mt_path, "=")
-    if world_mt_mapvars is None:
-        error("ERROR: Tried to get world.mt settings but couldn't"
-              " read '" + this_world_mt_path + "'")
-
-
-init_minetestinfo()
-
+# init_minetestinfo()
+deprecate_minetestinfo()
 
 
 if __name__ == '__main__':

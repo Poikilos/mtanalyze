@@ -17,7 +17,8 @@ cd ~/git/EnlivenMinetest/Bucket_Game-branches/stereo_to_mono-vs-211107c-qscale_a
 find -type f -exec ls -lh {} \; > ../stereo_to_mono-vs-211107c-qscale_a_1.stats.txt
 cd ..
 meld stereo_to_mono-vs-211107c-qscale_a_1.stats.txt stereo_to_mono-vs-211107c.stats.txt
-
+# apply:
+# Set BUCKET_GAME to Bucket_Game dir then: cd EnlivenMinetest && git pull && rsync -rt Bucket_Game-branches/stereo_to_mono-vs-211107c-qscale_a_1/ $BUCKET_GAME
 
 Known issues:
 - This script doesn't detect
@@ -127,6 +128,7 @@ def printNonMatchingStream(root, parent, name, matchValue,
                         print("- [ ] {}".format(relPath))
                         if os.path.isfile(destPath):
                             continue
+
                         subprocess.run('ffmpeg -i \"{}\" -ac 1 \"{}\"'.format(subPath, destPath), shell=True)
                         # ^ +1 to skip the os.path.sep.
                     else:

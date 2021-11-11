@@ -85,14 +85,15 @@ debugDTFmt = "%Y-%m-%d %H:%M:%S"
 is_start_now = False
 interactive_enable = False
 
-
+'''
 def is_yes(s):
+    # Use the one from mtanalyze instead.
     if s.lower() == "y":
         return True
     if s.lower() == "yes":
         return True
     return False
-
+'''
 
 def confirm_min_date():
     global min_date_string
@@ -1170,3 +1171,162 @@ if os.sep == "\\":
     print("# to convert line endings, otherwise inventory and all"
           " PlayerArgs will be loaded as blank (if using player files"
           " with Windows line endings on GNU/Linux copy of minetest).")
+
+FLAG_EMPTY_HEXCOLOR = "#010000"
+
+def combineColorLists(dest_colors_txt, share_minetest):
+    util_path = os.path.join(share_minetest, "util")
+    base_colors_txt = os.path.join(util_path, "colors.txt")
+    if not os.path.isfile(base_colors_txt):
+        base_colors_txt = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "colors (base).txt"
+        )
+    colors_folder_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "colors"
+    )
+    colors_repos_folder_path = os.path.join(colors_folder_path, "repos")
+    colors_fragments_folder_path = os.path.join(
+        colors_folder_path,
+        "fragments"
+    )
+    head_colors_txt = os.path.join(
+        colors_repos_folder_path,
+        "VenessaE.txt"
+    )
+
+    if not os.path.isfile(dest_colors_txt):
+        error("")
+        error("Generating colors ("+dest_colors_txt+")...")
+        base_colors = get_dict_from_conf_file(
+            base_colors_txt,
+            assignment_operator=" ",
+            inline_comments_enable=True
+        )
+        merged_colors = get_dict_deepcopy(base_colors)
+        error("")
+        error(base_colors_txt + " has " + str(len(merged_colors))
+              + " color(s)")
+        if os.path.isfile(head_colors_txt):
+            head_colors = get_dict_from_conf_file(
+                head_colors_txt,
+                assignment_operator=" ",
+                inline_comments_enable=True
+            )
+            error(os.path.basename(head_colors_txt) + " has "
+                  + str(len(head_colors)) + " color(s)")
+            # merged_colors = get_dict_modified_by_conf_file(
+            #     merged_colors,
+            #     head_colors_txt,
+            #     assignment_operator=" ",
+            #     inline_comments_enable=True
+            # )
+            entries_changed_count = 0
+            entries_new_count = 0
+            for this_key in head_colors:
+                if this_key not in merged_colors:
+                    merged_colors[this_key] = head_colors[this_key]
+                    entries_new_count += 1
+                elif merged_colors[this_key] != head_colors[this_key]:
+                    merged_colors[this_key] = head_colors[this_key]
+                    entries_changed_count += 1
+            error("  " + singular_or_plural("entry",
+                                            "entries",
+                                            (entries_new_count
+                                             + entries_changed_count))
+                  + " (" + str(entries_new_count) + " new, "
+                  + str(entries_changed_count)
+                  + " changed) merged from "
+                  + os.path.basename(head_colors_txt))
+        else:
+            error("Missing '"+head_colors_txt+"'")
+        this_name = "sfan5.txt"
+        show_max_count = 7
+        this_path = os.path.join(colors_repos_folder_path, this_name)
+        append_colors = get_dict_from_conf_file(
+            this_path,
+            assignment_operator=" ",
+            inline_comments_enable=True
+        )
+        if os.path.isfile(this_path):
+            appended_count = 0
+            error("")
+            error("Reading "+this_path+"...")
+            for this_key in append_colors.keys():
+                if this_key not in merged_colors:
+                    merged_colors[this_key] = append_colors[this_key]
+                    if appended_count < show_max_count:
+                        error("  "+this_key+" "+merged_colors[this_key])
+                    elif appended_count == show_max_count:
+                        error("  ...")
+                    appended_count += 1
+            error("  " + singular_or_plural("entry",
+                                            "entries",
+                                            appended_count)
+                  + " appended from " + this_name)
+        else:
+            error("Missing "+this_path)
+        folder_path = colors_fragments_folder_path
+        if os.path.isdir(folder_path):
+            for sub_name in os.listdir(folder_path):
+                sub_path = os.path.join(folder_path, sub_name)
+                if sub_name[:1] != "." and os.path.isfile(sub_path):
+                    error("")
+                    error("Reading "+sub_path+"...")
+                    appended_count = 0
+                    append_colors = get_dict_from_conf_file(
+                        sub_path,
+                        assignment_operator=" ",
+                        inline_comments_enable=True
+                    )
+                    for this_key in append_colors.keys():
+                        if this_key not in merged_colors:
+                            merged_colors[this_key] = \
+                                append_colors[this_key]
+                            if appended_count < show_max_count:
+                                error("  " + this_key + " "
+                                      + merged_colors[this_key])
+                            elif appended_count == show_max_count:
+                                error("  ...")
+                            appended_count += 1
+                    error("  " + singular_or_plural("entry",
+                                                    "entries",
+                                                    appended_count)
+                          + " appended from " + sub_name)
+        exclusions_name = "colors - invisible.txt"
+        exclusions_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            exclusions_name
+        )
+        exclusions_list = []
+        if os.path.isfile(exclusions_path):
+            ins = open(exclusions_path, 'r')
+            line = True
+            counting_number = 1
+            while line:
+                participle = "reading line "+str(counting_number)
+                line = ins.readline()
+                if line:
+                    strp = line.strip()
+                    if len(strp) > 0:
+                        exclusions_list.append(strp)
+
+            ins.close()
+            error("Listed " + str(len(exclusions_list))
+                  + " invisible blocks to exclude using '"
+                  + exclusions_name + "'.")
+        else:
+            error("Missing "+exclusions_path)
+        for this_key in merged_colors.keys():
+            if this_key in exclusions_list:
+                merged_colors.remove(this_key)
+                error("Removed invisible block '"+this_key+"'")
+
+        with open(dest_colors_txt, 'w') as outs:
+            for key, value in merged_colors.items():
+                outs.write("{} {}".format(key, value))
+        error("Finished writing " + str(len(merged_colors))
+              + " value(s) to '" + dest_colors_txt + "'")
+    else:
+        error("Using colors from " + dest_colors_txt)

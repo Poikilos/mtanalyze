@@ -36,6 +36,9 @@ textNames = [
     "castle_tapestries_README",
     "castle_tapestries_LICENSE",
     "mergefoods",
+    "a",
+    "license",
+    "p1",  # old temp file bucket_game-190613/mods/coderbuild/cottages/p1
 ]
 
 typeExtensions = {}
@@ -58,7 +61,7 @@ typeExtensions['text/json'] = ["json"]
 typeExtensions['application/x-shellscript'] = ["sh"]
 typeExtensions['text/x-python'] = ["py"]
 typeExtensions['application/zip'] = ["zip"]
-typeExtensions['application/octet-stream'] = ["save", "bak", "1st", "old", "obsolete"]
+typeExtensions['application/octet-stream'] = ["save", "bak", "1st", "old", "obsolete", "db"]
 typeExtensions['application/win-lnk'] = ["lnk"] # I made this up--mimetype says application/octet-stream
 typeExtensions['application/x-msdos-program'] = ["bat"]
 typeExtensions['text/plain'] = [
@@ -74,6 +77,8 @@ typeExtensions['text/plain'] = [
     "patch",
     "example",
     "tt",  # such as coderbuild/castle/doc/license_castle_weapons_sounds.tt
+    "skin",  # such as for old versions of bucket_game (before mod storage was used)
+    "0",
 ]
 typeExtensions['text/yaml'] = ["yml", "yaml"]
 typeExtensions['image/raster'] = [
