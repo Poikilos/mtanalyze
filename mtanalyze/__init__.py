@@ -24,15 +24,20 @@ import sys
 from datetime import datetime
 import platform
 import json
-import from minetestsettings import MinetestSettings
+# from voxboxor.settings import Settings
 '''
 import from minetestassumptions import (
     default_after_broken,
 )
+
+try:
+    input = raw_input
+except NameError:
+    pass
+
 '''
 
-settings = MinetestSettings()
-
+mti = {}  # mostly deprecated
 
 def error(*args):
     if len(args) > 1:
@@ -52,23 +57,6 @@ me = '__init__.py'
 
 if not os.path.isfile(os.path.join(myPackage, me)):
     raise RuntimeError('{} is not in package {}.'.format(me, myPackage))
-
-try:
-    input = raw_input
-except NameError:
-    pass
-
-UPM = 10.0  # (unused, for reference) Engine units per Minetest meter
-
-# TODO: crafts (scrape list of ingredients to remove from inventory)
-
-loaded_mod_list = []
-
-prepackaged_game_mod_list = []
-prepackaged_gameid = None
-new_mod_list = []
-
-user_excluded_mod_count = 0
 
 profile_path = None
 appdata_path = None
@@ -99,58 +87,6 @@ _OLD_yaml_path = os.path.join(myPackage, "minetestmeta.yml")
 _OLD_json_path = os.path.join(appdata_path, "minetestmeta.json")
 # ^ formerly config_path
 
-def irr_to_mt(irr_pos):
-    '''
-    Convert from engine units to Minetest meters.
-    '''
-    c = None
-    try:
-        c = len(irr_pos)
-    except TypeError:
-        # if isinstance(irr_pos, int):
-        #     return irr_pos / 10.0
-        return irr_pos / 10.0
-    if c == 3:
-        return (irr_pos[0] / 10.0, irr_pos[1] / 10.0, irr_pos[2] / 10.0)
-    elif c == 2:
-        return (irr_pos[0] / 10.0, irr_pos[1] / 10.0)
-    elif c == 1:
-        return (irr_pos[0] / 10.0,)
-    else:
-        raise ValueError("Converting Irrlicht tuples of this size is"
-                         " not implemented.")
-    return None
-
-
-def irr_to_mt_s(irr_pos):
-    '''
-    Convert from engine units to Minetest meters then to a string.
-    '''
-    return ','.join(irr_to_mt(irr_pos))
-
-
-def mt_to_irr(mt_pos):
-    '''
-    Convert from Minetest meters to engine units.
-    '''
-    c = None
-    try:
-        c = len(mt_pos)
-    except TypeError:
-        # if isinstance(mt_pos, int):
-        #     return float(mt_pos) * 10.0
-        return mt_pos * 10.0
-    if c == 3:
-        return (mt_pos[0] * 10.0, mt_pos[1] * 10.0, mt_pos[2] * 10.0)
-    elif c == 2:
-        return (mt_pos[0] * 10.0, mt_pos[1] * 10.0)
-    elif c == 1:
-        return (mt_pos[0] * 10.0,)
-    else:
-        raise ValueError("Converting Minetest tuples of this size is"
-                         " not implemented.")
-    return None
-
 
 def deprecate_minetestinfo():
     '''
@@ -171,5 +107,5 @@ deprecate_minetestinfo()
 
 if __name__ == '__main__':
     error()
-    error("Import this into your py file via"
+    error("This is a module not a script. In Python you can do:"
           " `import mtanalyze.minetestinfo` ")
