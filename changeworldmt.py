@@ -18,9 +18,9 @@ import shutil
 
 verbose = False
 
-def error(msg):
-    sys.stderr.write(msg)
-    sys.stderr.flush()
+# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def debug(msg):
     if verbose:

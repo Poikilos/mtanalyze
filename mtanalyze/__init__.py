@@ -39,14 +39,147 @@ except NameError:
 
 mti = {}  # mostly deprecated
 
-def error(*args):
-    if len(args) > 1:
-        raise NotImplementedError("multiple args in error function")
-    elif len(args) > 0:
-        sys.stderr.write("{}\n".format(args[0]))
-    else:
-        sys.stderr.write("\n")
-    sys.stderr.flush()
+
+# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+class EngineInfo:
+    def __init__(self, path_user, path_share, prefix=None,
+                 run_in_place=None, conf_path=None, gameid=None):
+        '''
+        Get various Minetest paths (sets self.meta['paths'] dict).
+        To indicate RUN_IN_PLACE mode, set path_user and path_share
+        to the same value. Otherwise, manually set run_in_place.
+
+        Sequential arguments:
+        path_user -- This is the path to the user-specific data.
+            - If run_in_place, this should be the same as path_share.
+            - If not run_in_place, path_user should usually be
+              ~/.minetest
+
+        path_share -- This contains data shared between users, such as
+            the following directories: builtin, client, fonts, games,
+            textures. It may also contain files such as:
+            minetestmapper-colors.txt. The directory (or a "doc"
+            directory under it) may contain files such as: copyright,
+            README.txt, lua_api.txt, menu_lua_api.txt,
+            minetest.conf.example, texture_packs.txt, world_format.txt.
+            - If run_in_place, this should be the same as path_user such
+              as ~/minetest.
+            - If not run_in_place, path_share is the prefixed system
+              path such as "/usr/share/games/minetest".
+
+        prefix -- The preferred location of bin/minetest or
+            bin/minetestserver. For example, set prefix to "/usr" or
+            "/usr/local", otherwise the first minetest binaries
+            occurring in the system's PATH will be used. The prefix is
+            irrelevant if run_in_place.
+
+        run_in_place -- Use the standard run-in-place locations of
+            files, such as {path_share}/games and {path_share}/worlds.
+            Also, the binary {path_share}/bin/minetest will be used and
+            the prefix and system PATH will be ignored.
+
+        gameid -- The engine will be set to use the gameid specified
+                  but only if the gameid. The game must exist in one of
+                  the standard locations. The gameid value is defined
+                  by game.conf but the "_game" suffix is removed. The
+                  environment variable MINETEST_SUBGAME_PATH can
+                  override this behavior and use a nonstandard location.
+        '''
+        self.meta = {}
+
+        self.gameid = None
+        if run_in_place is None:
+            run_in_place = (path_user == path_share)
+        elif run_in_place is True:
+            if path_user != path_share:
+                error('WARNING: path_user "{}" and path_share "{}"'
+                      ' differ but run_in_place is True, so path_share'
+                      ' will be used.'.format(path_user, path_share))
+        path_user = os.path.abspath(path_user)
+        path_share = os.path.abspath(path_share)
+        if run_in_place:
+            if not os.path.isdir(path_share):
+                raise ValueError("When run_in_place, the path_share"
+                                 " must exist and be the location of"
+                                 " all minetest subdirectories such as"
+                                 " bin and builtin.")
+        # if not run_in_place:
+        #     raise NotImplementedError("non-run_in_place is not"
+        #                               " implemented")
+        paths = {}
+        self.meta['paths'] = paths
+        paths['RUN_IN_PLACE'] = run_in_place
+        exeCount = 0
+        tryExeDirsMsg = "in the system's paths"
+        if conf_path is not None:
+            paths['conf'] = conf_path
+        if run_in_place:
+            if conf_path is None:
+                paths['conf'] = os.path.join(path_share,
+                                                  'minetest.conf')
+            paths['screenshots'] = os.getcwd()
+            tryBinsPath = os.path.join(path_share, 'bin')
+
+            paths['minetest'] = os.path.join(tryBinsPath,
+                                                  'minetest')
+            tryExeDirsMsg = 'in "{}"'.format(os.path.join(tryBinsPath))
+            if not os.path.isfile(paths['minetest']):
+                del paths['minetest']
+            else:
+                exeCount += 1
+
+            tryMTS = os.path.join(tryBinsPath, 'minetestserver')
+            paths['minetestserver'] = tryMTS
+            if not os.path.isfile(paths['minetestserver']):
+                del paths['minetestserver']
+            else:
+                exeCount += 1
+        else:
+            if conf_path is None:
+                paths['conf'] = os.path.join(path_user,
+                                                  'minetest.conf')
+            gamesDirs = []
+            sysGames = os.path.join(path_share, "games")
+            myGames = os.path.join(path_user, "games")
+
+            binNames = ['minetest', 'minetestserver']
+            myPaths = sys.path
+            if prefix is not None:
+                tryExeDirsMsg = ('in the system PATH nor the specified '
+                                 ' prefix "{}"\'s bin folder'
+                                 ''.format(prefix))
+                myPaths = [os.path.join(prefix, "bin")] + sys.path
+            for binName in binNames:
+                for tryBinsPath in myPaths:
+                    tryBinPath = os.path.join(tryBinsPath, binName)
+                    if os.path.isfile(tryBinPath):
+                        paths[binName] = tryBinPath
+                        exeCount += 1
+                        break
+            paths['screenshots'] = os.path.join(path_user,
+                                                     "screenshots")
+            tryExes = [
+                '/usr/games/minetest',  # Ubuntu bionic package for MT5
+            ]
+
+        if gameid is not None:
+            self.meta['gameid'] = gameid
+            '''
+            paths['game'] = game_path
+            if not os.path.isdir(game_path):
+                raise ValueError("")
+            '''
+
+        if not os.path.isfile(paths['conf']):
+            error("WARNING: There is no \"{}\"."
+                  "".format(paths['conf']))
+        if exeCount < 1:
+            error("WARNING: There was no minetest nor minetestserver"
+                  " found {}.")
 
 
 myPath = os.path.realpath(__file__)
