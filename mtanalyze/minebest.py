@@ -26,7 +26,6 @@ Examples:
 minebest list  # Show a list of Minetest worlds.
 minebest log world1  # show the log from a world called world1
 '''
-
 # TODO: when showing a debug log, output a suggested nano command
 # (and option to run it). Jump to line number in nano (undocumented):
 # "nano +{} {}".format(lineN, path)
@@ -101,11 +100,13 @@ def echo2(*args, **kwargs):
         return
     print(*args, file=sys.stderr, **kwargs)
 
+
 def startsWithAny(haystack, needles):
     for needle in needles:
         if haystack.startswith(needle):
             return True
     return False
+
 
 def containsAny(haystack, needles):
     for needle in needles:
@@ -113,21 +114,110 @@ def containsAny(haystack, needles):
             return True
     return False
 
+
 def usage():
     echo0(__doc__)
+
+
+# See mtanalyze/settings.py or <https://github.com/poikilos/voxboxor>
+#   for real settingtypes.txt processing code. `var_types` is only a
+#   short list of well-known settings:
+var_types = {}
+var_types['motd'] = "string"
+var_types['server_address'] = "string"
+var_types['server_description'] = "string"
+var_types['server_name'] = "string"
+var_types['serverlist_url'] = "string"
+var_types['irc.channel'] = "string"
+var_types['irc.nick'] = "string"
+var_types['irc.server'] = "string"
+var_types['remote_media'] = "string"
+var_types['name'] = "string"
+var_types['debug_log_level'] = "string"
+var_types['travelnet_theme'] = "string"
+var_types['areas.self_protection_privilege'] = "string"
+var_types['debug_log_level'] = "string"
+var_types['mg_name'] = "string"
+var_types['secure.trusted_mods'] = "<string>,..."
+var_types['secure.http_mods'] = "<string>,..."
+var_types['deprecated_lua_api_handling'] = "string"
+var_types['codergroups'] = "string"
+var_types['game_mode'] = "string"
+var_types['restriction_exempted_names'] = "<string>,..."
+var_types['default_privs'] = "<string>, ..."  # spaces are allowed
+var_types['mgflat_spflags'] = "<string>, ..."
+var_types['mgv7_spflags'] = "<string>, ..."
+
+transfer_var_names = ['secure.trusted_mods', 'secure.http_mods',
+                      'server_address', 'static_spawn_point']
 
 trues = ["true", "on"]
 falses = ["false", "off"]
 
-def symbol_to_tuple(s, allow_string=True, allow_bool=True):
-    if "," not in s:
+
+def symbol_to_tuple(s, allow_string=True, allow_bool=True,
+                    var_name=None, var_type=None, allow_one=False,
+                    tuple_format=None):
+    '''
+    Convert a comma-separated list of value symbols to individual
+    literal values with Python types. For documentation on more keyword
+    arguments see symbol_to_value.
+
+    Keyword arguments:
+    allow_one -- True: Return a tuple as long as the string isn't blank.
+        False: Return None if the value doesn't contain a comma (This
+        setting is usually for auto-detection of whether it is a tuple).
+    tuple_format -- The tuple format can be  "..." (csv with no spaces)
+        or " ..." (csv with spaces allowed [spaces will be stripped]).
+        The default value is " ..." if it is None so that spaces are
+        removed for usual cases (such as v3f).
+
+    Returns:
+    A tuple if parses as a tuple; None if has no commas, unless is
+    forced to be a tuple by allow_one=True; None if dict (surrounded by
+    "{}" curly braces); None if var_type is set and not every element
+    is of that type.
+    '''
+
+    list_var_type = None
+    is_dict = s.startswith("{") and s.endswith("}")
+    if var_name is not None:
+        list_var_type = var_types.get(var_name)
+        if list_var_type is not None:
+            if is_dict or ("," not in list_var_type):
+                raise ValueError("A tuple was expected for {}"
+                                 "".format(var_name))
+    if tuple_format is None:
+        tuple_format = " ..."
+        # ^ By default, spaces are stripped (such as "0, 2.5, 0").
+    if is_dict:
         return None
+    if not allow_one:
+        if "," not in s:
+            return None
     part_strings = s.split(",")
     parts = []
-    for part_s in part_strings:
+    for raw_part_s in part_strings:
+        part_s = raw_part_s
+        if tuple_format == " ...":
+            part_s = part_s.strip()
+        elif tuple_format == "...":
+            if part_s[:1].strip() != part_s[:1]:
+                var_name_msg = var_name
+                if var_name_msg is None:
+                    var_name_msg = ""
+                raise ValueError(
+                    "The value of {} = {} should not contain spaces."
+                    "".format(var_name_msg, s)
+                )
+        elif tuple_format is not None:
+            raise ValueError(
+                "The tuple format {} is not valid."
+                "".format(tuple_format)
+            )
         part = symbol_to_value(part_s, allow_string=allow_string,
                                allow_bool=allow_bool,
-                               allow_tuple=False)
+                               allow_tuple=False, var_type=var_type)
         if part is None:
             # If any part is not an expected value, then do not
             # consider the value as a tuple.
@@ -138,7 +228,8 @@ def symbol_to_tuple(s, allow_string=True, allow_bool=True):
 
 
 def symbol_to_value(s, allow_string=True, allow_bool=True,
-                    allow_tuple=True, allow_string_tuple=True):
+                    allow_tuple=True, allow_string_tuple=True,
+                    var_name=None, var_type=None):
     '''
     Keyword arguments:
     allow_string -- If false, return None if doesn't evaluate
@@ -150,29 +241,95 @@ def symbol_to_value(s, allow_string=True, allow_bool=True,
         boolean).
     allow_string_tuple -- Allow a tuple of strings (no quotes, just
         commas). This is common for Minetest.
+    var_name -- Set the variable name in order to help detect the type
+        (The global dict var_types is used to define the type of vars
+        by name).
+    var_type -- Specify the var type so it doesn't have to be detected.
+        this should be set if symbol_to_value calls itself and the
+        type of the tuple element is known (for example, if the type of
+        var_name is string list, exclude var_name but set
+        var_type="string".
     '''
     result = None
-    if s.startswith('"') and s.endswith('"'):
-        if allow_string:
-            return s[1:-1]
-        else:
-            return None
+    type_parts = None  # If not None, the expected value is a tuple.
+    homogeneous_type = None
+    tuple_format = None
+    if var_name is not None:
+        if var_type is None:
+            var_type = var_types.get(var_name)
+    if var_type is not None:
+        if "," in var_type:
+            type_parts = var_type.split(",")
+            tp0 = type_parts[0]
+            tp1 = None
+            if len(type_parts) > 1:
+                tp1 = type_parts[1]
+            if tp0.startswith("<") and tp0.endswith(">"):
+                tp0 = tp0[0][1:-1]
+                type_parts[0] = tp0
+            if (len(type_parts) == 2) and (tp1 in ["...", " ..."]):
+                homogeneous_type = tp0
+                tuple_format = tp1
+            else:
+                raise NotImplementedError(
+                    'Non-homogeneous type for {} (only var_type like'
+                    ' "type", "<type>,...", or "<type>, ..." [tuple'
+                    ' with spaces allowed] is implemented)'
+                    ''.format(var_type)
+                )
+    if type_parts is None:
+        # Only check for a string literal if not a tuple.
+        if s.startswith('"') and s.endswith('"'):
+            if allow_string:
+                return s[1:-1]
+            else:
+                return None
+    else:
+        if not allow_tuple:
+            raise ValueError(
+                "type_parts for {} was {} but allow_tuple=False."
+                "".format(var_name, type_parts)
+            )
     try:
+        if type_parts is not None:
+            ValueError("Checking for int skipped.")
         result = int(s)
     except ValueError:
         try:
+            if type_parts is not None:
+                ValueError("Checking for float skipped.")
             result = float(s)
         except ValueError:
             got_tuple = None
+            allow_one = False
+            if type_parts is not None:
+                # Force a tuple even if there is no comma if a tuple is
+                # expected.
+                allow_one = True
+            if s.startswith("{") and s.endswith("}"):
+                # TODO: implement dict such as { x=100, y=100, z=100 }"
+                #   for areas.self_protection_max_size
+                pass
+                # Dict is not implemented, so it will become a string.
             if allow_tuple:
                 got_tuple = symbol_to_tuple(
                     s,
                     allow_string=allow_string_tuple,
                     allow_bool=False,
+                    allow_one=allow_one,
+                    var_type=homogeneous_type,
+                    tuple_format=tuple_format,
                 )
             # ^ allow_bool=False because a tuple of booleans doesn't
             #   have a known usage for Minetest.
-            if allow_bool and s.lower() in trues:
+            if type_parts is not None:
+                result = got_tuple
+                if got_tuple is None:
+                    raise ValueError(
+                        "A {} tuple was expected for {}"
+                        "".format(homogeneous_type, var_name)
+                    )
+            elif allow_bool and s.lower() in trues:
                 return True
             elif allow_bool and s.lower() in falses:
                 return False
@@ -205,19 +362,22 @@ def get_conf_value(path, var_name, use_last=True):
                 continue
             name = line[:signI].strip()
             value = line[signI+1:].strip()
+            '''
             if value.startswith('"') and value.endswith('"'):
                 value = value[1:-1]
                 # print("{}:{}: Warning: {} was not in quotes."
                 #       "".format(path, lineN, result_line_n, name))
             else:
-                tmp = symbol_to_value(value, allow_string=False)
-                if tmp is not None:
-                    value = tmp
-                else:
-                    echo1('{}:{}: INFO: The type of "{}" for {} is not'
-                          ' detectable. It will become a string.'
-                          ''.format(path, lineN, value, name))
-                    value = tmp
+            '''
+            tmp = symbol_to_value(value, allow_string=True,
+                                  var_name=name)
+            if tmp is not None:
+                value = tmp
+            else:
+                echo1('{}:{}: INFO: The type of "{}" for {} is not'
+                      ' detectable. It will become a string.'
+                      ''.format(path, lineN, value, name))
+                value = tmp
             if len(name) == 0:
                 continue
             if name == var_name:
@@ -230,7 +390,22 @@ def get_conf_value(path, var_name, use_last=True):
                     break
     return result
 
+
+"""
+def check_minetest_server(address, port):
+    '''
+    Send a dummy reliable packet to the server.
+    minetest/doc/protocol.txt
+    '''
+    pass
+    # TODO: finish this
+"""
+
+
 def check_server(address, port):
+    '''
+    This doesn't work for Minetest (connection is refused).
+    '''
     # from <https://stackoverflow.com/a/32382603/4541104>
     # Create a TCP socket
     if not isinstance(port, int):
@@ -469,7 +644,7 @@ class Minetest:
                 if os.path.isfile(try_log_path):
                     world['log_paths'].append(try_log_path)
                 else:
-                    echo1('INFO: There is no log file "{}"'
+                    echo2('INFO: There is no log file "{}"'
                           ' in {} ("debug.txt" will also be'
                           ' checked if present there).'
                           ''.format(try_log_path, self.logs_path))
@@ -483,6 +658,11 @@ class Minetest:
             if os.path.isfile(world_conf_path):
                 # This file is for Final Minetest only.
                 world['port'] = get_conf_value(world_conf_path, "port")
+                for test_name in transfer_var_names:
+                    world[test_name] = get_conf_value(world_conf_path,
+                                                      test_name)
+                    echo2("test setting: world[{}]={}"
+                          "".format(test_name, world[test_name]))
                 if world['port'] is not None:
                     port = int(world['port'])
                     world['running'] = False
@@ -652,7 +832,6 @@ def main():
         usage()
         echo0("Error: invalid command {}".format(command))
         return 1
-
 
     return 0
 
