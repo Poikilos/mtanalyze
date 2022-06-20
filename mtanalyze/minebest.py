@@ -215,7 +215,7 @@ def get_conf_value(path, var_name, use_last=True):
                     value = tmp
                 else:
                     echo1('{}:{}: INFO: The type of "{}" for {} is not'
-                          ' yet implemented. It will become a string.'
+                          ' detectable. It will become a string.'
                           ''.format(path, lineN, value, name))
                     value = tmp
             if len(name) == 0:
@@ -377,7 +377,7 @@ class Minetest:
                         continue
                     lines.append(line)
                 if (max_lines is not None) and (len(lines) > max_lines):
-                    lines = lines[:max_lines]
+                    lines = lines[len(lines)-max_lines:]
                 all_lines += lines
         return all_lines
 
