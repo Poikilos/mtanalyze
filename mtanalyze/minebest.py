@@ -24,7 +24,7 @@ Arguments:
 
 Examples:
 minebest list  # Show a list of Minetest worlds.
-minebest log world1  # show the log from a world called world1 starting after the last line containing -------------
+minebest log world1  # show the log from a world called world1
 '''
 
 # TODO: when showing a debug log, output a suggested nano command
