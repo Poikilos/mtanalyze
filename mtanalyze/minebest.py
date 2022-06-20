@@ -469,10 +469,15 @@ class Minetest:
                     # See <https://stackoverflow.com/a/19196218/4541104>
                     # edited Mar 5, 2019 at 23:52 by ejohnso49
                     # answered Oct 5, 2013 at 9:38 by mrjandro
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock = socket.socket(socket.AF_INET,
+                                         socket.SOCK_STREAM)
                     result = sock.connect_ex(('127.0.0.1', port))
                     if result == 0:
                         world['running'] = True
+                    else:
+                        echo1("connect_ex 127.0.0.1:{} responded with"
+                              " code {}."
+                              "".format(port, result))
             else:
                 echo1("INFO: {} in worlds directory {} doesn't contain"
                       " world.conf".format(sub, path))
