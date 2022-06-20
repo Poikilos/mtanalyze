@@ -1,0 +1,3 @@
+include mtanalyze/*.py
+include readme.md
+include license.txt
