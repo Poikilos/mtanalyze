@@ -230,6 +230,26 @@ def get_conf_value(path, var_name, use_last=True):
                     break
     return result
 
+def check_server(address, port):
+    # from <https://stackoverflow.com/a/32382603/4541104>
+    # Create a TCP socket
+    if not isinstance(port, int):
+        raise ValueError(
+            "port must be an int but {} is a(n) {}"
+            "".format(port, type(port).__name__)
+        )
+    s = socket.socket()
+    print("Attempting to connect to %s on port %s" % (address, port))
+    try:
+        s.connect((address, port))
+        print("Connected to %s on port %s" % (address, port))
+        return True
+    except socket.error as e:
+        print("Connection to %s on port %s failed: %s" % (address, port, e))
+        return False
+    finally:
+        s.close()
+
 
 class Minetest:
     def __init__(self, data_dir=None, worlds_dir=None, logs_path=None):
@@ -466,6 +486,7 @@ class Minetest:
                 if world['port'] is not None:
                     port = int(world['port'])
                     world['running'] = False
+                    '''
                     # See <https://stackoverflow.com/a/19196218/4541104>
                     # edited Mar 5, 2019 at 23:52 by ejohnso49
                     # answered Oct 5, 2013 at 9:38 by mrjandro
@@ -478,6 +499,17 @@ class Minetest:
                         echo1("connect_ex 127.0.0.1:{} responded with"
                               " code {}."
                               "".format(port, result))
+                    '''
+                    # ^ always returns code 111 for some reason, so:
+                    result = check_server("127.0.0.1", port)
+                    if result:
+                        world['running'] = True
+                    else:
+                        world['running'] = False
+                        echo1("check_server 127.0.0.1:{} responded with"
+                              " {}."
+                              "".format(port, result))
+
             else:
                 echo1("INFO: {} in worlds directory {} doesn't contain"
                       " world.conf".format(sub, path))
