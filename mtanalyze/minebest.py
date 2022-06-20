@@ -19,9 +19,12 @@ Related Projects:
 - mtctl by Miniontoby
 - mtinfo by BuckarooBanzay
 
+Arguments:
+-n            Set the maximum number of lines for showing each log file.
+
 Examples:
 minebest list  # Show a list of Minetest worlds.
-minebest world1  # show info on a world named world1
+minebest log world1  # show the log from a world called world1 starting after the last line containing -------------
 '''
 
 # TODO: when showing a debug log, output a suggested nano command
@@ -62,6 +65,8 @@ if WHOAMI != MTUSER:
 fi
 '''
 
+SEPARATOR = "-------------"
+
 profile = None
 if platform.system() == "Windows":
     profile = os.environ['USERPROFILE']
@@ -96,6 +101,17 @@ def echo2(*args, **kwargs):
         return
     print(*args, file=sys.stderr, **kwargs)
 
+def startsWithAny(haystack, needles):
+    for needle in needles:
+        if haystack.startswith(needle):
+            return True
+    return False
+
+def containsAny(haystack, needles):
+    for needle in needles:
+        if needle in haystack:
+            return True
+    return False
 
 def usage():
     echo0(__doc__)
@@ -216,7 +232,7 @@ def get_conf_value(path, var_name, use_last=True):
 
 
 class Minetest:
-    def __init__(self, data_dir=None, worlds_dir=None):
+    def __init__(self, data_dir=None, worlds_dir=None, logs_path=None):
         '''
         Keyword arguments:
         data_dir -- is the folder containing worlds and other things
@@ -230,6 +246,10 @@ class Minetest:
             "static" then each is treated as another folder containing
             worlds. The default value is f'{data_dir}/worlds', otherwise
             f'{data_dir}/mtworlds' if that is present.
+        logs_path -- The directory that contains log(s) such as
+            debug.txt, or if present, f'{world_name}.txt' instead. The
+            default directory is f'{data_dir}/bin', but if
+            f'{data_dir}/log' is present, that will be used instead.
         '''
         worlds = None
         self.good = False
@@ -249,6 +269,13 @@ class Minetest:
         else:
             data_dir = BESTDIR
         print("data_dir={}".format(data_dir))
+        if logs_path is None:
+            self.logs_path = os.path.join(data_dir, "bin")
+            try_logs_path = os.path.join(data_dir, "log")
+            if os.path.isdir(try_logs_path):
+                self.logs_path = try_logs_path
+        else:
+            self.logs_path = logs_path
         self.data_dir = data_dir
         if worlds_dir is None:
             self.worlds_dir = os.path.join(data_dir, "worlds")
@@ -262,6 +289,110 @@ class Minetest:
         metas, err = self.load_worlds_meta()
         if err is not None:
             raise RuntimeError(err)
+
+    def find_world(self, world_name):
+        for worldI in range(len(self.worlds)):
+            world = self.worlds[worldI]
+            if world.get('name') == world_name:
+                return worldI
+        return -1
+
+    def get_world(self, world_name):
+        worldI = self.find_world(world_name)
+        if worldI >= 0:
+            return self.worlds[worldI]
+        return None
+
+    def get_world_log_paths(self, world_name):
+        world = self.get_world(world_name)
+        if world is None:
+            echo0("There is no world named {}".format(world_name))
+            return None
+        results = world.get('log_paths')
+        if results is None:
+            try_log = os.path.join(self.logs_path, "debug.txt")
+            if os.path.isfile(try_log):
+                results = [try_log]
+        return results
+
+    def get_log(self, world_name,
+                ignore_startswith=["[MOD]", "[OK]", "COLON: "],
+                ignore_contains=[" ACTION[", " WARNING[",
+                                 "3d_armor)[3d_armor]"],
+                reset_at_separator=False, max_lines=32):
+        '''
+        Get the log only from the last run. The reset and max arguments
+        only apply on a per-log basis (both f'{world_name}.log and
+        f'debug-{world_name}.log' will both be read if they exist).
+
+        Keyword arguments:
+        reset_at_separator -- Clear the buffer at each instance of
+            "-------------" in each log so that only lines from the
+            last server restart are shown.
+        max_lines -- Only show the tail of the log (If <= 0, show all).
+        '''
+        if max_lines <= 0:
+            max_lines = None
+        log_paths = self.get_world_log_paths(world_name)
+        if log_paths is None:
+            return None
+        all_lines = []
+        # if len(log_paths) == 1:
+        #     all_lines.append("")
+        all_lines.append("")
+        title = "Log"
+        if len(log_paths) > 1:
+            title = "Logs"
+        all_lines.append(
+            "{} (max_lines={}, reset_at_separator={}"
+            " ignore_startswith={}, ignore_contains={}):"
+            "".format(title, max_lines, reset_at_separator,
+                      ignore_startswith, ignore_contains)
+        )
+        all_lines.append("")
+
+        for log_path in log_paths:
+            with open(log_path, 'r') as ins:
+                lines = []
+                # if len(log_paths) > 1:
+                lines.append("")
+                lines.append("# {}"
+                             "".format(log_path))
+                lines.append("")
+                custom_count = len(lines)
+                for rawL in ins:
+                    line = rawL.strip()
+                    if reset_at_separator and (SEPARATOR in line):
+                        # such as in:
+                        '''
+                        -------------
+                          Separator
+                        -------------
+                        '''
+                        lines = lines[:custom_count]
+                        continue
+                    if startsWithAny(line, ignore_startswith):
+                        continue
+                    if containsAny(line, ignore_contains):
+                        continue
+                    lines.append(line)
+                if (max_lines is not None) and (len(lines) > max_lines):
+                    lines = lines[:max_lines]
+                all_lines += lines
+        return all_lines
+
+    def show_log(self, world_name, reset_at_separator=False,
+                 max_lines=32):
+        lines = self.get_log(
+            world_name,
+            reset_at_separator=reset_at_separator,
+            max_lines=max_lines,
+        )
+        if lines is None:
+            # An error should have already been shown by __init__.
+            return
+        for line in lines:
+            print(line)
 
     def get_worlds_from(self, path, category_subs=["live", "static"]):
         '''
@@ -304,6 +435,28 @@ class Minetest:
             }
             world['port'] = None
             world['running'] = None
+            try_log_paths = []
+            try_log_paths.append(os.path.join(
+                self.logs_path,
+                "{}.log".format(sub),
+            ))
+            try_log_paths.append(os.path.join(
+                self.logs_path,
+                "debug-{}.log".format(sub),
+            ))
+            world['log_paths'] = []  # set to None if len stays 0
+            for try_log_path in try_log_paths:
+                if os.path.isfile(try_log_path):
+                    world['log_paths'].append(try_log_path)
+                else:
+                    echo1('INFO: There is no log file "{}"'
+                          ' in {} ("debug.txt" will also be'
+                          ' checked if present there).'
+                          ''.format(try_log_path, self.logs_path))
+
+            if len(world['log_paths']) == 0:
+                world['log_paths'] = None
+
             if not os.path.isfile(world_mt_path):
                 echo0("Error: {} in worlds directory {} doesn't contain"
                       " world.mt".format(sub, path))
@@ -327,6 +480,10 @@ class Minetest:
         return worlds, err
 
     def load_worlds_meta(self):
+        '''
+        Make set self.worlds to a list of dicts. Each dict contains
+        metadata about a world.
+        '''
         if not self.good:
             msg = ("load_worlds_meta couldn't proceed since the"
                    " installation couldn't be analyzed by"
@@ -347,59 +504,81 @@ class Minetest:
         return names, None
 
 
-class World:
-    def __init__(self, path):
-        pass
-
-
-def show_logs(world_name):
-    pass
-
-
 def main():
     global verbosity
-    world_name = None
-    try:
-        minebest = Minetest()
-    except Exception as ex:
-        usage()
-        if "Your minebest structure is not recognized" in str(ex):
-            echo0("{}".format(ex))
-            return 1
-        else:
-            raise ex
+    param1 = None
     command = None
     single_world_commands = ["log"]
     multi_world_commands = ["list"]
+
+    var_name = None
+    options = {}
+    options['max_lines'] = 32
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
-        if arg.startswith("--"):
+        if var_name is not None:
+            try:
+                value = int(arg)
+            except ValueError:
+                try:
+                    value = float(arg)
+                except ValueError:
+                    value = arg
+            default_v = options.get(var_name)
+            if default_v is not None:
+                if type(value) != type():
+                    usage()
+                    echo0("Error: {} must be a {}"
+                          " but {} is a(n) {}"
+                          "".format(var_name, type(default_v).__name__,
+                                    value, type(value).__name__))
+                    return 1
+            var_name = None
+            continue
+        if arg.startswith("-"):
             if arg == "--verbose":
                 verbosity = 1
             elif arg == "--debug":
                 verbosity = 2
+            elif arg == "-n":
+                var_name = "max_lines"
             else:
                 usage()
                 echo0("Invalid argument: {}".format(arg))
                 return 1
         elif command is None:
             command = arg
-        elif world_name is None:
-            world_name = arg
+        elif param1 is None:
+            param1 = arg
         else:
             usage()
             echo0("Invalid argument: {}".format(arg))
             return 1
 
+    if command is None:
+        usage()
+        echo0("You must specify a command.")
+        return 1
+
+    try:
+        minetest = Minetest()
+    except Exception as ex:
+        usage()
+        if "Your Minebest structure is not recognized" in str(ex):
+            echo0("{}".format(ex))
+            return 1
+        else:
+            raise ex
+
     if command in multi_world_commands:
-        if world_name is not None:
+        if param1 is not None:
             usage()
             echo0("You specified both a multi-world"
                   " command and a world name.")
             return 1
         elif command == "list":
             multi_world_command = True
-            worlds, err = minebest.load_worlds_meta()
+            worlds, err = minetest.load_worlds_meta()
             if err is not None:
                 echo0(err)
                 return 1
@@ -414,14 +593,30 @@ def main():
                                 status))
         else:
             usage()
-            echo0("Error: The command is not ")
+            echo0('Error: The "{}" command is not implemented.'
+                  ''.format(command))
+            return 1
     elif command in single_world_commands:
-        pass
+        if param1 is None:
+            usage()
+            echo0("Error: You must specify a world.")
+            return 1
+        world_name = param1
+        if command == "log":
+            print("")
+            minetest.show_log(world_name,
+                              max_lines=options['max_lines'])
+        else:
+            usage()
+            echo0('Error: The "{}" command is not implemented.'
+                  ''.format(command))
+            return 1
     else:
         usage()
         echo0("Error: invalid command {}".format(command))
+        return 1
 
-    show_logs(world_name)
+
     return 0
 
 
