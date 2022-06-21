@@ -465,10 +465,10 @@ def check_server(host, port):
         # ^ always returns 111 connection refused
         #   so send a UDP packet as per <https://pythontic.com/modules/
         #   socket/udp-client-server-example>:
-        # msgFromClient       = "Hello UDP Server"
-        # buf                 = str.encode(msgFromClient)
-        serverAddressPort   = (host, port)
-        bufferSize          = 1000  # minetest/doc/protocol.txt has 1000
+        # msgFromClient = "Hello UDP Server"
+        # buf = str.encode(msgFromClient)
+        serverAddressPort = (host, port)
+        bufferSize = 1000  # minetest/doc/protocol.txt has 1000
         # ^ "ask for enough bytes to cover the entire message or it will
         #   be dropped" -<https://stackoverflow.com/a/36116486/4541104>
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -936,7 +936,7 @@ def main():
     try:
         echo_status_fmt = None
         if command == "list":
-            echo_status_fmt=Minetest.minebest_list_fmt
+            echo_status_fmt = Minetest.minebest_list_fmt
         minetest = Minetest(echo_status_fmt=echo_status_fmt)
     except ValueError as ex:
         usage()
