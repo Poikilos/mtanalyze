@@ -27,7 +27,9 @@ minebest list  # Show a list of Minetest worlds.
 minebest log world1  # show the log from a world called world1
 '''
 # TODO: when showing a debug log, output a suggested nano command
-# (and option to run it). Jump to line number in nano (undocumented):
+# (and option to run it). Jump to line number in nano (undocumented
+# in --help but found at <https://stackoverflow.com/a/36211296/4541104>
+# and <https://linuxhint.com/how-to-go-to-line-x-in-nano/>):
 # "nano +{} {}".format(lineN, path)
 
 from __future__ import print_function
@@ -37,6 +39,10 @@ import sys
 import platform
 import subprocess
 import socket
+import codecs
+import struct
+import re
+from copy import deepcopy
 
 # TODO:
 '''
@@ -63,7 +69,7 @@ if WHOAMI != MTUSER:
     exit 0
 fi
 '''
-
+python_mr = sys.version_info.major
 SEPARATOR = "-------------"
 
 profile = None
@@ -153,6 +159,12 @@ transfer_var_names = ['secure.trusted_mods', 'secure.http_mods',
 
 trues = ["true", "on"]
 falses = ["false", "off"]
+
+
+def get_braced_parts(text):
+    # See <https://stackoverflow.com/questions/51051136/
+    # extracting-content-between-curly-braces-in-python>
+    return re.findall(r'\{(.*?)\}', text)
 
 
 def symbol_to_tuple(s, allow_string=True, allow_bool=True,
@@ -365,7 +377,7 @@ def get_conf_value(path, var_name, use_last=True):
             '''
             if value.startswith('"') and value.endswith('"'):
                 value = value[1:-1]
-                # print("{}:{}: Warning: {} was not in quotes."
+                # echo0("{}:{}: Warning: {} was not in quotes."
                 #       "".format(path, lineN, result_line_n, name))
             else:
             '''
@@ -382,7 +394,7 @@ def get_conf_value(path, var_name, use_last=True):
                 continue
             if name == var_name:
                 if result is not None:
-                    print("{}:{}: Warning: Line {} already set {}."
+                    echo0("{}:{}: Warning: Line {} already set {}."
                           "".format(path, lineN, result_line_n, name))
                 result_line_n = lineN
                 result = value
@@ -402,9 +414,10 @@ def check_minetest_server(address, port):
 """
 
 
-def check_server(address, port):
+def _check_generic_server(address, port):
     '''
-    This doesn't work for Minetest (connection is refused).
+    This doesn't work for Minetest (connection is refused--UDP doesn't
+    have a connection, unlike TCP).
     '''
     # from <https://stackoverflow.com/a/32382603/4541104>
     # Create a TCP socket
@@ -414,20 +427,99 @@ def check_server(address, port):
             "".format(port, type(port).__name__)
         )
     s = socket.socket()
-    print("Attempting to connect to %s on port %s" % (address, port))
+    echo1("Attempting to connect to %s on port %s" % (address, port))
     try:
         s.connect((address, port))
-        print("Connected to %s on port %s" % (address, port))
+        echo1("Connected to %s on port %s" % (address, port))
         return True
     except socket.error as e:
-        print("Connection to %s on port %s failed: %s" % (address, port, e))
+        echo1("Connection to %s on port %s failed: %s" % (address, port, e))
         return False
     finally:
         s.close()
 
 
+def check_server(host, port):
+    '''
+    Do a server detection by constructing and examining packets
+    manually (based on the PHP example "check_if_minetestserver_up" in
+    minetest/doc/protocol.txt)
+
+    For more detailed packet construction code, see
+    voxboxor/network/connection.py in
+    <https://github.com/poikilos/voxboxor>.
+    '''
+    # from <https://stackoverflow.com/a/32382603/4541104>
+    # Create a TCP socket
+    if not isinstance(port, int):
+        raise ValueError(
+            "port must be an int but {} is a(n) {}"
+            "".format(port, type(port).__name__)
+        )
+    sock = socket.socket()
+    # NOTE: from socket import socket doesn't help. using socket() after
+    #   that doesn't result in a function.
+    echo1("Attempting to connect to %s on port %s" % (host, port))
+    try:
+        # sock.connect((host, port))
+        # ^ always returns 111 connection refused
+        #   so send a UDP packet as per <https://pythontic.com/modules/
+        #   socket/udp-client-server-example>:
+        # msgFromClient       = "Hello UDP Server"
+        # buf                 = str.encode(msgFromClient)
+        serverAddressPort   = (host, port)
+        bufferSize          = 1000  # minetest/doc/protocol.txt has 1000
+        # ^ "ask for enough bytes to cover the entire message or it will
+        #   be dropped" -<https://stackoverflow.com/a/36116486/4541104>
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # ^ The PHP example also uses SOL_UDP
+        # ^ kwargs names for args used above are: family, type
+        # ^ SOCK_DGRAM is UDP
+        # buf = codecs.decode("4f45740300000003ffdc01", "hex")
+        # ^ This hex string is from minetest/doc/protocol.txt example
+        # ^ codecs.decode works for Python 2 or 3 according to
+        #   <https://stackoverflow.com/a/9641622/4541104>
+        buf = b'OEt\x03\x00\x00\x00\x03\xff\xdc\x01'
+        # ^ This hex string is the one a voxboxor nose test displays
+        #   (It is identical to the example, just defined differently in
+        #   Python)
+
+        echo1("Sending %s connect packet to %s on port %s"
+              % (type(buf).__name__, host, port))
+        sock.sendto(buf, (host, port))
+        # ^ buf must be bytes (See <https://docs.python.org/3/library/
+        #   socket.html#socket.socket.sendto>
+        echo1("Receiving response...")
+        sock.settimeout(3)
+        msgFromServer, conn_info = sock.recvfrom(bufferSize)
+        # ^ recvfrom is for UDP and returns (data, connection info)
+        #   (recv is for TCP and only has one return--see
+        #   <https://stackoverflow.com/a/36116194/4541104>).
+        # ^ raises exception on timeout
+        # msgFromServer[0] is 79 if up and has expected protocol
+        peer_id_bytes = msgFromServer[9:11]
+        values = struct.unpack(">H", peer_id_bytes)
+        # ^ '>' since Minetest packets are always big-endian
+        peer_id = values[0]  # There is only one value in the substring.
+        # ^ H for u16 (for a complete packet struct, see
+        #   <https://github.com/poikilos/voxboxor>).
+        msg = "Message from Server: {}".format(msgFromServer[0])
+        echo1(msg)
+        echo1("- peer_id: {}".format(peer_id))
+        return True
+    except socket.error as e:
+        echo1("Connection to %s on port %s failed: %s" % (host, port, e))
+        return False
+    finally:
+        echo1("Closing connection.")
+        sock.close()
+
+
 class Minetest:
-    def __init__(self, data_dir=None, worlds_dir=None, logs_path=None):
+    minebest_list_fmt = "{port: <5} {name: <16}{status}"
+
+    def __init__(self, data_dir=None, worlds_dir=None, logs_path=None,
+                 echo_status_fmt=None):
         '''
         Keyword arguments:
         data_dir -- is the folder containing worlds and other things
@@ -445,6 +537,8 @@ class Minetest:
             debug.txt, or if present, f'{world_name}.txt' instead. The
             default directory is f'{data_dir}/bin', but if
             f'{data_dir}/log' is present, that will be used instead.
+        echo_status_fmt -- Output text to the console in this format
+            immediately after each world is analyzed.
         '''
         worlds = None
         self.good = False
@@ -463,7 +557,7 @@ class Minetest:
                 data_dir = parentDir
         else:
             data_dir = BESTDIR
-        print("data_dir={}".format(data_dir))
+        echo0("data_dir={}".format(data_dir))
         if logs_path is None:
             self.logs_path = os.path.join(data_dir, "bin")
             try_logs_path = os.path.join(data_dir, "log")
@@ -479,9 +573,11 @@ class Minetest:
                 self.worlds_dir = minebest_worlds_dir
         else:
             self.worlds_dir = worlds_dir
-        print("worlds_dir={}".format(self.worlds_dir))
+        echo0("worlds_dir={}".format(self.worlds_dir))
         self.good = True
-        metas, err = self.load_worlds_meta()
+        metas, err = self.load_worlds_meta(
+            echo_status_fmt=echo_status_fmt,
+        )
         if err is not None:
             raise RuntimeError(err)
 
@@ -589,7 +685,8 @@ class Minetest:
         for line in lines:
             print(line)
 
-    def get_worlds_from(self, path, category_subs=["live", "static"]):
+    def get_worlds_from(self, path, category_subs=["live", "static"],
+                        echo_status_fmt=None):
         '''
         Get a tuple that contains a world metadatas list and an error
         (or None).
@@ -598,6 +695,10 @@ class Minetest:
         category_subs -- If a subdirectory under path is named the same
             as any string in this list, look for more worlds there
             instead of considering that directory a world.
+        echo_status_fmt -- After each world is analyzed, echo world
+            keys in this format such as "{: <5} {: <16}{}" for
+            minebest format (produces output such as:
+            "30000 notcraft        is running")
         '''
         worlds = []
         err = None
@@ -606,6 +707,7 @@ class Minetest:
             err = ('Error: Your minebest structure is not'
                    ' recognized. "{}" does not exist.'.format(path))
             return None, err
+
         for sub in os.listdir(path):
             subPath = os.path.join(path, sub)
             if not os.path.isdir(subPath):
@@ -613,7 +715,12 @@ class Minetest:
             if sub in category_subs:
                 echo0('* loading worlds from specially-named directory'
                       ' "{}"'.format(sub))
-                got_worlds, deep_error = self.get_worlds_from(subPath)
+
+                got_worlds, deep_error = self.get_worlds_from(
+                    subPath,
+                    category_subs=[],  # prevent deeper directories
+                    echo_status_fmt=echo_status_fmt,
+                )
                 if got_worlds is not None:
                     worlds += got_worlds
                 if deep_error is not None:
@@ -689,24 +796,73 @@ class Minetest:
                         echo1("check_server 127.0.0.1:{} responded with"
                               " {}."
                               "".format(port, result))
-
             else:
                 echo1("INFO: {} in worlds directory {} doesn't contain"
                       " world.conf".format(sub, path))
+            world['status'] = None
+            if world.get('running') is True:
+                world['status'] = "is running"
+            elif world.get('running') is False:
+                world['status'] = "is down"
+            if echo_status_fmt is not None:
+                tmp_world = deepcopy(world)
+                if not isinstance(echo_status_fmt, str):
+                    raise TypeError(
+                        "echo_status_fmt must be str (to be"
+                        " used) or None but is {}"
+                        "".format(type(echo_status_fmt).__name__)
+                    )
+                echo2("")
+                echo2("echo_status_fmt={}".format(echo_status_fmt))
+                echo2("world={}".format(world))
+                required_vars = get_braced_parts(echo_status_fmt)
+                for i in range(len(required_vars)):
+                    ender = required_vars[i].find(":")
+                    if ender >= 0:
+                        required_vars[i] = required_vars[i][:ender]
+                    if len(required_vars[i]) == 0:
+                        raise ValueError(
+                            'All of the placeholders in'
+                            ' the format must be named, but [{}] was'
+                            ' sequential in "{}".'
+                            ''.format(i, echo_status_fmt)
+                        )
+                    if required_vars[i] not in world:
+                        tmp_world[required_vars[i]] = None
+                        echo2("adding required '{}' temporarily"
+                              "".format(required_vars[i]))
+                echo2("required_vars={}".format(required_vars))
+                for k, v in tmp_world.items():
+                    if v is None:
+                        tmp_world[k] = "None"
+                msg = echo_status_fmt.format(**tmp_world)
+                # ^ Without changing None to "None", expansion
+                #   (when echo_status_fmt=minebest_list_fmt)
+                #   works in python2 and python3 terminal but not when
+                #   running the script in python3 (3.9.2) :( why??
+                #   It works fine on python2
+                print(msg)
             worlds.append(world)
         return worlds, err
 
-    def load_worlds_meta(self):
+    def load_worlds_meta(self, echo_status_fmt=None):
         '''
         Make set self.worlds to a list of dicts. Each dict contains
         metadata about a world.
+
+        Keyword arguments:
+        echo_status_fmt -- Show a world in this format immediately each
+            time a world is done being analyzed.
         '''
         if not self.good:
             msg = ("load_worlds_meta couldn't proceed since the"
                    " installation couldn't be analyzed by"
                    " minebest:Minetest.")
             return None, msg
-        self.worlds, err = self.get_worlds_from(self.worlds_dir)
+        self.worlds, err = self.get_worlds_from(
+            self.worlds_dir,
+            echo_status_fmt=echo_status_fmt,
+        )
         return self.worlds, err
 
     def list_worlds(self):
@@ -778,9 +934,18 @@ def main():
         return 1
 
     try:
-        minetest = Minetest()
-    except Exception as ex:
+        echo_status_fmt = None
+        if command == "list":
+            echo_status_fmt=Minetest.minebest_list_fmt
+        minetest = Minetest(echo_status_fmt=echo_status_fmt)
+    except ValueError as ex:
         usage()
+        if "Your Minebest structure is not recognized" in str(ex):
+            echo0("{}".format(ex))
+            return 1
+        else:
+            raise ex
+    except Exception as ex:
         if "Your Minebest structure is not recognized" in str(ex):
             echo0("{}".format(ex))
             return 1
@@ -794,7 +959,9 @@ def main():
                   " command and a world name.")
             return 1
         elif command == "list":
+            # already done during Minetest object init in this case
             multi_world_command = True
+            '''
             worlds, err = minetest.load_worlds_meta()
             if err is not None:
                 echo0(err)
@@ -802,12 +969,16 @@ def main():
             echo1("got {} world(s)".format(len(worlds)))
             for world in worlds:
                 running = world.get('running')
-                status = ""
                 if running is True:
                     status = "is running"
-                print("{} {}    {}"
+                elif running is False:
+                    status = "is down"
+                else:
+                    status = "None"
+                print("{: <5} {: <16}{}"
                       "".format(world['port'], world['name'],
                                 status))
+            '''
         else:
             usage()
             echo0('Error: The "{}" command is not implemented.'
