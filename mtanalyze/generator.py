@@ -61,7 +61,7 @@ except ImportError:
     print("#or")
     print("#same but python3 instead")
     # print("sudo pip install Pillow")
-    exit()
+    exit(1)
 
 from chunkymaprenderer import ChunkymapRenderer
 
@@ -1432,8 +1432,8 @@ class MTChunks(ChunkymapRenderer):
             # this_chunk.save_yaml(chunk_yaml_path)
             # if is_changed:
             participle = "accessing dict"
-            if not is_dict_subset(meta, old_meta, False):
-                # , True, "chunk_yaml_path")
+            # set_verbose(1)
+            if not is_dict_subset(meta, old_meta):
                 participle = "saving chunk meta"
                 self.save_chunk_meta(qX, qZ)
             # print(min_indent + "(saved yaml to '"

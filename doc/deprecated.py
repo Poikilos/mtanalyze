@@ -233,7 +233,7 @@ class MTChunk:
                 counting_number += 1
             ins.close()
         participle = "checking for changes"
-        is_changed = is_dict_subset(self.metadata, old_meta, False)
+        is_changed = is_dict_subset(self.metadata, old_meta)
         return is_changed
 
 def getServerPath():
