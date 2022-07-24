@@ -39,10 +39,28 @@ except NameError:
 
 mti = {}  # mostly deprecated
 
+verbosity = 0
 
 # see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
-def error(*args, **kwargs):
+def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def echo1(*args, **kwargs):
+    if verbosity < 1:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+def echo2(*args, **kwargs):
+    if verbosity < 2:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+def set_verbosity(level):
+    global verbosity
+    verbosity = level
+
+def get_verbosity(level):
+    return verbosity
 
 
 class EngineInfo:
@@ -96,7 +114,7 @@ class EngineInfo:
             run_in_place = (path_user == path_share)
         elif run_in_place is True:
             if path_user != path_share:
-                error('WARNING: path_user "{}" and path_share "{}"'
+                echo0('WARNING: path_user "{}" and path_share "{}"'
                       ' differ but run_in_place is True, so path_share'
                       ' will be used.'.format(path_user, path_share))
         path_user = os.path.abspath(path_user)
@@ -175,10 +193,10 @@ class EngineInfo:
             '''
 
         if not os.path.isfile(paths['conf']):
-            error("WARNING: There is no \"{}\"."
+            echo0("WARNING: There is no \"{}\"."
                   "".format(paths['conf']))
         if exeCount < 1:
-            error("WARNING: There was no minetest nor minetestserver"
+            echo0("WARNING: There was no minetest nor minetestserver"
                   " found {}.")
 
 
@@ -239,6 +257,6 @@ deprecate_minetestinfo()
 
 
 if __name__ == '__main__':
-    error()
-    error("This is a module not a script. In Python you can do:"
+    echo0()
+    echo0("This is a module not a script. In Python you can do:"
           " `import mtanalyze.minetestinfo` ")

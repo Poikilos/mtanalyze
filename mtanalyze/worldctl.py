@@ -13,15 +13,28 @@ world.py --mg_name carpathian --create ~/minetest/worlds/worldname
 '''
 
 import sys
+import os
 
+myPath = os.path.realpath(__file__)
+myPackage = os.path.split(myPath)[0]
+myRepo = os.path.split(myPackage)[0]
+repos = os.path.split(myRepo)[0]
+me = "worldctl"
 
-def error(msg):
-    sys.stderr.write("{}\n".format(msg))
-    sys.stderr.flush()
+try:
+    import mtanalyze
+except ModuleNotFoundError:
+    sys.path.insert(0, myRepo)
+
+from mtanalyze import (
+    echo0,
+    echo1,
+)
 
 
 def usage():
-    error(__doc__)
+    echo0("How to use {}:".format(me))
+    echo0(__doc__)
 
 default_map_meta_str = '''
 mg_biome_np_humidity_blend = {
@@ -140,7 +153,7 @@ def main():
     if len(sys.argv) < 2:
         usage()
         # 1st arg is self
-        # error("Error: You must provide a path"
+        # echo0("Error: You must provide a path"
         #       " (or call make_world in Python).")
         return 1
     op = None
@@ -163,7 +176,7 @@ def main():
 
     if op is None:
         usage()
-        error("Error: You must specify an option"
+        echo0("Error: You must specify an option"
               " (or call make_world in Python).")
         return 1
 
@@ -172,7 +185,7 @@ def main():
 
     if 'error' in results:
         usage()
-        error(results['error'])
+        echo0(results['error'])
         return 1
     return 0
 

@@ -16,15 +16,10 @@ import sys
 import os
 import shutil
 
-verbose = False
-
-# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
-def error(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-def debug(msg):
-    if verbose:
-        error(msg)
+from mtanalyze import (
+    echo0,
+    echo1,
+)
 
 def usage():
     print(__doc__)
@@ -67,7 +62,7 @@ def changeMtVarInWorldIf(worldPath, vname, new, whereEquals=None):
                     continue
                 parts = line.strip().split("=")
                 if len(parts) != 2:
-                    debug("  * len(\"{}\".split(\"=\")) != 2".format(line))
+                    echo1("  * len(\"{}\".split(\"=\")) != 2".format(line))
                     outs.write(line + "\n")  # unmodified
                     continue
                 name, value = parts
@@ -81,10 +76,10 @@ def changeMtVarInWorldIf(worldPath, vname, new, whereEquals=None):
                 if whereEquals is not None:
                     match = (value == whereEquals)
                     if not match:
-                        debug("  * value {} != {}"
+                        echo1("  * value {} != {}"
                               "".format(value, whereEquals))
                 if (name != vname) or (not match):
-                    debug("  * name {} != {}".format(name, vname))
+                    echo1("  * name {} != {}".format(name, vname))
                     outs.write(line + "\n")  # unmodified
                     continue
                 outs.write("{}{} = {}\n".format(indent, vname, new))

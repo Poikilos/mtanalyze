@@ -25,6 +25,7 @@ such as assist in data recovery where original filename is not known
 
 import shutil
 import os
+import sys
 from datetime import datetime
 
 myPath = os.path.realpath(__file__)
@@ -32,6 +33,16 @@ myPackage = os.path.split(myPath)[0]
 myRepo = os.path.split(myPackage)[0]
 repos = os.path.split(myRepo)[0]
 me = 'minetestoffline.py'
+
+try:
+    import mtanalyze
+except ModuleNotFoundError:
+    sys.path.insert(0, myRepo)
+
+from mtanalyze import (
+    echo0,
+    echo1,
+)
 
 try:
     try:
@@ -47,7 +58,7 @@ except ImportError:
           " pycodetool")
     print()
     print()
-    exit(1)
+    sys.exit(1)
 
 from minetestinfo import *
 
@@ -1197,16 +1208,16 @@ def combineColorLists(dest_colors_txt, share_minetest):
     )
 
     if not os.path.isfile(dest_colors_txt):
-        error("")
-        error("Generating colors ("+dest_colors_txt+")...")
+        echo0("")
+        echo0("Generating colors ("+dest_colors_txt+")...")
         base_colors = get_dict_from_conf_file(
             base_colors_txt,
             assignment_operator=" ",
             inline_comments_enable=True
         )
         merged_colors = get_dict_deepcopy(base_colors)
-        error("")
-        error(base_colors_txt + " has " + str(len(merged_colors))
+        echo0("")
+        echo0(base_colors_txt + " has " + str(len(merged_colors))
               + " color(s)")
         if os.path.isfile(head_colors_txt):
             head_colors = get_dict_from_conf_file(
@@ -1214,7 +1225,7 @@ def combineColorLists(dest_colors_txt, share_minetest):
                 assignment_operator=" ",
                 inline_comments_enable=True
             )
-            error(os.path.basename(head_colors_txt) + " has "
+            echo0(os.path.basename(head_colors_txt) + " has "
                   + str(len(head_colors)) + " color(s)")
             # merged_colors = get_dict_modified_by_conf_file(
             #     merged_colors,
@@ -1231,7 +1242,7 @@ def combineColorLists(dest_colors_txt, share_minetest):
                 elif merged_colors[this_key] != head_colors[this_key]:
                     merged_colors[this_key] = head_colors[this_key]
                     entries_changed_count += 1
-            error("  " + singular_or_plural("entry",
+            echo0("  " + singular_or_plural("entry",
                                             "entries",
                                             (entries_new_count
                                              + entries_changed_count))
@@ -1240,7 +1251,7 @@ def combineColorLists(dest_colors_txt, share_minetest):
                   + " changed) merged from "
                   + os.path.basename(head_colors_txt))
         else:
-            error("Missing '"+head_colors_txt+"'")
+            echo0("Missing '"+head_colors_txt+"'")
         this_name = "sfan5.txt"
         show_max_count = 7
         this_path = os.path.join(colors_repos_folder_path, this_name)
@@ -1251,29 +1262,29 @@ def combineColorLists(dest_colors_txt, share_minetest):
         )
         if os.path.isfile(this_path):
             appended_count = 0
-            error("")
-            error("Reading "+this_path+"...")
+            echo0("")
+            echo0("Reading "+this_path+"...")
             for this_key in append_colors.keys():
                 if this_key not in merged_colors:
                     merged_colors[this_key] = append_colors[this_key]
                     if appended_count < show_max_count:
-                        error("  "+this_key+" "+merged_colors[this_key])
+                        echo0("  "+this_key+" "+merged_colors[this_key])
                     elif appended_count == show_max_count:
-                        error("  ...")
+                        echo0("  ...")
                     appended_count += 1
-            error("  " + singular_or_plural("entry",
+            echo0("  " + singular_or_plural("entry",
                                             "entries",
                                             appended_count)
                   + " appended from " + this_name)
         else:
-            error("Missing "+this_path)
+            echo0("Missing "+this_path)
         folder_path = colors_fragments_folder_path
         if os.path.isdir(folder_path):
             for sub_name in os.listdir(folder_path):
                 sub_path = os.path.join(folder_path, sub_name)
                 if sub_name[:1] != "." and os.path.isfile(sub_path):
-                    error("")
-                    error("Reading "+sub_path+"...")
+                    echo0("")
+                    echo0("Reading "+sub_path+"...")
                     appended_count = 0
                     append_colors = get_dict_from_conf_file(
                         sub_path,
@@ -1285,12 +1296,12 @@ def combineColorLists(dest_colors_txt, share_minetest):
                             merged_colors[this_key] = \
                                 append_colors[this_key]
                             if appended_count < show_max_count:
-                                error("  " + this_key + " "
+                                echo0("  " + this_key + " "
                                       + merged_colors[this_key])
                             elif appended_count == show_max_count:
-                                error("  ...")
+                                echo0("  ...")
                             appended_count += 1
-                    error("  " + singular_or_plural("entry",
+                    echo0("  " + singular_or_plural("entry",
                                                     "entries",
                                                     appended_count)
                           + " appended from " + sub_name)
@@ -1313,20 +1324,20 @@ def combineColorLists(dest_colors_txt, share_minetest):
                         exclusions_list.append(strp)
 
             ins.close()
-            error("Listed " + str(len(exclusions_list))
+            echo0("Listed " + str(len(exclusions_list))
                   + " invisible blocks to exclude using '"
                   + exclusions_name + "'.")
         else:
-            error("Missing "+exclusions_path)
+            echo0("Missing "+exclusions_path)
         for this_key in merged_colors.keys():
             if this_key in exclusions_list:
                 merged_colors.remove(this_key)
-                error("Removed invisible block '"+this_key+"'")
+                echo0("Removed invisible block '"+this_key+"'")
 
         with open(dest_colors_txt, 'w') as outs:
             for key, value in merged_colors.items():
                 outs.write("{} {}".format(key, value))
-        error("Finished writing " + str(len(merged_colors))
+        echo0("Finished writing " + str(len(merged_colors))
               + " value(s) to '" + dest_colors_txt + "'")
     else:
-        error("Using colors from " + dest_colors_txt)
+        echo0("Using colors from " + dest_colors_txt)

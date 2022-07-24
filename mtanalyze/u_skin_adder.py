@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import os
+import sys
 # from PIL import Image, ImageDraw, ImageFont, ImageColor
 
 myPath = os.path.realpath(__file__)
@@ -25,7 +26,7 @@ except ImportError:
           " pycodetool")
     print()
     print()
-    exit(1)
+    sys.exit(1)
 
 from minetestinfo import *  # paths and FLAG_EMPTY_HEXCOLOR = "#010000"
 try:
@@ -50,7 +51,7 @@ except ImportError:
     print("#or")
     print("#same but python3 instead")
     # print("sudo pip install Pillow")
-    exit()
+    sys.exit(1)
 import shutil
 u_skins_rel = ("Desktop\\Backup\\fcalocal\\usr\\local\\share\\minetest"
                "\\games"

@@ -44,24 +44,28 @@ from parsing import *
 # python_exe_path is from:
 from pythoninfo import *
 
+deps_msg = '''
+You must first install Pillow's PIL.
+On Windows:
+Right-click windows menu, 'Command Prompt (Admin)' then:
+pip install Pillow
+
+On *nix-like systems:
+sudo python2 -m pip install --upgrade pip
+sudo python2 -m pip install --upgrade pip wheel
+#then:
+sudo pip install Pillow
+python2 -m pip install Pillow
+#or
+#same but python3 instead
+sudo pip install Pillow
+'''
+
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageColor
 except ImportError:
-    print("You must first install Pillow's PIL.")
-    print("On Windows:")
-    print("Right-click windows menu, 'Command Prompt (Admin)' then:")
-    print("pip install Pillow")
-    print("")
-    print("On *nix-like systems:")
-    print("sudo python2 -m pip install --upgrade pip")
-    print("sudo python2 -m pip install --upgrade pip wheel")
-    print("#then:")
-    # print("sudo pip install Pillow")
-    print("python2 -m pip install Pillow")
-    print("#or")
-    print("#same but python3 instead")
-    # print("sudo pip install Pillow")
-    exit(1)
+    print(deps_msg)
+    sys.exit(1)
 
 from chunkymaprenderer import ChunkymapRenderer
 
@@ -384,6 +388,20 @@ class MTChunks(ChunkymapRenderer):
                 print("WARNING: {} was not set so is now 0"
                       "".format(name))
                 self.mapvars[name] = 0
+
+    def echo0(self, msg):
+        # def echo0(self, *args, **kwargs):
+        # print(*args, file=sys.stderr, **kwargs)
+        print(msg, file=sys.stderr)
+        return True
+
+    def echo1(self, msg):
+        # def echo1(self, *args, **kwargs):
+        if not self.verbose_enable:
+            return False
+        # print(*args, file=sys.stderr, **kwargs)
+        print(msg, file=sys.stderr)
+        return True
 
     def install_default_world_data(self):
         # formerly install_website
@@ -794,11 +812,10 @@ class MTChunks(ChunkymapRenderer):
             print("")
             print("    Rendering 160px decachunk {}"
                   "".format((decachunky_x, decachunky_z)))
-            if self.verbose_enable:
-                print(+str(chunky_coord_list))
-                print("")
+            if self.echo1(str(chunky_coord_list)):
+                self.echo1("")
             else:
-                print(
+                self.echo0(
                     "      USING ({}) chunks (region {}:{}, {}:{})"
                     "".format(len(chunky_coord_list), chunky_min_x,
                               chunky_max_x, chunky_min_z,
@@ -1313,11 +1330,9 @@ class MTChunks(ChunkymapRenderer):
         dest_png_path = self.cImagePath(qX, qZ)
         # is_empty_chunk = (is_chunk_yaml_marked(qX, qZ) and
         #                   is_chunk_yaml_marked_empty(qX, qZ))
-        # if self.verbose_enable:
-        #     # print(min_indent+"")
-        #     print(min_indent+"Running '"+cmd_string+"'...")
+        # if self.echo1(min_indent+"Running '"+cmd_string+"'...")
         # else:
-        print(min_indent+"Calling map tile renderer for: {}"
+        self.echo0(min_indent+"Calling map tile renderer for: {}"
               "".format((qX, qZ)))
         min_indent += "  "
         if os.path.isfile(tmp_png_path):
@@ -1432,7 +1447,7 @@ class MTChunks(ChunkymapRenderer):
             # this_chunk.save_yaml(chunk_yaml_path)
             # if is_changed:
             participle = "accessing dict"
-            # set_verbose(1)
+            # set_verbosity(1)
             if not is_dict_subset(meta, old_meta):
                 participle = "saving chunk meta"
                 self.save_chunk_meta(qX, qZ)
@@ -1465,9 +1480,8 @@ class MTChunks(ChunkymapRenderer):
                         result = True
                         break
                     # else:
-                    #     if self.verbose_enable:
-                    #         print("existing " + this_player["index"]
-                    #               + " is not needle " + str(index))
+                    #     self.echo1("existing " + this_player["index"]
+                    #                + " is not needle " + str(index))
                 # else:
                 #     print("WARNING: player " + this_key + ":"
                 #           + str(this_player) + " is missing index")
@@ -1577,19 +1591,18 @@ class MTChunks(ChunkymapRenderer):
                         # be found as dict key when checked later
                         self.players[player_dict["playerid"]] = \
                             player_dict
-                        if self.verbose_enable:
-                            print("Loading map entry index '"
-                                  + str(player_dict["index"])
-                                  + "' for playerid '"
-                                  + str(player_dict["playerid"]) + "'")
+                        self.echo1('Loading map entry index "{}"'
+                                   ' for playerid "{}"'
+                                   ''.format(player_dict["index"],
+                                             player_dict["playerid"]))
                     else:
-                        print("ERROR: no 'playerid' in chunkymap player"
-                              " entry '"+sub_path+"'")
+                        self.echo0("ERROR: no 'playerid' in chunkymap"
+                              " player entry '"+sub_path+"'")
             else:
                 os.makedirs(self.chunkymap_players_path)
                 self.deny_http_access(self.chunkymap_players_path)
-        if self.verbose_enable:
-            print("player_markers_count: "+str(player_markers_count))
+        self.echo1('player_markers_count: {}'
+                   ''.format(player_markers_count))
             # this could be huge:
             # print("players:" + str(self.players.keys()))
         players_path = os.path.join(self.world_path, "players")
@@ -1651,10 +1664,9 @@ class MTChunks(ChunkymapRenderer):
                     if ("utc_mtime" not in self.players[file_name]):
                         # or (self.players[file_name]["utc_mtime"] != \
                         #     this_mtime_s):
-                        if self.verbose_enable:
-                            print("no modified time for player '"
-                                  + file_name
-                                  + "' so marking for resave.")
+                        self.echo1('no modified time for player "{}"'
+                                   ' so marking for resave.'
+                                   ''.format(file_name))
                         self.players[file_name]["utc_mtime"] = \
                             this_mtime_s
                         is_changed = True
@@ -1671,11 +1683,10 @@ class MTChunks(ChunkymapRenderer):
                         self.players[file_name]["index"] = player_index
                         is_changed = True
                 else:
-                    # if self.verbose_enable:
-                    #     this could be huge: print(
-                    #         file_name+" is not"
-                    #         " in "+str(self.players.keys())
-                    #     )
+                    # self.echo1(
+                    #     '{} is not in {}'
+                    #     ''.format(file_name, self.players.keys())
+                    # )  # this could be huge
                     self.players[file_name] = {}
                     player_index = self.get_new_player_index()
                     print(min_indent + "Creating map entry "
@@ -1742,52 +1753,45 @@ class MTChunks(ChunkymapRenderer):
                     saved_player_x = float(self.players[file_name]["x"])
                     if int(saved_player_x) != int(player_x):
                         is_moved = True
-                        if self.verbose_enable:
-                            print(min_indent
-                                  + "x changed for playerid '"
-                                  + file_name
-                                  + "' so marking for save.")
+                        self.echo1('{}x changed for playerid "{}"'
+                                   ' so marking for save.'
+                                   ''.format(min_indent, file_name))
                 else:
                     self.players[file_name]["x"] = player_x
                     is_moved = True
-                    if self.verbose_enable:
-                        print(min_indent + "No x for playerid '"
-                              + file_name + "' so marking for save:")
-                        print(min_indent+str(self.players[file_name]))
+                    self.echo1('{}No x for playerid "{}"'
+                               ' so marking for save:'
+                               ''.format(min_indent, file_name))
+                    self.echo1(min_indent+str(self.players[file_name]))
                 if "y" in self.players[file_name].keys():
                     saved_player_y = float(self.players[file_name]["y"])
                     if int(saved_player_y) != int(player_y):
                         is_moved = True
-                        if self.verbose_enable:
-                            print(min_indent
-                                  + "y changed for playerid '"
-                                  + file_name
-                                  + "' so marking for save.")
+                        self.echo1('{}y changed for playerid "{}"'
+                                   ' so marking for save.'
+                                   ''.format(min_indent, file_name))
                 else:
                     self.players[file_name]["y"] = player_y
                     is_moved = True
-                    if self.verbose_enable:
-                        print(min_indent + "No y for playerid '"
-                              + file_name + "' so marking for save.")
+                    self.echo1('{}No y for playerid "{}"'
+                               ' so marking for save.'
+                               ''.format(min_indent, file_name))
                 if "z" in self.players[file_name].keys():
                     saved_player_z = float(self.players[file_name]["z"])
                     if int(saved_player_z) != int(player_z):
                         is_moved = True
-                        if self.verbose_enable:
-                            print(min_indent
-                                  + "z changed for playerid '"
-                                  + file_name
-                                  + "' so marking for save.")
+                        self.echo1('{}z changed for playerid "{}"'
+                                   ' so marking for save.'
+                                   ''.format(min_indent, file_name))
                 else:
                     self.players[file_name]["z"] = player_z
                     is_moved = True
-                    if self.verbose_enable:
-                        print(min_indent + "No z for playerid '"
-                              + file_name + "' so marking for save.")
+                    self.echo1('{}No z for playerid "{}"'
+                               ' so marking for save.'
+                               ''.format(min_indent, file_name))
                 if is_moved:
-                    if self.verbose_enable:
-                        print(min_indent
-                              + "Moved so marking as changed")
+                    self.echo1('{}Moved so marking as changed'
+                               ''.format(min_indent))
                     is_changed = True
 
                 # if ((self.players[file_name] is None) or
@@ -1800,8 +1804,8 @@ class MTChunks(ChunkymapRenderer):
                 #     (int(saved_player_y) != int(player_y)) or
                 #     (int(saved_player_z) != int(player_z))):
                 if is_changed:
-                    if self.verbose_enable:
-                        print(min_indent + player_name + " changed.")
+                    self.echo1('{}{} changed.'
+                               ''.format(min_indent, player_name))
                     # don't check y since y is elevation in minetest,
                     # don't use float since subblock position doesn't
                     # matter to map
@@ -1814,24 +1818,24 @@ class MTChunks(ChunkymapRenderer):
                         #       + " moved from "
                         #       + str(map_player_position_tuple)
                         #       + " to " + str(plPos))
-                        if self.verbose_enable:
-                            print(min_indent + "PLAYER MOVED: "
-                                  + str(player_name) + " moved from "
-                                  + str(saved_player_x) + ", "
-                                  + str(saved_player_y) + ", "
-                                  + str(saved_player_z) + " to "
-                                  + str(player_x) + ", "
-                                  + str(player_y) + ", "
-                                  + str(player_z))
+                        self.echo1(
+                            '{}PLAYER MOVED: {} moved from '
+                            '{}, {}, {} to '
+                            '{}, {}, {}'
+                            ''.format(min_indent, player_name,
+                                      saved_player_x, saved_player_y,
+                                      saved_player_z,
+                                      player_x, player_y, player_z)
+                        )
                         self.last_player_move_mtime_string = \
                             this_mtime_s
                         players_moved_count += 1
                         self.players[file_name]["utc_mtime"] = \
                             this_mtime_s
                     else:
-                        if self.verbose_enable:
-                            print(min_indent + "SAVING map entry for"
-                                  " player '" + str(player_name) + "'")
+                        self.echo1('{}SAVING map entry for'
+                                   ' player "{}"'
+                                   ''.format(min_indent, player_name))
                         players_saved_count += 1
 
                     # set BEFORE saving to prevent unecessary resaving
@@ -1841,17 +1845,18 @@ class MTChunks(ChunkymapRenderer):
                     self.players[file_name]["z"] = player_z
 
                     if player_dest_path is not None:
-                        if self.verbose_enable:
-                            print(min_indent
-                                  + "saving '" + player_dest_path + "'")
+                        self.echo1('{}saving "{}"'
+                                   ''.format(min_indent,
+                                             player_dest_path))
                         save_conf_from_dict(player_dest_path,
                                             self.players[file_name],
                                             ":",
                                             save_nulls_enable=False)
                     else:
-                        print(min_indent + "Could not save playerid '"
-                              + file_name + "' since generating map"
-                              " entry path failed")
+                        self.echo0('{}Could not save playerid "{}"'
+                                   ' since generating map'
+                                   ' entry path failed'
+                                   ''.format(min_indent, file_name))
                     # outs = open(player_dest_path, 'w')
                     # outs.write("playerid:"+file_name)
                     # if player_name is not None:
@@ -1870,8 +1875,7 @@ class MTChunks(ChunkymapRenderer):
                     # outs.close()
                     player_written_count += 1
                 else:
-                    if self.verbose_enable:
-                        print("DIDN'T MOVE: "+str(player_name))
+                    self.echo1("DIDN'T MOVE: "+str(player_name))
                     players_didntmove_count += 1
                 player_count += 1
         # if not self.verbose_enable:
@@ -1938,36 +1942,41 @@ class MTChunks(ChunkymapRenderer):
                         is_render_needed = True
                         result[1] = ("RENDERING since nonfresh empty"
                                      " traversed")
-                        if self.verbose_enable:
-                            print(min_indent+chunk_luid+": "+result[1])
+                        self.echo1('{}{}: {}'
+                                   ''.format(min_indent, chunk_luid,
+                                             result[1]))
                         # else:
                         #     sys.stdout.write('.')
                     else:
                         if self.isCDeployed(qX, qZ):
                             result[1] = ("SKIPPING since RENDERED"
                                          " nonfresh nonempty traversed")
-                            if self.verbose_enable:
-                                print(min_indent + chunk_luid + ": "
-                                      + result[1])
+                            self.echo1(
+                                '{}{}: '
+                                ''.format(min_indent, chunk_luid,
+                                          result[1])
+                            )
                         else:
                             is_render_needed = True
                             result[1] = ("RENDERING since NONRENDERED"
                                          " nonfresh nonempty traversed")
-                            if self.verbose_enable:
-                                theoretical_path = self.cImagePath(qX,
-                                                                   qZ)
-                                print(min_indent + chunk_luid + ": "
-                                      + result[1])
-                                print(min_indent + "  {dest_png_path:"
-                                      + theoretical_path + "}")
+                            if self.echo1('{}{}: {}'
+                                          ''.format(min_indent,
+                                                    chunk_luid,
+                                                    result[1])):
+                                try_path = self.cImagePath(qX, qZ)
+                                self.echo1('{}  (dest_png_path="{}")'
+                                           ''.format(min_indent,
+                                                     try_path))
                 # end if marked
                 else:
                     is_render_needed = True
                     result[1] = ("RENDERING since nonfresh unmarked"
                                  " traversed")
-                    if self.verbose_enable:
-                        print(min_indent+chunk_luid+": "+result[1])
-                    # else:
+                    self.echo1('{}{}: {}'
+                               ''.format(min_indent,chunk_luid,
+                                         result[1]))
+                    # if not self.verbose_enable:
                     #     sys.stdout.write('.')
             # end if traversed
             else:
@@ -1975,41 +1984,42 @@ class MTChunks(ChunkymapRenderer):
                     if (self.is_chunk_yaml_marked_empty(qX, qZ)):
                         result[1] = ("SKIPPING since nonfresh empty"
                                      " nontraversed")
-                        if self.verbose_enable:
-                            print(min_indent+chunk_luid+": "+result[1])
+                        self.echo1(min_indent+chunk_luid+": "+result[1])
                     else:
                         if (self.isCDeployed(qX, qZ)):
                             result[1] = ("SKIPPING since RENDERED"
                                          " nonfresh nonempty"
                                          " nontraversed (delete png to"
                                          " re-render)")
-                            if self.verbose_enable:
-                                print(min_indent + chunk_luid + ":"
-                                      + result[1])
+                            self.echo1('{}{}: {}'
+                                       ''.format(min_indent, chunk_luid,
+                                                 result[1]))
                         else:
                             is_render_needed = True
-                            theoretical_path = self.cImagePath(qX, qZ)
+                            try_path = self.cImagePath(qX, qZ)
                             result[1] = ("RENDERING since NONRENDRERED"
                                          " nonfresh nonempty"
                                          " nontraversed")
-                            if self.verbose_enable:
-                                print(min_indent + chunk_luid + ": "
-                                      + result[1])
-                                print(min_indent + "  {dest_png_path:"
-                                      + theoretical_path + "}")
+                            self.echo1('{}{}: {}'
+                                       ''.format(min_indent, chunk_luid,
+                                                 result[1]))
+                            self.echo1('{}  (dest_png_path={})'
+                                       ''.format(min_indent, try_path))
                 else:
                     is_render_needed = True
                     result[1] = ("RENDERING since nonfresh unmarked"
                                  " nontraversed")
-                    if self.verbose_enable:
-                        print(min_indent+chunk_luid+": "+result[1])
-                    # else:
+                    self.echo1('{}{}: {}'
+                               ''.format(min_indent, chunk_luid,
+                                         result[1]))
+                    # if not self.verbose_enable:
                     #     sys.stdout.write('.')
         else:
             result[1] = "SKIPPING since RENDERED fresh"
-            if self.verbose_enable:
-                print(min_indent + chunk_luid + ": " + result[1]
-                      + " (rendered after starting " + __file__ + ")")
+            self.echo1('{}{}: {}'
+                       ' (rendered after starting "{}")'
+                       ''.format(min_indent, chunk_luid, result[1],
+                                 __file__))
             # if (not self.is_chunk_yaml_marked(qX, qZ)):
             #     is_render_needed = True
 
@@ -2030,7 +2040,8 @@ class MTChunks(ChunkymapRenderer):
         if is_render_needed:
             self.rendered_count += 1
             if not self.verbose_enable:
-                print(min_indent+chunk_luid+": "+result[1])
+                print('{}{}: {}'
+                      ''.format(min_indent,chunk_luid, result[1]))
             sub_result = self._render_chunk(qX, qZ)
             if sub_result is True:
                 result[0] = True
@@ -2046,10 +2057,11 @@ class MTChunks(ChunkymapRenderer):
                 tmp_png_path = self.cImagePath(qX, qZ)
                 # NOTE: do NOT set result[1] since specific reason was
                 # already set above
-                if self.verbose_enable:
-                    print(min_indent+chunk_luid+": Skipping existing"
-                          " map tile file " + tmp_png_path
-                          + " (delete it to re-render)")
+                self.echo1('{}{}: Skipping existing'
+                           ' map tile file "{}"'
+                           ' (delete it to re-render)'
+                           ''.format(min_indent, chunk_luid,
+                                     tmp_png_path))
             # elif is_empty_chunk:
             #     print("Skipping empty chunk " + chunk_luid)
             # else:
@@ -2083,10 +2095,8 @@ class MTChunks(ChunkymapRenderer):
         maxQX = self.mapvars["max_chunkx"]
         if self.todo_index < 0:
             self.check_map_pseudorecursion_start()
-            if self.verbose_enable:
-                print(min_indent + "(initialized "
-                      + str(len(self.todo_positions))
-                      + " branch(es))")
+            self.echo1('{}(initialized {} branch(es))'
+                       ''.format(min_indent, len(self.todo_positions)))
         if self.todo_index >= 0:
             if self.todo_index < len(self.todo_positions):
                 this_pos = self.todo_positions[self.todo_index]
@@ -2135,16 +2145,17 @@ class MTChunks(ChunkymapRenderer):
                             ti = self.todo_index
                             td = len(self.todo_positions) - prev_len
                             fmt = "[{}] branching from {} (added {})"
-                            print(min_indent + fmt.format(ti, XZ, td))
+                            self.echo0(min_indent
+                                       + fmt.format(ti, XZ, td))
                     # else None (db is locked; let retry happen later)
                 else:
                     # Now is ok to checkDCAt,
                     # since does not count current index as unfinished
                     # (allow_current_chunk_enable=False):
                     self.checkDCAt(qX, qZ)
-                    if self.verbose_enable:
-                        print(min_indent + "[" + str(self.todo_index)
-                              + "] not branching from " + str((qX, qZ)))
+                    self.echo1('{}[{}] not branching from {}'
+                               ''.format(min_indent, self.todo_index,
+                                         (qX, qZ)))
                 self.todo_index += 1
                 self.checkDCAt(qX, qZ)
             if self.todo_index >= len(self.todo_positions):
@@ -2158,8 +2169,7 @@ class MTChunks(ChunkymapRenderer):
                 # while len(self.todo_positions) > 0:
                 #     self.todo_positions.pop()
         else:
-            if self.verbose_enable:
-                print(min_indent+"(no branches)")
+            self.echo1(min_indent+"(no branches)")
 
     def coordsOfLUID(self, chunk_luid):
         """get coords from luid"""
@@ -2513,10 +2523,9 @@ class MTChunks(ChunkymapRenderer):
             #     ":"
             # )
         else:
-            if self.verbose_enable:
-                print("  (Not saving '{}' since same value of each"
-                      " current variable is already in file as loaded)"
-                      "".format(self.world_yaml_path))
+            self.echo1('  (Not saving "{}" since same value of each'
+                       ' current variable is already in file as loaded)'
+                       ''.format(self.world_yaml_path))
 
     def atH(self, qX):
         if qX == self.mapvars["min_chunkx"]:
@@ -2606,10 +2615,7 @@ class MTChunks(ChunkymapRenderer):
                             continue
                         this_iteration_generates_count += 1
                         self.mapvars["total_generated_count"] += 1
-                    if self.verbose_enable:
-                        print("")
-                        # blank line before next qZ so output is
-                        # more readable
+                    self.echo1("") # blank line before next qZ
                 self.mapvars["min_chunkx"] -= 1
                 self.mapvars["min_chunkz"] -= 1
                 self.mapvars["max_chunkx"] += 1
@@ -2618,11 +2624,12 @@ class MTChunks(ChunkymapRenderer):
             #   generated any png files
             self.save_mapvars_if_changed()
             if not self.verbose_enable:
-                print("  rendered: " + str(self.rendered_count)
-                      + " (only checks for new chunks)")
+                self.echo0('  rendered: {}'
+                           ' (only checks for new chunks)'
+                           ''.format(self.rendered_count))
         else:
-            print("MAP ERROR: failed since this folder must contain"
-                  " colors.txt and minetestmapper-numpy.py")
+            self.echo0("MAP ERROR: failed since this folder must contain"
+                       " colors.txt and minetestmapper-numpy.py")
 
     def read_then_remove_signals(self):
         signal_path = self.get_signal_path()
@@ -2801,7 +2808,7 @@ class MTChunks(ChunkymapRenderer):
             # self.check_map_pseudorecursion_iterate()
 
 
-if __name__ == '__main__':
+def main():
     mtchunks = MTChunks()
     signal_path = mtchunks.get_signal_path()
     stop_line = "loop_enable:False"
@@ -2853,3 +2860,7 @@ if __name__ == '__main__':
             print("To stop generator.py loop, save a line '" + stop_line
                   + "' to '" + signal_path + "'")
             mtchunks.run_loop()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
