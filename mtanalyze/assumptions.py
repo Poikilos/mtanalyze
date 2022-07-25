@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# TODO: crafts (scrape list of ingredients to remove from inventory)
 
 worldgen_mod_list = []
 worldgen_mod_list.append("caverealms")
@@ -25,6 +27,7 @@ worldgen_mod_list.append("tsm_pyramids")
 worldgen_mod_list.append("tsm_railcorridors")
 
 after_broken = {}
+take_after_broken = {}
 after_broken["default:stone"] = "default:cobble"
 after_broken["default:stone_with_iron"] = "default:iron_lump"
 after_broken["default:stone_with_copper"] = "default:copper_lump"
@@ -50,8 +53,11 @@ after_broken["caverealms:stone_with_algae"] = "default:cobble"
 after_broken["caverealms:constant_flame"] = "Empty"
 after_broken["fire:basic_flame"] = "Empty"
 after_broken["default:water_source"] = "bucket:bucket_water"
+take_after_broken["default:water_source"] = "bucket:bucket_empty"
 after_broken["default:river_water_source"] = "bucket:bucket_river_water"
+take_after_broken["default:river_water_source"] = "bucket:bucket_empty"
 after_broken["default:lava_source"] = "bucket:bucket_lava"
+take_after_broken["default:lava_source"] = "bucket:bucket_empty"
 # after_broken[""] = ""
 
 

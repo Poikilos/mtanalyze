@@ -111,6 +111,16 @@ git clone https://github.com/poikilos/pycodetool.git {}
 '''.format(PCT_REPO_PATH)
 
 
+def is_yes(s):
+    '''
+    This is ONLY for terminal input.
+    '''
+    if s.lower() == "y":
+        return True
+    if s.lower() == "yes":
+        return True
+    return False
+
 class EngineInfo:
     def __init__(self, path_user, path_share, prefix=None,
                  run_in_place=None, conf_path=None, gameid=None):

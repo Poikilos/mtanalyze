@@ -6,6 +6,7 @@ in favor of ../webapp since it is planned to run as the same user
 as the user who ran minetestserver.
 '''
 from __future__ import print_function
+from __future__ import division
 
 # Copyright (C) 2018 Jake Gustafson
 
@@ -24,7 +25,6 @@ from __future__ import print_function
 # Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-from __future__ import division
 
 import os
 import subprocess
@@ -40,6 +40,8 @@ import time
 # copyfile etc:
 import shutil
 import math
+
+loaded_mod_list = []  # TODO: (?) this is only filled in deprecated.py
 
 MY_PATH = os.path.realpath(__file__)
 MY_MODULE_PATH = os.path.split(MY_PATH)[0]

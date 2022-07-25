@@ -105,15 +105,8 @@ debugDTFmt = "%Y-%m-%d %H:%M:%S"
 is_start_now = False
 interactive_enable = False
 
-'''
-def is_yes(s):
-    # Use the one from mtanalyze instead.
-    if s.lower() == "y":
-        return True
-    if s.lower() == "yes":
-        return True
-    return False
-'''
+
+
 
 def confirm_min_date():
     global min_date_string

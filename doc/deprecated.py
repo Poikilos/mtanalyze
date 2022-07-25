@@ -21,11 +21,17 @@ from mtanalyze import (
     combineColorLists,
     echo0,
     echo1,
+    is_yes,
 )
+user_excluded_mod_count = 0
+new_mod_list = []
+prepackaged_game_mod_list = []
+prepackaged_gameid = None
 
 try:
     from pycodetool.parsing import ( #import *
         # ConfigParser,
+        # ConfigManager,
         save_conf_from_dict,
         get_dict_modified_by_conf_file,
         get_dict_from_conf_file,
@@ -287,7 +293,7 @@ def init_minetestinfo(**kwargs):
     '''
     global dict_entries_modified_count
     global profile_path
-    if not mti.get("www_minetest_path") is not None:
+    if mti.get("www_minetest_path") is None:
         default_www_minetest_path = "/var/www/html/minetest"
         if "windows" in platform.system().lower():
             default_www_minetest_path = None
@@ -767,6 +773,7 @@ def load_world_and_mod_data():
 
     mods_path = None
     prepackaged_game_path = None
+    global prepackaged_gameid
     if games_path is not None:
         # from release 0.4.16 on, directory is just called minetest
         try_id = "minetest_game"
