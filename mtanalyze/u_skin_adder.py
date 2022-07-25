@@ -3,60 +3,73 @@ from __future__ import print_function
 
 import os
 import sys
-# from PIL import Image, ImageDraw, ImageFont, ImageColor
 
-myPath = os.path.realpath(__file__)
-myPackage = os.path.split(myPath)[0]
-myRepo = os.path.split(myPackage)[0]
-repos = os.path.split(myRepo)[0]
 me = 'u_skin_adder.py'
 
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
+
+from mtanalyze import (  # formerly: from minetestinfo import *
+    mti,
+    FLAG_EMPTY_HEXCOLOR,
+    PIL_DEP_MSG,
+    PYCODETOOL_DEP_MSG,
+    PCT_REPO_PATH,
+    HOME_PATH,
+) # paths and FLAG_EMPTY_HEXCOLOR = "#010000"
 
 try:
-    try:
-        from parsing import *
-    except ImportError as ex:
-        from pycodetool.parsing import *
-except ImportError:
-    print("This script requires parsing from poikilos/pycodetool")
-    print("Try (in a Terminal):")
-    print()
-    print("cd \"{}\"".format(repos))
-    print("git clone https://github.com/poikilos/pycodetool.git"
-          " pycodetool")
-    print()
-    print()
-    sys.exit(1)
-
-from minetestinfo import *  # paths and FLAG_EMPTY_HEXCOLOR = "#010000"
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.path.insert(0, PCT_REPO_PATH)
 try:
-    input = input
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.stderr.write(PYCODETOOL_DEP_MSG+"\n")
+        sys.stderr.flush()
+        sys.exit(1)
+    else:
+        raise ex
+
+from pycodetool.parsing import *
+
+# TODO: (?) from mtanalyze.minetestoffline import *
+
+try:
+    input = raw_input
 except NameError:
     # Python 3
     pass
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageColor
-except ImportError:
-    print("You must first install Pillow's PIL.")
-    print("On Windows:")
-    print("Right-click windows menu, 'Command Prompt (Admin)' then:")
-    print("pip install Pillow")
-    print("")
-    print("On *nix-like systems:")
-    print("sudo python2 -m pip install --upgrade pip")
-    print("sudo python2 -m pip install --upgrade pip wheel")
-    print("#then:")
-    # print("sudo pip install Pillow")
-    print("sudo python -m pip install Pillow\n")
-    print("#or")
-    print("#same but python3 instead")
-    # print("sudo pip install Pillow")
+except ImportError as ex:
+    print(str(ex))
+    print(PIL_DEP_MSG)
     sys.exit(1)
+except ModuleNotFoundError as ex:
+    print(str(ex))
+    print(PIL_DEP_MSG)
+    sys.exit(1)
+
 import shutil
 u_skins_rel = ("Desktop\\Backup\\fcalocal\\usr\\local\\share\\minetest"
                "\\games"
                "\\fca_game_a\\mods\\u_skins\\u_skins")
-u_skins_mod_path = os.path.join(profile_path, u_skins_rel)
+u_skins_mod_path = os.path.join(HOME_PATH, u_skins_rel)
 games_path = os.path.join(mti.get_var("shared_minetest_path"),
                           "games")
 
@@ -418,7 +431,7 @@ def add_skin_if_new(sub_path):
 
 
 def load_new_skins_from_folder(in_path):
-    # in_path = os.path.join(profile_path,"Downloads\\skins-to-add")
+    # in_path = os.path.join(HOME_PATH,"Downloads\\skins-to-add")
     # if not os.path.isdir(in_path):
     #     in_path = "."
     #     print("Looking for new textures in current directory")

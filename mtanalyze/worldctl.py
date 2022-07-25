@@ -14,17 +14,20 @@ world.py --mg_name carpathian --create ~/minetest/worlds/worldname
 
 import sys
 import os
-
-myPath = os.path.realpath(__file__)
-myPackage = os.path.split(myPath)[0]
-myRepo = os.path.split(myPackage)[0]
-repos = os.path.split(myRepo)[0]
 me = "worldctl"
 
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
 try:
     import mtanalyze
-except ModuleNotFoundError:
-    sys.path.insert(0, myRepo)
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
 
 from mtanalyze import (
     echo0,

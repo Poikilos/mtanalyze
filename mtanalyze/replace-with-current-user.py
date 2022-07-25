@@ -1,13 +1,30 @@
 #!/usr/bin/env python3
+from __future__ import print_function
 import os
-from os.path import expanduser
-
+import sys
 try:
     # Python 2
     input = raw_input
 except NameError:
     # Python 3
     pass
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
+
+from mtanalyze import (  # formerly: from minetestinfo import *
+    HOME_PATH,
+)
+
 
 filenames = []
 filenames.append(os.path.join("unused", "chunkymap-cronjob"))
@@ -19,8 +36,9 @@ filenames.append(os.path.join("unused",
 filenames.append(os.path.join("unused", "set-minutely-crontab-job.sh"))
 filenames.append("chunkymap-generator.sh")
 
-home_path = expanduser("~")
-home_minetest_chunkymap_path = os.path.join(home_path, "chunkymap")
+
+
+home_minetest_chunkymap_path = os.path.join(HOME_PATH, "chunkymap")
 print("Using chunkymap path '" + home_minetest_chunkymap_path + "'")
 # home_minetest_chunkymap_unused_path = os.path.join(
 #     home_minetest_chunkymap_path,
@@ -42,7 +60,7 @@ if "\\" not in home_minetest_chunkymap_path:
                         line = ins.readline()
                         if line:
                             line = line.replace("/home/owner",
-                                                home_path)
+                                                HOME_PATH)
                             outs.write(line+"\n")
                     outs.close()
                     os.remove(temp_path)

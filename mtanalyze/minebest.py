@@ -69,7 +69,7 @@ if WHOAMI != MTUSER:
     exit 0
 fi
 '''
-python_mr = sys.version_info.major
+PYTHON_MR = sys.version_info.major
 SEPARATOR = "-------------"
 
 profile = None

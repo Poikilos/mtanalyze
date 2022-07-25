@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
-"""
+'''
 Test other Poikilos python modules.
 
 This module requires the parsing module from
 https://github.com/poikilos/pycodetool
-"""
+'''
+from __future__ import print_function
+
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or
@@ -30,14 +30,50 @@ import keyword
 # import types
 import inspect
 import traceback
+if sys.version_info.major >= 3:
+    if sys.version_info.minor >= 4:
+        from importlib import reload
+    else:
+        from imp import reload
+else:
+    input = raw_input
+
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
+
+from mtanalyze import (
+    PYCODETOOL_DEP_MSG,
+    PCT_REPO_PATH,
+)
 
 try:
-    input = raw_input
-except NameError:
-    pass
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.path.insert(0, PCT_REPO_PATH)
+try:
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.stderr.write(PYCODETOOL_DEP_MSG+"\n")
+        sys.stderr.flush()
+        sys.exit(1)
+    else:
+        raise ex
 
-from parsing import *
-
+from pycodetool.parsing import *
 
 modules = []
 modules.append("os")

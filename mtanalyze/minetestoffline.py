@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from __future__ import print_function
 '''
 Process minetest player files when server is not running
 such as assist in data recovery where original filename is not known
+(such as where player_id does not match filename of plr file,
+as caused by data recovery or other corruption)
 '''
-# (such as where player_id does not match filename of plr file,
-# as caused by data recovery or other corruption)
+from __future__ import print_function
+
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or
@@ -27,40 +28,48 @@ import shutil
 import os
 import sys
 from datetime import datetime
-
-myPath = os.path.realpath(__file__)
-myPackage = os.path.split(myPath)[0]
-myRepo = os.path.split(myPackage)[0]
-repos = os.path.split(myRepo)[0]
 me = 'minetestoffline.py'
 
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
 try:
     import mtanalyze
-except ModuleNotFoundError:
-    sys.path.insert(0, myRepo)
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
 
 from mtanalyze import (
     echo0,
     echo1,
+    FLAG_EMPTY_HEXCOLOR,
+    PYCODETOOL_DEP_MSG,
+    mti,
+    PCT_REPO_PATH,
 )
 
 try:
-    try:
-        from parsing import *
-    except ImportError as ex:
-        from pycodetool.parsing import *
-except ImportError:
-    print("This script requires parsing from poikilos/pycodetool")
-    print("Try (in a Terminal):")
-    print()
-    print("cd \"{}\"".format(repos))
-    print("git clone https://github.com/poikilos/pycodetool.git"
-          " pycodetool")
-    print()
-    print()
-    sys.exit(1)
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.path.insert(0, PCT_REPO_PATH)
+try:
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.stderr.write(PYCODETOOL_DEP_MSG+"\n")
+        sys.stderr.flush()
+        sys.exit(1)
+    else:
+        raise ex
 
-from minetestinfo import *
+from pycodetool.parsing import *
 
 import time
 from ast import literal_eval  # as make_tuple
@@ -1183,7 +1192,6 @@ if os.sep == "\\":
           " PlayerArgs will be loaded as blank (if using player files"
           " with Windows line endings on GNU/Linux copy of minetest).")
 
-FLAG_EMPTY_HEXCOLOR = "#010000"
 
 def combineColorLists(dest_colors_txt, share_minetest):
     util_path = os.path.join(share_minetest, "util")

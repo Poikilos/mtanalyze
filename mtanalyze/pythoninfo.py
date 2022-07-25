@@ -2,29 +2,13 @@
 from __future__ import print_function
 
 import os
-
-myPath = os.path.realpath(__file__)
-myPackage = os.path.split(myPath)[0]
-myRepo = os.path.split(myPackage)[0]
-repos = os.path.split(myRepo)[0]
+import sys
 me = 'pythoninfo.py'
 
-try:
-    try:
-        from parsing import *
-    except ImportError as ex:
-        from pycodetool.parsing import *
-except ImportError:
-    print("This script requires parsing from poikilos/pycodetool")
-    print("Try (in a Terminal):")
-    print()
-    print("cd \"{}\"".format(repos))
-    print("git clone https://github.com/poikilos/pycodetool.git"
-          " pycodetool")
-    print()
-    print()
-    exit(1)
-
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
 
 def get_python3_exe_path():
     result = "python3"

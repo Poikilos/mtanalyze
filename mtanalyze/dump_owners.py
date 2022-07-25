@@ -169,5 +169,6 @@ def main():
     for ext, count in counts.items():
         print("* there were {} {} file(s) in {}."
               "".format(count, ext, folder_path))
+
 if __name__ == "__main__":
     main()

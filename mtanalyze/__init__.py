@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+'''
+Analyze the Minetest installation and data. The only maintained parts of
+this module cover installation and other processes done while Minetest
+is not running such as processing colors.txt and old flat files of
+players. For features regarding configuration and runtime
+data, see <https://github.com/poikilos/voxboxor>.
+'''
 from __future__ import print_function
 
 # mtanalyze: module for using minetest data
@@ -24,6 +31,8 @@ import sys
 from datetime import datetime
 import platform
 import json
+import pathlib
+
 # from voxboxor.settings import Settings
 '''
 import from minetestassumptions import (
@@ -36,8 +45,14 @@ except NameError:
     pass
 
 '''
+PYTHON_MR = sys.version_info.major
 
+# mtanalyze was formerly mtanalyze.minetestinfo
 mti = {}  # mostly deprecated
+# region from minetestoffline formerly part of mtanalyze
+FLAG_EMPTY_HEXCOLOR = "#010000"
+
+# endregion from minetestoffline formerly part of mtanalyze
 
 verbosity = 0
 
@@ -61,6 +76,39 @@ def set_verbosity(level):
 
 def get_verbosity(level):
     return verbosity
+
+me = '__init__.py'
+
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+PCT_REPO_PATH = os.path.join(REPOS_PATH, "pycodetool")
+if not os.path.isfile(os.path.join(MY_MODULE_PATH, me)):
+    raise RuntimeError('{} is not in module {}.'
+                       ''.format(me, MY_MODULE_PATH))
+
+
+PIL_DEP_MSG = '''
+You must first install Pillow's PIL.
+On Windows:
+Right-click windows menu, 'Command Prompt (Admin)' then:
+pip install Pillow
+
+On *nix-like systems:
+python3 -m pip install --user --upgrade pip
+python3 -m pip install --user --upgrade pip wheel
+#then:
+sudo pip install Pillow
+python3 -m pip install --user Pillow
+'''
+
+PYCODETOOL_DEP_MSG = '''
+This script requires parsing from poikilos/pycodetool.
+Try (in a Terminal):
+
+git clone https://github.com/poikilos/pycodetool.git {}
+'''.format(PCT_REPO_PATH)
 
 
 class EngineInfo:
@@ -200,42 +248,36 @@ class EngineInfo:
                   " found {}.")
 
 
-myPath = os.path.realpath(__file__)
-myPackage = os.path.split(myPath)[0]
-myRepo = os.path.split(myPackage)[0]
-repos = os.path.split(myRepo)[0]
-me = '__init__.py'
 
-if not os.path.isfile(os.path.join(myPackage, me)):
-    raise RuntimeError('{} is not in package {}.'.format(me, myPackage))
+# HOME_PATH = expanduser("~")  # from os.path import expanduser
+HOME_PATH = str(pathlib.Path.home())
 
-profile_path = None
-appdata_path = None
+APPDATA_PATH = None
 if "windows" in platform.system().lower():
     if 'USERPROFILE' in os.environ:
-        profile_path = os.environ['USERPROFILE']
-        appdatas_path = os.path.join(profile_path, "AppData")
-        appdata_path = os.path.join(appdatas_path, "Local")
+        # HOME_PATH = os.environ['USERPROFILE']
+        APPDATAS_PATH = os.path.join(HOME_PATH, "AppData")
+        APPDATA_PATH = os.path.join(APPDATAS_PATH, "Local")
     else:
         raise ValueError("ERROR: The USERPROFILE variable is missing"
                          " though platform.system() is {}."
                          "".format(platform.system()))
 else:
     if 'HOME' in os.environ:
-        profile_path = os.environ['HOME']
-        appdata_path = os.path.join(profile_path, ".config")
+        # HOME_PATH = os.environ['HOME']
+        APPDATA_PATH = os.path.join(HOME_PATH, ".config")
     else:
         raise ValueError("ERROR: The HOME variable is missing"
                          " though the platform {} is not Windows."
                          "".format(platform.system()))
 
 
-configs_path = os.path.join(appdata_path, "enlivenminetest")
+CONFIGS_PATH = os.path.join(APPDATA_PATH, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #                          "minetestmeta.yml")
-_OLD_yaml_path = os.path.join(myPackage, "minetestmeta.yml")
+_OLD_yaml_path = os.path.join(MY_MODULE_PATH, "minetestmeta.yml")
 # ^ formerly _OLD_conf_path formerly conf_path (or _OLD_json_path?)
-_OLD_json_path = os.path.join(appdata_path, "minetestmeta.json")
+_OLD_json_path = os.path.join(APPDATA_PATH, "minetestmeta.json")
 # ^ formerly config_path
 
 
@@ -252,11 +294,12 @@ def deprecate_minetestinfo():
               "".format(_OLD_json_path))
 
 
-# init_minetestinfo()
-deprecate_minetestinfo()
 
 
 if __name__ == '__main__':
+    # init_minetestinfo()
+    deprecate_minetestinfo()
     echo0()
     echo0("This is a module not a script. In Python you can do:"
-          " `import mtanalyze.minetestinfo` ")
+          " `import mtanalyze` ")
+    # formerly " `import mtanalyze.minetestinfo` ")

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+'''
+Sort players by distance from a point. This only works with the old
+flat player files.
+'''
 # script for listing players by distance from a certain point
 # Copyright (C) 2018 Jake Gustafson
 
@@ -16,8 +20,25 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
+from __future__ import print_function
+import sys
+import os
 
-from minetestoffline import *
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
+from mtanalyze.minetestoffline import (
+    MinetestPlayer,
+)
 import math
 
 try:

@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+'''
+Read settingtypes.txt files where each non-commented line is formatted
+like: `<source>name (Readable name) type type_args</source>`
+(See minetest/builtin/settingtypes.txt).
+Terms specific to this implementation:
+- The "default_default" is a default that is set if no default is
+  specified by the settingtypes.txt.
+- "<type>,..." means more than one value separated by commas but no
+  spaces (where type is string or some other type).
+- "default", "min", and "max" always take the format of the
+  setting_params key which can be found in setting_formats.
+  - Any other param's value can be looked up in setting_formats
+    directly.
+
+For a more complete implementation of Minetest settings, see
+<https://github.com/poikilos/voxboxor>
+'''
 # mtanalyze: module for using minetest data
 # Copyright (C) 2022 Jake Gustafson
 
@@ -18,23 +35,7 @@
 # Boston, MA 02110-1301 USA
 
 # TODO: read settingtypes.txt files (and cache them):
-'''
-Read settingtypes.txt files where each non-commented line is formatted
-like: `<source>name (Readable name) type type_args</source>`
-(See minetest/builtin/settingtypes.txt).
-Terms specific to this implementation:
-- The "default_default" is a default that is set if no default is
-  specified by the settingtypes.txt.
-- "<type>,..." means more than one value separated by commas but no
-  spaces (where type is string or some other type).
-- "default", "min", and "max" always take the format of the
-  setting_params key which can be found in setting_formats.
-  - Any other param's value can be looked up in setting_formats
-    directly.
 
-For a more complete implementation of Minetest settings, see
-<https://github.com/poikilos/voxboxor>
-'''
 setting_formats = {
     "possible_flags": "<string>,...",
     "values": "<string>,...",

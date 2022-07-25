@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+'''
+(deprecated) module for generating map chunks and/or player locations
+for mtanalyze/web. Both this module and mtanalyze/web are deprecated
+in favor of ../webapp since it is planned to run as the same user
+as the user who ran minetestserver.
+'''
 from __future__ import print_function
 
-# (deprecated) module for generating map chunks and/or player locations
-# for mtanalyze/web. Both this module and mtanalyze/web are deprecated
-# in favor of ../webapp since it is planned to run as the same user
-# as the user who ran minetestserver.
 # Copyright (C) 2018 Jake Gustafson
 
 # This library is free software; you can redistribute it and/or
@@ -39,32 +41,59 @@ import time
 import shutil
 import math
 
-from minetestinfo import *
-from parsing import *
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
+
+from mtanalyze import ( # formerly: from minetestinfo import *
+    mti,
+    FLAG_EMPTY_HEXCOLOR,
+    PIL_DEP_MSG,
+    PYCODETOOL_DEP_MSG,
+    PCT_REPO_PATH,
+)
+
+try:
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.path.insert(0, PCT_REPO_PATH)
+try:
+    import pycodetool
+except ImportError as ex:
+    if (("No module named pycodetool" in str(ex))  # Python 2
+            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
+        sys.stderr.write(PYCODETOOL_DEP_MSG+"\n")
+        sys.stderr.flush()
+        sys.exit(1)
+    else:
+        raise ex
+
+from pycodetool.parsing import *
+
 # python_exe_path is from:
 from pythoninfo import *
 
-deps_msg = '''
-You must first install Pillow's PIL.
-On Windows:
-Right-click windows menu, 'Command Prompt (Admin)' then:
-pip install Pillow
-
-On *nix-like systems:
-sudo python2 -m pip install --upgrade pip
-sudo python2 -m pip install --upgrade pip wheel
-#then:
-sudo pip install Pillow
-python2 -m pip install Pillow
-#or
-#same but python3 instead
-sudo pip install Pillow
-'''
 
 try:
     from PIL import Image, ImageDraw, ImageFont, ImageColor
-except ImportError:
-    print(deps_msg)
+except ImportError as ex:
+    print(str(ex))
+    print(PIL_DEP_MSG)
+    sys.exit(1)
+except ModuleNotFoundError as ex:
+    print(str(ex))
+    print(PIL_DEP_MSG)
     sys.exit(1)
 
 from chunkymaprenderer import ChunkymapRenderer
