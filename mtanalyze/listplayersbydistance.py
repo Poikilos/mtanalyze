@@ -125,4 +125,3 @@ def list_players_by_distance(single_axis_enable, start=(0, 0, 0)):
 
 
 list_players_by_distance(True)
-input("Press enter to exit...")

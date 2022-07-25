@@ -13,8 +13,13 @@ Terms specific to this implementation:
   - Any other param's value can be looked up in setting_formats
     directly.
 
+To read simple conf values (but not Minetest objects), you can use:
+from mtanalyze.minebest import (
+    get_conf_value,
+)
+
 For a more complete implementation of Minetest settings, see
-<https://github.com/poikilos/voxboxor>
+<https://github.com/poikilos/voxboxor>.
 '''
 # mtanalyze: module for using minetest data
 # Copyright (C) 2022 Jake Gustafson

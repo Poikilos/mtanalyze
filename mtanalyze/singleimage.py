@@ -44,7 +44,7 @@ except ImportError as ex:
     else:
         raise ex
 
-from mtanalyze import (  # formerly: from minetestinfo import *
+from mtanalyze import (
     mti,
     get_required,
     FLAG_EMPTY_HEXCOLOR,
@@ -52,7 +52,14 @@ from mtanalyze import (  # formerly: from minetestinfo import *
     echo0,
     echo1,
     echo2,
+    genresult_name_end_flag,
+    gen_error_name_end_flag,
 )
+
+from mtanalyze.minetestoffline import (
+    WorldInfo,
+)
+
 # python_exe_path is from:
 from pythoninfo import *
 try:
@@ -93,7 +100,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
     # mtm_bin_enable = None
     # mtm_bin_dir_path = None
 
-    def __init__(self):
+    def __init__(self, world_path):
+        if world_path is None:
+            raise ValueError("You must provide a world_path.")
         # limit to 8192x8192 for browsers to be able to load it
         # NOTE: a 16464x16384 or 12288x12288 image fails to load in
         # browser, but 6112x6592 works
@@ -105,10 +114,19 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         self.mtm_bin_enable = False
         # ^ set below automatically if present
 
-        self.backend_string = get_world_var("backend")
-        # TODO: Modernize (get_world_var moved to deprecated.py)
+        # self.world_path = get_required("primary_world_path")
+        self.world_path = world_path
+        self.world = WorldInfo(world_path)
+        self.backend_string = self.world.get_mt("backend")
+        if self.backend_string is not None:
+            self.backend_string = self.backend_string.strip()
+            if len(self.backend_string) == 0:
+                self.backend_string = None
+        if self.backend_string is None:
+            raise ValueError('"{}" does not set: backend'
+                             ''.format(self.world.mt_path))
         self.prepare_env()  # from super
-        self.world_path = get_required("primary_world_path")
+
 
         if not os.path.isdir(self.world_path):
             print("ERROR: missing world '" + self.world_path
@@ -201,8 +219,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         if ((not self.mtm_bin_enable) and
                 ("numpy" in self.mtm_py_path)):
             limit_param = region_param
-            io_string = (" \"" + self.world_path + "\" \""
+            io_string = (" -i \"" + self.world_path + "\" -o \""
                          + tmp_png_path + "\"")
+            # FIXME: Why was -i and -o implicit before?
             # geometry_param = " --region " + str(min_x) + " "
             #   + str(max_x) + " " + str(min_z) + " " + str(max_z)
             # print("Using numpy style parameters.")
@@ -370,14 +389,13 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
                 )
                 mtchunk.save_yaml(dest_yaml_path)
         else:
-
-            print("No image could be generated from '" + self.world_path
-                  + "'")
+            print('No image could be generated from "{}"'
+                  ''.format(self.world_path))
             if is_locked:
                 print("(database is locked--shutdown server first or"
                       " try generator.py to render chunks"
                       " individually).")
-            else:
+            elif os.path.isfile(gen_error_path):
                 # ins = open(genresult_path, 'r')
                 ins = open(gen_error_path, 'r')
                 line = True
@@ -388,7 +406,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
                         if "No module named leveldb" in line:
                             print(no_leveldb_msg)
                 ins.close()
+            else:
+                echo0("* and there is no {}".format(gen_error_path))
 
 
-cmor = ChunkymapOfflineRenderer()
+cmor = ChunkymapOfflineRenderer(get_required("world"))
 cmor.RenderSingleImage()

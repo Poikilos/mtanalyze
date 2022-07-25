@@ -48,11 +48,7 @@ except NameError:
 PYTHON_MR = sys.version_info.major
 
 # mtanalyze was formerly mtanalyze.minetestinfo
-mti = {}  # mostly deprecated
-default_license_string = "CC BY-SA 3.0"
-try_shared_minetest_path = os.path.join(os.getcwd(), "games")
-if os.path.isdir(try_shared_minetest_path):
-    mti['shared_minetest_path'] = try_shared_minetest_path
+mti = {}  # (see under HOME_PATH for detected settings)
 
 verbosity = 0
 key = None
@@ -81,14 +77,15 @@ def get_required(key):
             value = None
     if value is None:
         raise ValueError(
-            'The "{}" setting is required for this operation.'
+            'A value for --{} is required for this operation.'
             ''.format(key)
         )
     return value
 
 # region from minetestoffline formerly part of mtanalyze
 FLAG_EMPTY_HEXCOLOR = "#010000"
-
+genresult_name_end_flag = "_mapper_result.txt"
+gen_error_name_end_flag = "_mapper_err.txt"
 # endregion from minetestoffline formerly part of mtanalyze
 
 # see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
@@ -316,6 +313,16 @@ else:
                          " though the platform {} is not Windows."
                          "".format(platform.system()))
 
+if os.path.isdir(os.path.join(os.getcwd(), "games")):
+    mti['shared_minetest_path'] = os.getcwd()
+else:
+    print('shared_minetest_path was not detected. Run in a Minetest'
+          ' directory containing "games" to detect.')
+if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
+    mti['profile_minetest_path'] = os.getcwd()
+else:
+    print('profile_minetest_path was not detected. Run in a Minetest'
+          ' directory containing "minetest.conf" to detect.')
 
 CONFIGS_PATH = os.path.join(APPDATA_PATH, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

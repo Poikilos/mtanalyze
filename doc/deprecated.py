@@ -56,12 +56,6 @@ except ImportError:
         sys.exit(1)
 
 
-
-
-genresult_name_end_flag = "_mapper_result.txt"
-gen_error_name_end_flag = "_mapper_err.txt"
-
-
 class MTDecaChunk:
     '''
     This is formerly from mtanalyze formerly mtanalyze.minetestinfo.

@@ -8,7 +8,7 @@ Usage in python:
 
 Command-line interface:
 
-world.py --mg_name carpathian --create ~/minetest/worlds/worldname
+worldctl --mg_name carpathian --create ~/minetest/worlds/worldname
 # ^ where ~/minetest/worlds is your Minetest worlds directory
 '''
 

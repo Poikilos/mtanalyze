@@ -58,8 +58,13 @@ from mtanalyze import (
     FLAG_EMPTY_HEXCOLOR,
     PYCODETOOL_DEP_MSG,
     mti,
+    get_required,
     PCT_REPO_PATH,
     # get_required,
+)
+
+from mtanalyze.minebest import (
+    get_conf_value,
 )
 
 try:
@@ -86,45 +91,87 @@ try:
 except NameError:
     pass  # Python 3
 
-tmp_prof = os.path.join("C:\\", "Users", "jgustafson")
-desktop = os.path.join(tmp_prof, "Desktop")
-bak_p = os.path.join(tmp_prof, "Backup", "fcalocal", "home", "owner")
-bak_mt = os.path.join(bak_p, ".minetest")
-bak_worlds = os.path.join(bak_mt, "worlds")
-tmp_prof = None
-# plrs = os.path.join(bak_mt, "worlds", "FCAGameAWorld", "players")
-p_world_path = mti.get("primary_world_path")
-if p_world_path is not None:
-    p_world_path = p_world_path.strip()
-    if len(p_world_path) == 0:
-        p_world_path = None
 players_path = None
-if p_world_path is not None:
-    players_path = os.path.join(p_world_path, "players")
-else:
-    echo0("primary_world_path was not set, so players_path was not set")
+p_world_path = None
+bak_mt = None
 
-_MAX_STACK_QTY = 99
-poiDotExt = ".conf"  # formerly PLAYER_STORAGE_FILE_DOT_THEN_EXT
+
+def set_players_path(world_path):
+    global players_path
+    global bak_mt
+    tmp_prof = os.path.join("C:\\", "Users", "jgustafson")
+    # desktop = os.path.join(tmp_prof, "Desktop")
+    bak_p = os.path.join(tmp_prof, "Backup", "fcalocal", "home", "owner")
+    bak_mt = os.path.join(bak_p, ".minetest")
+    bak_worlds = os.path.join(bak_mt, "worlds")
+    tmp_prof = None
+    # plrs = os.path.join(bak_mt, "worlds", "FCAGameAWorld", "players")
+    if world_path is not None:
+        world_path = world_path.strip()
+        if len(world_path) == 0:
+            world_path = None
+    players_path = None
+    if world_path is not None:
+        players_path = os.path.join(world_path, "players")
+    else:
+        echo0("--world was not set, so players_path was not set.")
+
 # debugs_list = list()
 # dbga = os.path.join(bak_mt, "debug_archived")
 # moPath = os.path.join(dbga, "2016", "03")
 # debugs_list.append(os.path.join(moPath, "16.txt"))
 # debugs_list.append(os.path.join(moPath, "17.txt"))
+
+
 debug_txt_path = None
-if "profile_minetest_path" in mti:
-    debug_txt_path = os.path.join(
-        mti.get("profile_minetest_path"),
-        "debug.txt"
-    )
-else:
-    echo0("profile_minetest_path was not set,"
-          " so debug_txt_path was not set.")
+
+
+def detect_debug_txt_path():
+    global debug_txt_path
+    if "profile_minetest_path" not in mti:
+        echo0("profile_minetest_path was not set,"
+              " so debug_txt_path was not set.")
+        return
+    debug0 = os.path.join(profile_minetest_path, "bin", "debug.txt")
+    # ^ for RUN_IN_PLACE (games etc would be in
+    #   shared_minetest_path otherwise)
+    debug1 = os.path.join(profile_minetest_path, "debug.txt")
+
+    try_debug_paths = [debug0, debug1]
+    for try_debug_path in try_debug_paths:
+        if os.path.isfile(try_debug_path):
+            debug_txt_path = try_debug_path
+            print('* using detected debug_txt_path="{}"'
+                  ''.format(debug_txt_path))
+            break
+    if debug_txt_path is None:
+        debug_txt_path = debug0
+        print('* using default debug_txt_path="{}"'
+              ''.format(debug_txt_path))
+
+
+_MAX_STACK_QTY = 99
+poiDotExt = ".conf"  # formerly PLAYER_STORAGE_FILE_DOT_THEN_EXT
+
 min_date_string = None
 # min_date_string = "2016-03-15 12:12:00"
 debugDTFmt = "%Y-%m-%d %H:%M:%S"
 is_start_now = False
 interactive_enable = False
+
+
+class WorldInfo():
+    def __init__(self, world_path):
+        if world_path is None:
+            raise ValueError('You must provide a world_path.')
+        if not os.path.isdir(world_path):
+            raise ValueError(
+                '"{}" is not a directory.'.format(world_path)
+            )
+        self.mt_path = os.path.join(world_path, "world.mt")
+
+    def get_mt(self, name):
+        return get_conf_value(self.mt_path, name)
 
 
 def confirm_min_date():
@@ -172,13 +219,24 @@ g_old_off_inv_path = None
 give_path = None
 world_name = None
 deprecated_irl_person_csv_name = None
-if p_world_path is not None:
-    g_offline_inv_path = os.path.join(p_world_path, offline_inv_name)
+
+
+irl_person_csv_name = None
+irl_person_csv_path = None
+
+
+irl_person_csv_name = "irl_person_info.csv"  # in world dir
+
+
+def set_offline_paths(world_path):
+    global g_offline_inv_path
+    if world_path is None:
+        echo0("--world was not set, so g_offline_inv_path was not set")
+        return
+    echo0("")
+    g_offline_inv_path = os.path.join(world_path, offline_inv_name)
     # ^ formerly players_offline_storage_path
-    g_old_off_inv_path = os.path.join(
-        p_world_path,
-        old_offline_inv_name
-    )
+    g_old_off_inv_path = os.path.join(world_path, old_offline_inv_name)
     # ^ formerly deprecated_players_offline_storage_path
 
     if os.path.isdir(g_old_off_inv_path):
@@ -188,37 +246,35 @@ if p_world_path is not None:
         shutil.move(g_old_off_inv_path,
                     g_offline_inv_path)
     give_path = os.path.join(g_offline_inv_path, "give")
-    world_name = os.path.basename(os.path.abspath(p_world_path))
+    world_name = os.path.basename(os.path.abspath(world_path))
     deprecated_irl_person_csv_name = (
         world_name + " - Minetest Users - Real Names.txt"
     )
     # ^ See irl_person_csv_name's value for the new filename instead.
-else:
-    echo0("primarly_world_path was not set, so g_offline_inv_path was not set")
 
-print("Using offline g_offline_inv_path: {}".format(g_offline_inv_path))
-print("  (used for inventory recovery and other offline storage"
-      " features)")
+    print("Using offline g_offline_inv_path: {}".format(g_offline_inv_path))
+    print("  (used for inventory recovery and other offline storage"
+          " features)")
 
-print("give_path: {}".format(give_path))
-print("  (used for give commands for inventory leftover if more to"
-      " transfer after filling destination inventory)")
-# g_offline_inv_path = os.path.join(bak_worlds, "FCAGameAWorld",
-#                                   offline_inv_name)
-irl_person_csv_name = None
-irl_person_csv_path = None
+    print("give_path: {}".format(give_path))
+    print("  (used for give commands for inventory leftover if more to"
+          " transfer after filling destination inventory)")
+    # g_offline_inv_path = os.path.join(bak_worlds, "FCAGameAWorld",
+    #                                   offline_inv_name)
 
-print("")
-print("Using world_name '"+str(world_name)+"'")
+    print("")
+    print("Using world_name '"+str(world_name)+"'")
 
-irl_person_csv_name = "irl_person_info.csv"  # in world dir
-echo0("")
-
-if (p_world_path is not None) and os.path.isdir(p_world_path):
-    irl_person_csv_path = os.path.join(
-        p_world_path,
-        irl_person_csv_name
-    )
+    if (world_path is None):
+        echo0("The primary_world_path setting is required for"
+              " finding the client data, so irl_person_csv_path will"
+              " not be set")
+        return
+    elif not os.path.isdir(world_path):
+        echo0("No world folder found, so leaving irl_person_csv_path as"
+              " None")
+        return
+    irl_person_csv_path = os.path.join(world_path, irl_person_csv_name)
     if deprecated_irl_person_csv_name is not None:
         if os.sep == "\\":
             deprecated_irl_person_csv_path = os.path.join(
@@ -234,16 +290,6 @@ if (p_world_path is not None) and os.path.isdir(p_world_path):
     echo0("Using irl_person_csv_path:")
     echo0("  "+str(irl_person_csv_path))
     echo0("")
-else:
-    if p_world_path is None:
-        echo0("The primary_world_path setting is required for"
-              " finding the client data, so irl_person_csv_path will"
-              " not be set")
-    else:
-        echo0("No world folder found, so leaving irl_person_csv_path as"
-              " None")
-
-print("")
 
 
 class MinetestInventoryItem:
@@ -896,7 +942,7 @@ def convert_storage_to_give_commands_DEPRECATED(offline_inv_path,
             break
 
 
-def debug_log_replay_to_offline_player_storage(debug_txt_path,
+def debug_log_replay_to_offline_player_storage(_debug_txt_path,
                                                offline_inv_path,
                                                min_date_string):
     """
@@ -916,7 +962,7 @@ def debug_log_replay_to_offline_player_storage(debug_txt_path,
     if players is None:
         load_players_offline_storage(offline_inv_path)
 
-    ins = open(debug_txt_path, 'r')
+    ins = open(_debug_txt_path, 'r')
     line = True
     while line:
         line = ins.readline()
@@ -1130,50 +1176,6 @@ def set_player_names_to_file_names(min_indent=""):
     print(min_indent + "    " + str(incorrect_count)
           + " incorrect name(s)")
 
-# plrs = os.path.join(bak_mt, "worlds", "FCAGameAWorld", "players")
-# recover_player_files_by_content("C:\\1.RaiseDataRecovery", plrs)
-
-# ## RESTORE ITEMS FROM DEBUG.TXT:
-# log_path = os.path.join(
-#     bak_mt,
-#     "debug.txt"
-# )
-# "C:\Users\jgustafson\Desktop\Backup\fcalocal\home\owner\.minetest"
-# "\debug_archived\2016\03\"
-# # debug_log_replay_to_offline_player_storage(
-# #     log_path,
-# #     g_offline_inv_path,
-# #     min_date_string
-# # )
-
-# confirm_min_date()
-# # for debug_path in debugs_list:
-# #     debug_log_replay_to_offline_player_storage(
-# #         debug_path,
-# #         g_offline_inv_path,
-# #         min_date_string
-# #     )
-# debug_log_replay_to_offline_player_storage(
-#     debug_txt_path,
-#     g_offline_inv_path,
-#     min_date_string
-# )
-
-
-min_date_string = "2016-03-21 00:00:00"
-log_path = os.path.join(
-    bak_mt,
-    "debug 2017-03-24 stolen panels, cables, battery boxes ONLY.txt"
-)
-if g_offline_inv_path is not None:
-    debug_log_replay_to_offline_player_storage(
-        log_path,
-        g_offline_inv_path,
-        min_date_string
-    )
-else:
-    echo0("debug_log_replay_to_offline_player_storage was skipped"
-          " since g_offline_inv_path was not set.")
 
 def switch_player_file_contents(player1_path, player2_path):
     # switches everything except name
@@ -1188,40 +1190,6 @@ def switch_player_file_contents(player1_path, player2_path):
     player2.playerid = tmp_id
     player1.save()
     player2.save()
-
-# convert_storage_to_give_commands_DEPRECATED(
-#     g_offline_inv_path,
-#     give_path, irl_person_csv_path
-# )
-
-# move_storage_to_players(g_offline_inv_path, players_path,
-# give_path, move_plr_enable=True)
-
-
-# ## FOR TESTING PURPOSES:
-#  C:\Users\jgustafson\Desktop\Backup\fcalocal\home\owner\
-#  .minetest\worlds\FCAGameAWorld\players\
-# plr = MinetestPlayer("mrg")
-# plr.load()
-# item_id = "default:glass"
-# leftover = plr.push_item(item_id,1286)
-# print("/give "+plr.playerid+" "+item_id+" "+str(leftover))
-# plr.playerid = "mrg-try1"
-# plr.save()
-if os.sep == "\\":
-    world_path_msg = mti.get("primary_world_path")
-    if world_path_msg is None:
-        world_path_msg = "<world path>"
-    echo0("# REMEMBER If you later copy player files to a GNU/Linux"
-          " machine cd to your world's players folder then run dos2unix"
-          " such as:")
-    echo0("    sudo apt-get update")
-    echo0("    sudo apt-get install dos2unix")
-    echo0("    cd " + os.path.join(world_path_msg, "players"))
-    echo0("    dos2unix *")
-    echo0("# to convert line endings, otherwise inventory and all"
-          " PlayerArgs will be loaded as blank (if using player files"
-          " with Windows line endings on GNU/Linux copy of minetest).")
 
 
 def combineColorLists(dest_colors_txt, share_minetest):
@@ -1380,3 +1348,92 @@ def combineColorLists(dest_colors_txt, share_minetest):
               + " value(s) to '" + dest_colors_txt + "'")
     else:
         echo0("Using colors from " + dest_colors_txt)
+
+
+def main():
+    if os.sep == "\\":
+        world_path_msg = mti.get("primary_world_path")
+        if world_path_msg is None:
+            world_path_msg = "<world path>"
+        echo0("# REMEMBER If you later copy player files to a GNU/Linux"
+              " machine cd to your world's players folder then run dos2unix"
+              " such as (ONLY if using 'backend = files' in world.mt):")
+        echo0("    sudo apt-get update")
+        echo0("    sudo apt-get install dos2unix")
+        echo0("    cd " + os.path.join(world_path_msg, "players"))
+        echo0("    dos2unix *")
+        echo0("# to convert line endings, otherwise inventory and all"
+              " PlayerArgs will be loaded as blank (if using player files"
+              " with Windows line endings on GNU/Linux copy of minetest).")
+
+    # plrs = os.path.join(bak_mt, "worlds", "FCAGameAWorld", "players")
+    # recover_player_files_by_content("C:\\1.RaiseDataRecovery", plrs)
+
+    # ## RESTORE ITEMS FROM DEBUG.TXT:
+    # log_path = os.path.join(
+    #     bak_mt,
+    #     "debug.txt"
+    # )
+    # "C:\Users\jgustafson\Desktop\Backup\fcalocal\home\owner\.minetest"
+    # "\debug_archived\2016\03\"
+    # # debug_log_replay_to_offline_player_storage(
+    # #     log_path,
+    # #     g_offline_inv_path,
+    # #     min_date_string
+    # # )
+
+    # confirm_min_date()
+    # # for debug_path in debugs_list:
+    # #     debug_log_replay_to_offline_player_storage(
+    # #         debug_path,
+    # #         g_offline_inv_path,
+    # #         min_date_string
+    # #     )
+    # detect_debug_txt_path()
+    # debug_log_replay_to_offline_player_storage(
+    #     debug_txt_path,
+    #     g_offline_inv_path,
+    #     min_date_string
+    # )
+
+    '''
+    min_date_string = "2016-03-21 00:00:00"
+    log_path = os.path.join(
+        bak_mt,
+        "debug 2017-03-24 stolen panels, cables, battery boxes ONLY.txt"
+    )
+    if g_offline_inv_path is not None:
+        debug_log_replay_to_offline_player_storage(
+            log_path,
+            g_offline_inv_path,
+            min_date_string
+        )
+    else:
+        echo0("debug_log_replay_to_offline_player_storage was skipped"
+              " since g_offline_inv_path was not set.")
+    '''
+
+    # convert_storage_to_give_commands_DEPRECATED(
+    #     g_offline_inv_path,
+    #     give_path, irl_person_csv_path
+    # )
+
+    # move_storage_to_players(g_offline_inv_path, players_path,
+    # give_path, move_plr_enable=True)
+
+    # ## FOR TESTING PURPOSES:
+    #  C:\Users\jgustafson\Desktop\Backup\fcalocal\home\owner\
+    #  .minetest\worlds\FCAGameAWorld\players\
+    # plr = MinetestPlayer("mrg")
+    # plr.load()
+    # item_id = "default:glass"
+    # leftover = plr.push_item(item_id,1286)
+    # print("/give "+plr.playerid+" "+item_id+" "+str(leftover))
+    # plr.playerid = "mrg-try1"
+    # plr.save()
+    set_offline_paths(get_required("world"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

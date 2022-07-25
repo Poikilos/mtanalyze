@@ -78,7 +78,7 @@ u_skins_mod_path = None
 textures_path = None
 meta_path = None
 
-def set_paths():
+def set_uskin_paths():
     global u_skins_mod_path
     global textures_path
     global meta_path
@@ -523,9 +523,9 @@ def main():
     if 'u_skins_mod_path' not in mti:
         echo0("Set u_skins_mod_path using the --u_skins_mod_path option")
         return 1
-    code = set_paths()
+    code = set_uskin_paths()
     if code != 0:
-        echo0("set_paths failed, so nothing will be done.")
+        echo0("set_uskin_paths failed, so nothing will be done.")
         return code
     load_skin_metadata()
 

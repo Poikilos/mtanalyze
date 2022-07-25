@@ -8,7 +8,9 @@ the environment variable is present).
 import sys
 import os
 
-from mtanalyze import mti
+from mtanalyze import (
+    mti,
+)
 
 print()
 me = os.path.split(__file__)[-1]

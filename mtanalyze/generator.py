@@ -63,6 +63,11 @@ from mtanalyze import (
     PIL_DEP_MSG,
     PYCODETOOL_DEP_MSG,
     PCT_REPO_PATH,
+    echo0,
+    echo1,
+    echo2,
+    genresult_name_end_flag,
+    gen_error_name_end_flag,
 )
 
 try:
@@ -154,7 +159,7 @@ class MTChunks(ChunkymapRenderer):
     chunkymapdata_worlds_path = None
     is_save_output_ok = None
 
-    def __init__(self):  # formerly checkpaths() in global scope
+    def __init__(self, world_path):  # formerly checkpaths() in global scope
         # self.python_exe_path = None
         # ^ instead, use global from EnlivenMinetest pythoninfo module
         self.players = None
@@ -212,15 +217,15 @@ class MTChunks(ChunkymapRenderer):
         # ^ mtm_bin_enable will be set below automatically if present.
 
         input_string = ""
-        w_path = get_required("primary_world_path")
-        self.world_path = w_path
+        w_path = world_path
+        self.world_path = world_path
         if self.world_path is not None:
             if os.path.isdir(w_path):
-                print("Using primary_world_path '{}'".format(w_path))
+                print("Using world path '{}'".format(w_path))
             else:
                 raise ValueError("Missing world '{}'".format(w_path))
         else:
-            raise ValueError("primary_world_path is not set.")
+            raise ValueError("world is not set.")
 
         # if not os.path.isdir(w_path):
         #     print("(ERROR: missing, so please close immediately and"
@@ -260,6 +265,8 @@ class MTChunks(ChunkymapRenderer):
                   " to ensure image generator script will render map)")
 
         self.prepare_env()  # from super
+        print('www_minetest_path={}'
+              ''.format(get_required("www_minetest_path")))
 
         self.chunkymap_data_path = os.path.join(
             get_required("www_minetest_path"),
@@ -2843,7 +2850,8 @@ class MTChunks(ChunkymapRenderer):
 
 
 def main():
-    mtchunks = MTChunks()
+    mtchunks = MTChunks(get_required("world"))
+    # ^ formerly primary_world_path
     signal_path = mtchunks.get_signal_path()
     stop_line = "loop_enable:False"
     parser = argparse.ArgumentParser(
