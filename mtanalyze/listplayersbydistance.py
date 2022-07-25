@@ -61,7 +61,7 @@ def list_players_by_distance(single_axis_enable, start=(0, 0, 0)):
     # from ast import literal_eval # as make_tuple
 
     # players_path = os.path.join(
-    #     mti.get_var("primary_world_path"),
+    #     mti.get("primary_world_path"),
     #     "players"
     # )
     players_path = plrs

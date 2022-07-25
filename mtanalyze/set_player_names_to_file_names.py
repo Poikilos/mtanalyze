@@ -20,4 +20,9 @@ from mtanalyze.minetestoffline import (
     set_player_names_to_file_names,
 )
 
-set_player_names_to_file_names()
+def main():
+    set_player_names_to_file_names()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

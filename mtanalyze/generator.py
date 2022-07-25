@@ -56,8 +56,9 @@ except ImportError as ex:
     else:
         raise ex
 
-from mtanalyze import ( # formerly: from minetestinfo import *
+from mtanalyze import (
     mti,
+    get_required,
     FLAG_EMPTY_HEXCOLOR,
     PIL_DEP_MSG,
     PYCODETOOL_DEP_MSG,
@@ -211,7 +212,7 @@ class MTChunks(ChunkymapRenderer):
         # ^ mtm_bin_enable will be set below automatically if present.
 
         input_string = ""
-        w_path = mti.get_var("primary_world_path")
+        w_path = get_required("primary_world_path")
         self.world_path = w_path
         if self.world_path is not None:
             if os.path.isdir(w_path):
@@ -261,7 +262,7 @@ class MTChunks(ChunkymapRenderer):
         self.prepare_env()  # from super
 
         self.chunkymap_data_path = os.path.join(
-            mti.get_var("www_minetest_path"),
+            get_required("www_minetest_path"),
             "chunkymapdata"
         )
         self.chunkymapdata_worlds_path = os.path.join(
@@ -449,9 +450,11 @@ class MTChunks(ChunkymapRenderer):
             source_web_chunkymapdata_path,
             "images"
         )
-        dest_web_path = mti.get_var("www_minetest_path")
+        dest_web_path = get_required("www_minetest_path")
+        # TODO: ^ Should this be configurable separately?
+
         dest_web_chunkymapdata_path = os.path.join(
-            mti.get_var("www_minetest_path"),
+            get_required("www_minetest_path"),
             "chunkymapdata"
         )
         dest_web_chunkymapdata_images_path = os.path.join(

@@ -49,12 +49,47 @@ PYTHON_MR = sys.version_info.major
 
 # mtanalyze was formerly mtanalyze.minetestinfo
 mti = {}  # mostly deprecated
+default_license_string = "CC BY-SA 3.0"
+try_shared_minetest_path = os.path.join(os.getcwd(), "games")
+if os.path.isdir(try_shared_minetest_path):
+    mti['shared_minetest_path'] = try_shared_minetest_path
+
+verbosity = 0
+key = None
+for argI in range(1, len(sys.argv)):
+    arg = sys.argv[argI]
+    if key is not None:
+        mti[key] = arg
+        key = None
+    elif arg == "--verbose":
+        verbosity = 2
+    elif arg == "--debug":
+        verbosity = 2
+    elif arg.startswith("--"):
+        key = arg[2:]
+
+
+def get_required(key):
+    if key is None:
+        raise KeyError("key is None")
+    elif len(key.strip()) == 0:
+        raise KeyError("key is blank")
+    value = mti.get(key)
+    if value is not None:
+        value = value.strip()
+        if len(value) == 0:
+            value = None
+    if value is None:
+        raise ValueError(
+            'The "{}" setting is required for this operation.'
+            ''.format(key)
+        )
+    return value
+
 # region from minetestoffline formerly part of mtanalyze
 FLAG_EMPTY_HEXCOLOR = "#010000"
 
 # endregion from minetestoffline formerly part of mtanalyze
-
-verbosity = 0
 
 # see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
 def echo0(*args, **kwargs):

@@ -21,6 +21,7 @@ except ImportError as ex:
 
 from mtanalyze import (  # formerly: from minetestinfo import *
     mti,
+    get_required,
     FLAG_EMPTY_HEXCOLOR,
     PIL_DEP_MSG,
     PYCODETOOL_DEP_MSG,
@@ -66,12 +67,6 @@ except ModuleNotFoundError as ex:
     sys.exit(1)
 
 import shutil
-u_skins_rel = ("Desktop\\Backup\\fcalocal\\usr\\local\\share\\minetest"
-               "\\games"
-               "\\fca_game_a\\mods\\u_skins\\u_skins")
-u_skins_mod_path = os.path.join(HOME_PATH, u_skins_rel)
-games_path = os.path.join(mti.get_var("shared_minetest_path"),
-                          "games")
 
 verbose_enable = True
 image_size = (64, 32)
@@ -79,47 +74,89 @@ preview_size = (16, 32)
 show_no_dest_warnings = True
 
 visual_debug_enable = False
-dump_path = os.path.join(u_skins_mod_path, "debug")
-# ^ dump_path is only created or used if visual_debug_enable
+u_skins_mod_path = None
+textures_path = None
+meta_path = None
 
-world_path = None
-world_name = None
-if mti.contains("primary_world_path"):
-    world_path = mti.get_var("primary_world_path")
-    world_name = os.path.basename(world_path)
-    print("Using world '"+world_name+"'")
+def set_paths():
+    global u_skins_mod_path
+    global textures_path
+    global meta_path
+    u_skins_rel = ("Desktop\\Backup\\fcalocal\\usr\\local\\share\\minetest"
+                   "\\games"
+                   "\\fca_game_a\\mods\\u_skins\\u_skins")
+    try_skins_paths = [
+        os.path.join(HOME_PATH, u_skins_rel),
+    ]
+    u_skins_mod_path = None
+    for try_skins_path in try_skins_paths:
+        if os.path.isdir(try_skins_path):
+            u_skins_mod_path = try_skins_path
+            break
+    if u_skins_mod_path is None:
+        u_skins_mod_path = mti.get('u_skins_mod_path')
+    if u_skins_mod_path is None:
+        echo0("u_skins_mod_path could not be detected and it is not set"
+              " in settings, so paths will not be set.")
+        return 1
+    shared_minetest_path = mti.get("shared_minetest_path")
+    if shared_minetest_path is None:
+        try_path = os.path.join(os.getcwd(), "games")
+        if os.path.isdir(try_path):
+            shared_minetest_path = try_path
+            # ^ This is already tried in the main mtanalyze module init
+        else:
+            echo0('Error: You must be in a minetest directory'
+                  ' containing a "games" directory, or set'
+                  ' shared_minetest_path in settings.')
+            return 1
+    games_path = os.path.join(shared_minetest_path, "games")
+    dump_path = os.path.join(u_skins_mod_path, "debug")
+    # ^ dump_path is only created or used if visual_debug_enable
 
-# game_name = game_path_from_gameid_dict(
-gameid = None
-game_path = None
-mods_path = None
-if not os.path.isdir(u_skins_mod_path):
-    if world_path is not None and os.path.isdir(world_path):
-        gameid = get_world_var("gameid")
-        print("Using game '" + str(gameid) + "'")
-        if gameid is not None and games_path is not None:
-            game_path = os.path.join(games_path, gameid)
-            mods_path = os.path.join(game_path, "mods")
-            print("Using mods_path '" + mods_path + "'")
-            print("Looking for u_skins mod in u_skins modpack...")
-            # u_skins_mod_path = os.path.join(
-            #   os.path.join(os.path.join(game_path, "mods"),
-            #                "u_skins"),
-            #   "u_skins"
-            # )  # get the u_skins mod in the u_skins modpack
-            # print("  trying '" + u_skins_mod_path + "'")
+    world_path = None
+    world_name = None
+    if "primary_world_path" in mti:
+        world_path = mti.get("primary_world_path")
+        world_name = os.path.basename(world_path)
+        print("Using world '"+world_name+"'")
 
-            u_skins_modpack_path = os.path.join(mods_path, "u_skins")
-            u_skins_mod_path = os.path.join(u_skins_modpack_path,
-                                            "u_skins")
-    else:
-        print("Unknown world, so can't detect game.")
+    # game_name = game_path_from_gameid_dict(
+    gameid = None
+    game_path = None
+    mods_path = None
+    if not os.path.isdir(u_skins_mod_path):
+        echo0('"{}" does not exist.'.format(u_skins_mod_path))
+        if world_path is not None and os.path.isdir(world_path):
+            gameid = get_world_var("gameid")
+            print("Using game '" + str(gameid) + "'")
+            if gameid is not None and games_path is not None:
+                game_path = os.path.join(games_path, gameid)
+                mods_path = os.path.join(game_path, "mods")
+                print("Using mods_path '" + mods_path + "'")
+                print("Looking for u_skins mod in u_skins modpack...")
+                # u_skins_mod_path = os.path.join(
+                #   os.path.join(os.path.join(game_path, "mods"),
+                #                "u_skins"),
+                #   "u_skins"
+                # )  # get the u_skins mod in the u_skins modpack
+                # print("  trying '" + u_skins_mod_path + "'")
 
-meta_path = os.path.join(u_skins_mod_path, "meta")
-textures_path = os.path.join(u_skins_mod_path, "textures")
+                u_skins_modpack_path = os.path.join(mods_path, "u_skins")
+                u_skins_mod_path = os.path.join(u_skins_modpack_path,
+                                                "u_skins")
+        else:
+            print("Unknown world, so can't detect game.")
+
+    meta_path = os.path.join(u_skins_mod_path, "meta")
+    textures_path = os.path.join(u_skins_mod_path, "textures")
+    return 0
+
 image_prefix = "character_"
 preview_suffix = "_preview"
-default_license_string = "CC BY-SA 3.0"
+default_license_string = mti.get('default_license_string')
+if default_license_string is None:
+    default_license_string = "CC BY-SA 3.0"
 png_count = 0
 
 
@@ -338,37 +375,39 @@ def get_metadata_path_from_index(this_index):
     return os.path.join(meta_path,
                         get_metadata_name_from_index(this_index))
 
-
-print("Loading existing skin metadata to avoid duplication (but"
-      " ignoring metadata files that do not have pngs)")
-si_list = list()
-this_index = 1
-while os.path.isfile(get_png_path_from_index(this_index)):
-    existing_metadata_path = get_metadata_path_from_index(this_index)
-    this_si = USkinInfo()
-    is_ok = this_si.set_from_metadata_path(
-        get_metadata_path_from_index(this_index)
-    )
-    if is_ok:
-        # if not skin_exists(this_si.name_string,
-        #                    this_si.author_string):
-        si_list.append(this_si)
-        # if verbose_enable:
-        #     print("Added skin metadata:")
-        #     this_si.print_dump("  ")
-    this_index += 1
-print("  Found metadata for "+str(len(si_list))+" png file(s).")
-print("  The functions in "+__file__+" are now ready.")
-print("    * These functions mark destination as '"
-      + default_license_string + "' license unless you")
-print("      first change the global default_license_string variable")
-print("      in your program that has:")
-print("          from u_skin_adder import *")
-print("    * Skin filename should include _by_ (with underscores) to"
-      " specify author.")
-print("    * Examples:")
-print("      load_new_skins_from_folder(folder_path)")
-print("      add_skin_if_new(file_path)")
+def load_skin_metadata():
+    print("Loading existing skin metadata to avoid duplication (but"
+          " ignoring metadata files that do not have pngs)")
+    si_list = list()
+    this_index = 1
+    while os.path.isfile(get_png_path_from_index(this_index)):
+        existing_metadata_path = get_metadata_path_from_index(this_index)
+        this_si = USkinInfo()
+        is_ok = this_si.set_from_metadata_path(
+            get_metadata_path_from_index(this_index)
+        )
+        if is_ok:
+            # if not skin_exists(this_si.name_string,
+            #                    this_si.author_string):
+            si_list.append(this_si)
+            # if verbose_enable:
+            #     print("Added skin metadata:")
+            #     this_si.print_dump("  ")
+        this_index += 1
+    print("  Found metadata for "+str(len(si_list))+" png file(s).")
+    print("  The functions in "+__file__+" are now ready.")
+    print("    * These functions mark destination as '"
+          + default_license_string + "' license unless you")
+    print("      first change mti['default_license_string']")
+    print("      in your program that has:")
+    print("          from u_skin_adder import *")
+    print("          from mtanalyze import mti")
+    print("      or use the --default_license_string option")
+    print("    * Skin filename should include _by_ (with underscores) to"
+          " specify author.")
+    print("    * Python examples:")
+    print("      load_new_skins_from_folder(folder_path)")
+    print("      add_skin_if_new(file_path)")
 
 
 def fill_image_with_transparency(im):
@@ -478,8 +517,24 @@ def load_new_skins_from_folder(in_path):
     else:
         print("ERROR: missing meta_path (tried '"+meta_path+"')")
 
-# input("Press return to exit.")
-# load_new_skins_from_folder("C:\\Users\\Owner\\ownCloud\\Pictures\\"
-#                            "Projects\\Characters - Mine - In-Game\\"
-#                            "Minetest Player Skins")
-# add_skin_if_new("z:\\yelby.png")
+
+def main():
+    # mtanalyze processes the args and sets up mti.
+    if 'u_skins_mod_path' not in mti:
+        echo0("Set u_skins_mod_path using the --u_skins_mod_path option")
+        return 1
+    code = set_paths()
+    if code != 0:
+        echo0("set_paths failed, so nothing will be done.")
+        return code
+    load_skin_metadata()
+
+    # input("Press return to exit.")
+    # load_new_skins_from_folder("C:\\Users\\Owner\\ownCloud\\Pictures\\"
+    #                            "Projects\\Characters - Mine - In-Game\\"
+    #                            "Minetest Player Skins")
+    # add_skin_if_new("z:\\yelby.png")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

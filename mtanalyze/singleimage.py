@@ -46,8 +46,12 @@ except ImportError as ex:
 
 from mtanalyze import (  # formerly: from minetestinfo import *
     mti,
+    get_required,
     FLAG_EMPTY_HEXCOLOR,
     PIL_DEP_MSG,
+    echo0,
+    echo1,
+    echo2,
 )
 # python_exe_path is from:
 from pythoninfo import *
@@ -104,7 +108,8 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         self.backend_string = get_world_var("backend")
         # TODO: Modernize (get_world_var moved to deprecated.py)
         self.prepare_env()  # from super
-        self.world_path = mti.get_var("primary_world_path")
+        self.world_path = get_required("primary_world_path")
+
         if not os.path.isdir(self.world_path):
             print("ERROR: missing world '" + self.world_path
                   + "', so exiting " + __file__ + ".")
@@ -180,7 +185,7 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         #     python_exe_path + " " + self.mtm_py_path
         #     + " --bgcolor '" + self.FLAG_EMPTY_HEXCOLOR
         #     + "' --input \""
-        #     + mti.get_var("primary_world_path")
+        #     + str(get_required("primary_world_path"))
         #     + "\" --geometry " + geometry_string + " --output \""
         #     + tmp_png_path + "\""
         # )
@@ -243,8 +248,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         final_png_path = tmp_png_path
         www_uid = None
         www_gid = None
+        www_minetest_path = get_required("www_minetest_path")
         www_chunkymapdata_path = os.path.join(
-            mti.get_var("www_minetest_path"),
+            www_minetest_path,
             "chunkymapdata"
         )
         www_chunkymapdata_worlds_path = os.path.join(
@@ -256,8 +262,9 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
             self.world_name
         )
         try:
+            www_minetest_path = get_required("www_minetest_path")
             www_stat = os.stat(
-                mti.get_var("www_minetest_path")
+                www_minetest_path
             )
             www_uid = www_stat.st_uid
             www_gid = www_stat.st_gid
@@ -268,15 +275,16 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
             # import grp
             # www_uid = pwd.getpwnam("www_data").pw_uid
             # www_gid = grp.getgrnam("nogroup").gr_gid
-        except PermissionError:
-            print("Unable to get stat on www directory \""
-                  + mti.get_var("www_minetest_path")
-                  + "\", so will not be able to automatically set owner"
+        except PermissionError as ex:
+            # echo0(str(ex))
+            echo0("Unable to get stat on www directory \"{}\","
+                  " so will not be able to automatically set owner"
                   " of result jpg there. Make sure you manually set"
-                  " owner of singleimage.jpg in '"
-                  + www_chunkymapdata_world_path
-                  + "' to www-data user and group.")
-            print("  " + str(sys.exc_info()))
+                  " owner of singleimage.jpg in '{}"
+                  "' to www-data user and group."
+                  "".format(mti.get("www_minetest_path"),
+                            www_chunkymapdata_world_path))
+            echo0("  " + str(sys.exc_info()))
 
         is_locked = False
         err_count = 0

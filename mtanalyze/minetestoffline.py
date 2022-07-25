@@ -28,6 +28,15 @@ import shutil
 import os
 import sys
 from datetime import datetime
+import time
+from ast import literal_eval  # as make_tuple
+
+
+if sys.version_info.major >= 3:
+    pass
+else:
+    input = raw_input
+
 me = 'minetestoffline.py'
 
 MY_PATH = os.path.realpath(__file__)
@@ -50,6 +59,7 @@ from mtanalyze import (
     PYCODETOOL_DEP_MSG,
     mti,
     PCT_REPO_PATH,
+    # get_required,
 )
 
 try:
@@ -71,9 +81,6 @@ except ImportError as ex:
 
 from pycodetool.parsing import *
 
-import time
-from ast import literal_eval  # as make_tuple
-
 try:
     input = raw_input
 except NameError:
@@ -86,8 +93,17 @@ bak_mt = os.path.join(bak_p, ".minetest")
 bak_worlds = os.path.join(bak_mt, "worlds")
 tmp_prof = None
 # plrs = os.path.join(bak_mt, "worlds", "FCAGameAWorld", "players")
-players_path = os.path.join(mti.get_var("primary_world_path"),
-                            "players")
+p_world_path = mti.get("primary_world_path")
+if p_world_path is not None:
+    p_world_path = p_world_path.strip()
+    if len(p_world_path) == 0:
+        p_world_path = None
+players_path = None
+if p_world_path is not None:
+    players_path = os.path.join(p_world_path, "players")
+else:
+    echo0("primary_world_path was not set, so players_path was not set")
+
 _MAX_STACK_QTY = 99
 poiDotExt = ".conf"  # formerly PLAYER_STORAGE_FILE_DOT_THEN_EXT
 # debugs_list = list()
@@ -95,17 +111,20 @@ poiDotExt = ".conf"  # formerly PLAYER_STORAGE_FILE_DOT_THEN_EXT
 # moPath = os.path.join(dbga, "2016", "03")
 # debugs_list.append(os.path.join(moPath, "16.txt"))
 # debugs_list.append(os.path.join(moPath, "17.txt"))
-debug_txt_path = os.path.join(
-    mti.get_var("profile_minetest_path"),
-    "debug.txt"
-)
+debug_txt_path = None
+if "profile_minetest_path" in mti:
+    debug_txt_path = os.path.join(
+        mti.get("profile_minetest_path"),
+        "debug.txt"
+    )
+else:
+    echo0("profile_minetest_path was not set,"
+          " so debug_txt_path was not set.")
 min_date_string = None
 # min_date_string = "2016-03-15 12:12:00"
 debugDTFmt = "%Y-%m-%d %H:%M:%S"
 is_start_now = False
 interactive_enable = False
-
-
 
 
 def confirm_min_date():
@@ -148,70 +167,81 @@ offline_inv_name = "players_offline_storage"
 old_offline_inv_name = "player_storage"
 # ^ formerly deprecated_players_offline_storage_name
 # H:\Minetest\player_storage
-g_offline_inv_path = os.path.join(
-    mti.get_var("primary_world_path"),
-    offline_inv_name
-)
-# ^ formerly players_offline_storage_path
-g_old_off_inv_path = os.path.join(
-    mti.get_var("primary_world_path"),
-    old_offline_inv_name
-)
-# ^ formerly deprecated_players_offline_storage_path
-if os.path.isdir(g_old_off_inv_path):
-    print("moving \"" + g_old_off_inv_path
-          + "\" to")
-    print("  " + g_offline_inv_path)
-    shutil.move(g_old_off_inv_path,
-                g_offline_inv_path)
-print("Using offline g_offline_inv_path:")
-print("  " + g_offline_inv_path)
+g_offline_inv_path = None
+g_old_off_inv_path = None
+give_path = None
+world_name = None
+deprecated_irl_person_csv_name = None
+if p_world_path is not None:
+    g_offline_inv_path = os.path.join(p_world_path, offline_inv_name)
+    # ^ formerly players_offline_storage_path
+    g_old_off_inv_path = os.path.join(
+        p_world_path,
+        old_offline_inv_name
+    )
+    # ^ formerly deprecated_players_offline_storage_path
+
+    if os.path.isdir(g_old_off_inv_path):
+        print("moving \"" + g_old_off_inv_path
+              + "\" to")
+        print("  " + g_offline_inv_path)
+        shutil.move(g_old_off_inv_path,
+                    g_offline_inv_path)
+    give_path = os.path.join(g_offline_inv_path, "give")
+    world_name = os.path.basename(os.path.abspath(p_world_path))
+    deprecated_irl_person_csv_name = (
+        world_name + " - Minetest Users - Real Names.txt"
+    )
+    # ^ See irl_person_csv_name's value for the new filename instead.
+else:
+    echo0("primarly_world_path was not set, so g_offline_inv_path was not set")
+
+print("Using offline g_offline_inv_path: {}".format(g_offline_inv_path))
 print("  (used for inventory recovery and other offline storage"
       " features)")
-give_path = os.path.join(g_offline_inv_path, "give")
-print("give_path:")
+
+print("give_path: {}".format(give_path))
 print("  (used for give commands for inventory leftover if more to"
       " transfer after filling destination inventory)")
 # g_offline_inv_path = os.path.join(bak_worlds, "FCAGameAWorld",
 #                                   offline_inv_name)
 irl_person_csv_name = None
 irl_person_csv_path = None
-world_name = None
-world_name = os.path.basename(
-    os.path.abspath(mti.get_var("primary_world_path"))
-)
+
 print("")
 print("Using world_name '"+str(world_name)+"'")
 
-
-deprecated_irl_person_csv_name = (
-    world_name + " - Minetest Users - Real Names.txt"
-)
-# ^ RENAMED to value below:
 irl_person_csv_name = "irl_person_info.csv"  # in world dir
-print("")
-if os.path.isdir(mti.get_var("primary_world_path")):
+echo0("")
+
+if (p_world_path is not None) and os.path.isdir(p_world_path):
     irl_person_csv_path = os.path.join(
-        mti.get_var("primary_world_path"),
+        p_world_path,
         irl_person_csv_name
     )
-    if os.sep == "\\":
-        deprecated_irl_person_csv_path = os.path.join(
-            "H:\\Minetest",
-            deprecated_irl_person_csv_name
-        )
-        if os.path.isfile(deprecated_irl_person_csv_name):
-            print("moving \"" + deprecated_irl_person_csv_path
-                  + "\" to")
-            print("  " + irl_person_csv_path)
-            os.rename(deprecated_irl_person_csv_path,
-                      irl_person_csv_path)
-    print("Using irl_person_csv_path:")
-    print("  "+str(irl_person_csv_path))
-    print("")
+    if deprecated_irl_person_csv_name is not None:
+        if os.sep == "\\":
+            deprecated_irl_person_csv_path = os.path.join(
+                "H:\\Minetest",
+                deprecated_irl_person_csv_name
+            )
+            if os.path.isfile(deprecated_irl_person_csv_name):
+                echo0("moving \"" + deprecated_irl_person_csv_path
+                      + "\" to")
+                echo0("  " + irl_person_csv_path)
+                os.rename(deprecated_irl_person_csv_path,
+                          irl_person_csv_path)
+    echo0("Using irl_person_csv_path:")
+    echo0("  "+str(irl_person_csv_path))
+    echo0("")
 else:
-    print("No world folder found, so leaving irl_person_csv_path as"
-          " None")
+    if p_world_path is None:
+        echo0("The primary_world_path setting is required for"
+              " finding the client data, so irl_person_csv_path will"
+              " not be set")
+    else:
+        echo0("No world folder found, so leaving irl_person_csv_path as"
+              " None")
 
 print("")
 
@@ -693,7 +723,9 @@ players = None
 def load_players_offline_storage(offline_inv_path):
     global players
     players = {}
-    if not os.path.exists(offline_inv_path):
+    if offline_inv_path is None:
+        raise ValueError("offline_inv_path is None")
+    elif not os.path.exists(offline_inv_path):
         os.makedirs(offline_inv_path)
     else:
         folder_path = offline_inv_path
@@ -805,7 +837,7 @@ def move_storage_to_players(offline_inv_path, plrs_path, give_cmds_path,
 
 def convert_storage_to_give_commands_DEPRECATED(offline_inv_path,
                                                 output_folder_path,
-                                                irl_person_csv_path):
+                                                _irl_person_csv_path):
     global players
     # if players is None:
     #     load_players_offline_storage(offline_inv_path)
@@ -823,7 +855,7 @@ def convert_storage_to_give_commands_DEPRECATED(offline_inv_path,
                 # if len(realNameS) > 0:
                 iuser_strp = identifiable_user_string.strip()
                 if len(iuser_strp) > 0:
-                    appends = open(irl_person_csv_path, 'a')
+                    appends = open(_irl_person_csv_path, 'a')
                     # line = (playerid.strip().replace(","," ")
                     #         + "," + realNameS.replace(","," ") + ",")
                     line = (playerid.strip().replace(",", " ")
@@ -879,8 +911,8 @@ def debug_log_replay_to_offline_player_storage(debug_txt_path,
                                      debugDTFmt)
     print("This will only work if server is offline.")
     print("  (Using min date "+str(min_date)+")")
-    input("  press enter to continue, otherwise exit this Window or"
-          " Ctrl-C to terminate script in GNU/Linux systems...")
+    # input("  press enter to continue, otherwise exit this Window or"
+    #       " Ctrl-C to terminate script in GNU/Linux systems...")
     if players is None:
         load_players_offline_storage(offline_inv_path)
 
@@ -1022,14 +1054,16 @@ def player_inventory_transfer(from_playerid, to_playerid):
     to_player_givescript_path = os.path.join(give_path, to_playerid)
 
 
-def set_player_names_to_file_names():
+def set_player_names_to_file_names(min_indent=""):
     assignment_operator = "="
     correct_count = 0
     incorrect_count = 0
     # NOTE: uses global min_indent
     line_count = 1
     print(min_indent + "set_player_names_to_file_names:")
-    if os.path.isdir(players_path):
+    if players_path is None:
+        raise ValueError("players_path is not set.")
+    elif os.path.isdir(players_path):
         folder_path = players_path
         print(min_indent + "  Examining players:")
         for sub_name in os.listdir(folder_path):
@@ -1131,12 +1165,15 @@ log_path = os.path.join(
     bak_mt,
     "debug 2017-03-24 stolen panels, cables, battery boxes ONLY.txt"
 )
-debug_log_replay_to_offline_player_storage(
-    log_path,
-    g_offline_inv_path,
-    min_date_string
-)
-
+if g_offline_inv_path is not None:
+    debug_log_replay_to_offline_player_storage(
+        log_path,
+        g_offline_inv_path,
+        min_date_string
+    )
+else:
+    echo0("debug_log_replay_to_offline_player_storage was skipped"
+          " since g_offline_inv_path was not set.")
 
 def switch_player_file_contents(player1_path, player2_path):
     # switches everything except name
@@ -1172,16 +1209,17 @@ def switch_player_file_contents(player1_path, player2_path):
 # plr.playerid = "mrg-try1"
 # plr.save()
 if os.sep == "\\":
-    print("# REMEMBER If you later copy player files to a GNU/Linux"
+    world_path_msg = mti.get("primary_world_path")
+    if world_path_msg is None:
+        world_path_msg = "<world path>"
+    echo0("# REMEMBER If you later copy player files to a GNU/Linux"
           " machine cd to your world's players folder then run dos2unix"
           " such as:")
-    print("    sudo apt-get update")
-    print("    sudo apt-get install dos2unix")
-    print("    cd "
-          + os.path.join(mti.get_var("primary_world_path"),
-                         "players"))
-    print("    dos2unix *")
-    print("# to convert line endings, otherwise inventory and all"
+    echo0("    sudo apt-get update")
+    echo0("    sudo apt-get install dos2unix")
+    echo0("    cd " + os.path.join(world_path_msg, "players"))
+    echo0("    dos2unix *")
+    echo0("# to convert line endings, otherwise inventory and all"
           " PlayerArgs will be loaded as blank (if using player files"
           " with Windows line endings on GNU/Linux copy of minetest).")
 
