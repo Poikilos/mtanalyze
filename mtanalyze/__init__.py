@@ -317,12 +317,14 @@ if os.path.isdir(os.path.join(os.getcwd(), "games")):
     mti['shared_minetest_path'] = os.getcwd()
 else:
     print('shared_minetest_path was not detected. Run in a Minetest'
-          ' directory containing "games" to detect.')
+          ' directory containing "games" to detect, or use'
+          ' --shared_minetest_path <path>')
 if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
     mti['profile_minetest_path'] = os.getcwd()
 else:
     print('profile_minetest_path was not detected. Run in a Minetest'
-          ' directory containing "minetest.conf" to detect.')
+          ' directory containing "minetest.conf" to detect, or use'
+          ' --profile_minetest_path <path>')
 
 CONFIGS_PATH = os.path.join(APPDATA_PATH, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),

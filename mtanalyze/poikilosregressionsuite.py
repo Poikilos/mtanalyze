@@ -54,6 +54,8 @@ except ImportError as ex:
 from mtanalyze import (
     PYCODETOOL_DEP_MSG,
     PCT_REPO_PATH,
+    echo0,
+    echo1,
 )
 
 try:
@@ -484,6 +486,7 @@ def check_coord_mismatch(path):
     global modules
     print("Running check_coord_mismatch on " + path + "...")
     global function_list
+    global pgrstmp
     if (path not in file_list):
         file_list.append(path)
     line_n = 1
@@ -616,6 +619,8 @@ def check_coord_mismatch(path):
                         outs.write("\n")
                         outs.close()
                         if "pgrstmp" in dModules:
+                            import pgrstmp
+                            # ^ prevent "'pgrstmp' is not defined below
                             reload(pgrstmp)
                         else:
                             import pgrstmp
@@ -833,10 +838,9 @@ def check_coord_mismatch(path):
                         break
         if issue_count > prev_issue_count:
             print("strp " + str(line_n) + ": " + rawl.strip())
-            if verbose_enable:
-                print("  ao_index:" + str(ao_index))
-                print("  names: " + ','.join(names))
-                print("  values: " + ','.join(values))
+            echo1("  ao_index:" + str(ao_index))
+            echo1("  names: " + ','.join(names))
+            echo1("  values: " + ','.join(values))
             print("")
             problematic_line_count += 1
         line_n += 1
@@ -864,12 +868,11 @@ independent_list.append("player_position_tuple")
 print("  (Ignoring the following independent variables:")
 print(','.join(independent_list)+")")
 
-# verbose_enable = True
+# set_verbosity(1)
 check_coord_mismatch("generator.py")
-check_coord_mismatch(os.path.join("web", "chunkymap.php"))
+check_coord_mismatch(os.path.join("..", "web", "chunkymap.php"))
 print("Found " + str(issue_count) + " issue(s) in "
       + str(len(file_list)) + " file(s)")
 if issue_count > 0:
     print("Please run again after these issues are fixed to check for"
           " more on same lines.")
-input("Press enter to exit...")
