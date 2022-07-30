@@ -114,7 +114,10 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         self.mtm_bin_enable = False
         # ^ set below automatically if present
 
-        # self.world_path = get_required("primary_world_path")
+        # self.world_path = get_required(
+        #     "primary_world_path",
+        #     caller_name="ChunkymapOfflineRenderer",
+        # )
         self.world_path = world_path
         self.world = WorldInfo(world_path)
         self.backend_string = self.world.get_mt("backend")
@@ -203,7 +206,8 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         #     python_exe_path + " " + self.mtm_py_path
         #     + " --bgcolor '" + self.FLAG_EMPTY_HEXCOLOR
         #     + "' --input \""
-        #     + str(get_required("primary_world_path"))
+        #     + str(get_required("primary_world_path",
+        #                        caller_name="RenderSingleImage"))
         #     + "\" --geometry " + geometry_string + " --output \""
         #     + tmp_png_path + "\""
         # )
@@ -267,7 +271,8 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
         final_png_path = tmp_png_path
         www_uid = None
         www_gid = None
-        www_minetest_path = get_required("www_minetest_path")
+        www_minetest_path = get_required("www_minetest_path",
+                                         caller_name="RenderSingleImage")
         www_chunkymapdata_path = os.path.join(
             www_minetest_path,
             "chunkymapdata"
@@ -281,7 +286,8 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
             self.world_name
         )
         try:
-            www_minetest_path = get_required("www_minetest_path")
+            www_minetest_path = get_required("www_minetest_path",
+                                             caller_name="RenderSingleImage")
             www_stat = os.stat(
                 www_minetest_path
             )
@@ -410,5 +416,13 @@ class ChunkymapOfflineRenderer(ChunkymapRenderer):
                 echo0("* and there is no {}".format(gen_error_path))
 
 
-cmor = ChunkymapOfflineRenderer(get_required("world"))
-cmor.RenderSingleImage()
+def main():
+    cmor = ChunkymapOfflineRenderer(
+        get_required("world", caller_name="singleimage")
+    )
+    cmor.RenderSingleImage()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

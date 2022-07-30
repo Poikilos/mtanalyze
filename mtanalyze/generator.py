@@ -68,7 +68,13 @@ from mtanalyze import (
     echo2,
     genresult_name_end_flag,
     gen_error_name_end_flag,
+    WEB_PATH,
+    DONE_ARGS,
+    ARG_TYPES,
+    STORE_TRUE_ARGS,
+    MTANALYZE_CACHE_PATH,
 )
+echo0('[generator] MTANALYZE_CACHE_PATH="{}"'.format(MTANALYZE_CACHE_PATH))
 from mtanalyze.mtchunk import(
     MTChunk,
     MTDecaChunk,
@@ -91,10 +97,18 @@ except ImportError as ex:
     else:
         raise ex
 
-from pycodetool.parsing import *
+from pycodetool.parsing import (
+    get_dict_deepcopy,
+    save_conf_from_dict,
+    get_list_from_hex,
+    InstalledFile,
+    get_dict_from_conf_file,
+    is_dict_subset,
+)
 
-# python_exe_path is from:
-from pythoninfo import *
+from mtanalyze.pythoninfo import (
+    python_exe_path,
+)
 
 
 try:
@@ -270,10 +284,12 @@ class MTChunks(ChunkymapRenderer):
 
         self.prepare_env()  # from super
         print('www_minetest_path={}'
-              ''.format(get_required("www_minetest_path")))
+              ''.format(get_required("www_minetest_path",
+                                     caller_name="MTChunks")))
 
         self.chunkymap_data_path = os.path.join(
-            get_required("www_minetest_path"),
+            get_required("www_minetest_path",
+                         caller_name="MTChunks"),
             "chunkymapdata"
         )
         self.chunkymapdata_worlds_path = os.path.join(
@@ -401,10 +417,10 @@ class MTChunks(ChunkymapRenderer):
                   " since is WIP")
 
     # def install_default_world_data(self):
-    #     source_web_path = os.path.join(
-    #         self.mydir,
-    #         "web"
-    #     )
+    #     source_web_path = WEB_PATH  # os.path.join(
+    #     #     self.mydir,
+    #     #     "web"
+    #     # )
     #     dest_web_chunkymapdata_world_path = \
     #         self.chunkymap_thisworld_data_path
     #     dest_web_chunkymapdata_world_players_path = os.path.join(
@@ -448,7 +464,7 @@ class MTChunks(ChunkymapRenderer):
 
     def install_default_world_data(self):
         # formerly install_website
-        source_web_path = os.path.join(self.mydir, "web")
+        source_web_path = WEB_PATH
         source_web_chunkymapdata_path = os.path.join(
             source_web_path,
             "chunkymapdata_default"
@@ -461,11 +477,15 @@ class MTChunks(ChunkymapRenderer):
             source_web_chunkymapdata_path,
             "images"
         )
-        dest_web_path = get_required("www_minetest_path")
+        dest_web_path = get_required(
+            "www_minetest_path",
+            caller_name="install_default_world_data",
+        )
         # TODO: ^ Should this be configurable separately?
 
         dest_web_chunkymapdata_path = os.path.join(
-            get_required("www_minetest_path"),
+            get_required("www_minetest_path",
+                         caller_name="install_default_world_data"),
             "chunkymapdata"
         )
         dest_web_chunkymapdata_images_path = os.path.join(
@@ -753,6 +773,7 @@ class MTChunks(ChunkymapRenderer):
     def checkDCAt(self, qX, qZ):
         """check decachunk containing the chunk identified by the given
         quantized position (quantized by chunk size)"""
+        min_indent = ""
         chunky_coord_list = list()
         decachunky_x = self.decimate(qX)
         decachunky_z = self.decimate(qZ)
@@ -820,7 +841,12 @@ class MTChunks(ChunkymapRenderer):
                     nearby_chunk_luid = self.cLUID(nearby_chunky_x,
                                                    nearby_chunky_z)
                     is_c = nearby_chunk_luid in self.chunks
-                    n_c = self.chunks[nearby_chunk_luid]
+                    n_c = self.chunks.get(nearby_chunk_luid)
+                    if n_c is None:
+                        # FIXME: Is this correct?
+                        n_c = MTChunk()
+                        self.chunks[nearby_chunk_luid] = n_c
+
                     is_fresh = n_c.is_fresh
                     is_deployed = self.isCDeployed(nearby_chunky_x,
                                                    nearby_chunky_z)
@@ -836,8 +862,11 @@ class MTChunks(ChunkymapRenderer):
                                           nearby_chunky_z)
                             if not is_wb:
                                 n_c.metadata["is_worldborder"] = True
-                                self.save_chunk_meta(nearby_chunky_x,
-                                                     nearby_chunky_z)
+                                self.save_chunk_meta(
+                                    nearby_chunky_x,
+                                    nearby_chunky_z,
+                                    min_indent=min_indent+"  ",
+                                )
                         if not is_wbc:
                             # empty chunk would not touch
                             # NON-worldborder chunk if decachunk was
@@ -1100,10 +1129,15 @@ class MTChunks(ChunkymapRenderer):
     def grBasePath(self):
         """get chunk genresults base path"""
         # formerly get_chunk_genresults_tmp_folder(self, chunk_luid)
+        # return os.path.join(
+        #     os.path.join(self.mydir, "chunkymap-genresults"),
+        #     self.world_name
+        # )
         return os.path.join(
-            os.path.join(self.mydir, "chunkymap-genresults"),
-            self.world_name
+            MTANALYZE_CACHE_PATH,
+            self.world_name,
         )
+
 
     def grTempPath(self, qX, qZ):
         """get chunk genresult tmp path"""
@@ -1235,7 +1269,11 @@ class MTChunks(ChunkymapRenderer):
         min_indent = "  "  # increased below
         result = False
         chunk_luid = self.cLUID(qX, qZ)
-        this_chunk = self.chunks[chunk_luid]
+        this_chunk = self.chunks.get(chunk_luid)
+        if this_chunk is None:
+            # FIXME: Is this correct?
+            this_chunk = MTChunk()
+            self.chunks[chunk_luid] = this_chunk
         meta = this_chunk.metadata
         png_name = self.get_chunk_image_name(qX, qZ)
         tmp_png_path = self.get_chunk_image_tmp_path(qX, qZ)
@@ -1495,7 +1533,7 @@ class MTChunks(ChunkymapRenderer):
             # set_verbosity(1)
             if not is_dict_subset(meta, old_meta):
                 participle = "saving chunk meta"
-                self.save_chunk_meta(qX, qZ)
+                self.save_chunk_meta(qX, qZ, min_indent=min_indent+"  ")
             # print(min_indent + "(saved yaml to '"
             #       + chunk_yaml_path + "')")
             if not self.is_save_output_ok:
@@ -1506,7 +1544,9 @@ class MTChunks(ChunkymapRenderer):
             print(min_indent + "database locked: " + lock_line)
         return result
 
-    def save_chunk_meta(self, qX, qZ):
+    def save_chunk_meta(self, qX, qZ, min_indent=None):
+        if min_indent is None:
+            min_indent = ""
         chunk_yaml_path = self.get_chunk_yaml_path(qX, qZ)
         chunk_luid = self.cLUID(qX, qZ)
         if chunk_luid not in self.chunks:
@@ -1780,7 +1820,11 @@ class MTChunks(ChunkymapRenderer):
                     if not meta["is_traversed"]:
                         meta = self.chunks[chunk_luid].metadata
                         meta["is_traversed"] = True
-                        self.save_chunk_meta(qX, qZ)
+                        self.save_chunk_meta(
+                            qX,
+                            qZ,
+                            min_indent=min_indent+"  ",
+                        )
 
                 # if is_enough_data:
                 # if player_name != "singleplayer":
@@ -2231,6 +2275,7 @@ class MTChunks(ChunkymapRenderer):
         return result
 
     def apply_auto_tags_by_worldgen_mods(self, qX, qZ):
+        min_indent = ""
         chunk_luid = self.cLUID(qX, qZ)
         if chunk_luid not in self.chunks.keys():
             self.prepareC(qX, qZ)
@@ -2254,11 +2299,14 @@ class MTChunks(ChunkymapRenderer):
 
         if is_changed:
             meta["tags"] = ', '.join(tags_list)
-            self.save_chunk_meta(qX, qZ)
+            self.save_chunk_meta(qX, qZ, min_indent=min_indent+"  ")
 
     def correct_genresults_paths(self):
         count = 0
         folder_path = self.grBasePath()
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
+            echo0('[generator] created "{}"'.format(folder_path))
         # for base_path, dirnames, filenames in os.walk(folder_path):
         for file_name in os.listdir(folder_path):
             # for file_name in filenames:
@@ -2383,6 +2431,7 @@ class MTChunks(ChunkymapRenderer):
         """
         Check a chunk in an z chunks path that is inside of an x path.
         """
+        min_indent = ""
         # file_path = os.path.join(
         #     self.chunkymap_thisworld_data_path,
         #     file_name
@@ -2408,7 +2457,7 @@ class MTChunks(ChunkymapRenderer):
         # meta = self.chunks[chunk_luid].metadata
         # if ("tags" not in meta):
         #     meta["tags"] = "moreores, caverealms"
-        #     self.save_chunk_meta(qX, qZ)
+        #     self.save_chunk_meta(qX, qZ, min_indent=min_indent+"  ")
         #     print("  saved tags to '"+chunk_path+"'")
 
     def _checkZ(self, decachunk_x_path):
@@ -2449,6 +2498,7 @@ class MTChunks(ChunkymapRenderer):
             self._checkZ(decachunk_x_path)
 
     def check_map_pseudorecursion_start(self):
+        min_indent = ""
         if ((self.todo_positions is not None) and
                 (self.todo_index >= len(self.todo_positions))):
             print("WARNING in check_map_pseudorecursion_start: todo"
@@ -2508,7 +2558,11 @@ class MTChunks(ChunkymapRenderer):
                         continue
                     if meta["is_empty"]:
                         meta["is_empty"] = False
-                        self.save_chunk_meta(qX, qZ)
+                        self.save_chunk_meta(
+                            qX,
+                            qZ,
+                            min_indent=min_indent+"  ",
+                        )
                     # if coords is not None:
                     self.todo_positions.append(coords)
                     # ins = open(file_path, 'r')
@@ -2854,7 +2908,9 @@ class MTChunks(ChunkymapRenderer):
 
 
 def main():
-    mtchunks = MTChunks(get_required("world"))
+    mtchunks = MTChunks(
+        get_required("world", caller_name="generator:main"),
+    )
     # ^ formerly primary_world_path
     signal_path = mtchunks.get_signal_path()
     stop_line = "loop_enable:False"
@@ -2883,6 +2939,22 @@ def main():
         help=('keep running until "' + signal_path
               + '" contains the line ' + stop_line)
     )
+    for done_arg in DONE_ARGS:
+        if not done_arg.startswith("-"):
+            continue
+        if done_arg in STORE_TRUE_ARGS:
+            parser.add_argument(
+                done_arg,
+                # type=ARG_TYPES[done_arg],
+                action='store_true',
+                help=('See mtchunk mti for more information.')
+            )
+        else:
+            parser.add_argument(
+                done_arg,
+                type=ARG_TYPES[done_arg],
+                help=('See mtchunk mti for more information.')
+            )
     args = parser.parse_args()
 
     if not args.skip_players:

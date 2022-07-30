@@ -7,12 +7,6 @@ and mtanalyze/minetestoffline.py
 # NOTE: parsing.py is from
 # <https://raw.githubusercontent.com/poikilos/pycodetool
 # /master/pycodetool/parsing.py>
-from mtanalyze.parsing import (
-    # ConfigParser,
-    save_conf_from_dict,
-    get_dict_modified_by_conf_file,
-    get_dict_from_conf_file,
-)
 '''
 import sys
 import os
@@ -48,31 +42,36 @@ prepackaged_game_mod_list = []
 prepackaged_gameid = None
 
 try:
+    import pycodetool
+except ImportError:
+    pctPackageRel = os.path.join('pycodetool', 'pycodetool')
+    pctPackage = os.path.join(repos, pctPackageRel)
+    pctRepo = os.path.dirname(pctPackage)
+    if os.path.isfile(os.path.join(pctPackage, 'parsing.py')):
+        echo0('[mtchunk] found pycodetool in "{}"'.format(pctRepo))
+        sys.path.append(pctRepo)
+
+try:
     from pycodetool.parsing import ( #import *
         # ConfigParser,
         # ConfigManager,
         save_conf_from_dict,
         get_dict_modified_by_conf_file,
         get_dict_from_conf_file,
+        get_dict_deepcopy,
+        is_dict_subset,
     )
-except ImportError:
-    pctPackageRel = os.path.join('pycodetool', 'pycodetool')
-    pctPackage = os.path.join(repos, pctPackageRel)
-    pctRepo = os.path.split(pctPackage)[0]
-    if os.path.isfile(os.path.join(pctPackage, 'parsing.py')):
-        sys.path.append(pctRepo)
-    try:
-        from pycodetool.parsing import *
-    except ImportError:
-        echo0("This script requires parsing from poikilos/pycodetool")
-        echo0("Try (in a Terminal):")
-        echo0()
-        echo0("cd \"{}\"".format(repos))
-        echo0("git clone https://github.com/poikilos/pycodetool.git"
-              " pycodetool")
-        echo0()
-        echo0()
-        sys.exit(1)
+except ImportError as ex:
+    echo0(str(ex))
+    echo0("This script requires parsing from poikilos/pycodetool")
+    echo0("Try (in a Terminal):")
+    echo0()
+    echo0("cd \"{}\"".format(repos))
+    echo0("git clone https://github.com/poikilos/pycodetool.git"
+          " pycodetool")
+    echo0()
+    echo0()
+    sys.exit(1)
 
 
 class MTDecaChunk:
@@ -487,7 +486,7 @@ def load_config():
     if os.path.isfile(_OLD_json_path):
         # mti = ConfigManager(_OLD_json_path, ":")
         # ^ formerly minetestinfo (which was confusing).
-        # ^ ConfigManager is from poikilos pycodetool.parsing
+        # ^ ConfigManager or ConfigManager is from pycodetool.parsing
         with open(_OLD_json_path, 'r') as ins:
             try:
                 mti = json.load(ins)

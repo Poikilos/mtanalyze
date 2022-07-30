@@ -60,7 +60,6 @@ from mtanalyze import (
     mti,
     get_required,
     PCT_REPO_PATH,
-    # get_required,
 )
 
 from mtanalyze.minebest import (
@@ -84,7 +83,11 @@ except ImportError as ex:
     else:
         raise ex
 
-from pycodetool.parsing import *
+from pycodetool.parsing import (
+    get_dict_deepcopy,
+    save_conf_from_dict,
+    get_dict_modified_by_conf_file,
+)
 
 try:
     input = raw_input
@@ -1431,7 +1434,8 @@ def main():
     # print("/give "+plr.playerid+" "+item_id+" "+str(leftover))
     # plr.playerid = "mrg-try1"
     # plr.save()
-    set_offline_paths(get_required("world"))
+    set_offline_paths(get_required("world",
+                                   caller_name="minetestoffline:main"))
     return 0
 
 

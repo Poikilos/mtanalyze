@@ -25,7 +25,8 @@ from mtanalyze import ( # formerly: from minetestinfo import *
 )
 
 def main():
-    profile_minetest_path = get_required("profile_minetest_path")
+    profile_minetest_path = get_required("profile_minetest_path",
+                                         caller_name="archivedebug")
     if profile_minetest_path is None:
         echo0("profile_minetest_path was not set,"
               " so debug_txt_path was not set.")

@@ -56,25 +56,84 @@ TRY_SHARE_MT_DIRS = [
 mti = {}  # (see under HOME_PATH for detected settings)
 
 verbosity = 0
+
+
+def echo0(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def echo1(*args, **kwargs):
+    if verbosity < 1:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def echo2(*args, **kwargs):
+    if verbosity < 2:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def set_verbosity(level):
+    global verbosity
+    verbosity = level
+
+
+def get_verbosity(level):
+    return verbosity
+
+
+prev_arg = None
+KNOWN_KEYS = ["www_minetest_path", "world", "shared_minetest_path"]
+STRING_ARGS = []
+DONE_ARGS = []
+ARG_TYPES = {}
+ARG_TYPES['--verbose'] = bool
+ARG_TYPES['--debug'] = bool
+STORE_TRUE_ARGS = ['--verbose', '--debug']
+for known_key in KNOWN_KEYS:
+    STRING_ARGS.append("--{}".format(known_key))
+for known_arg in STRING_ARGS:
+    # tmp = known_arg[1:]
+    # if tmp.startswith("-"):  # if started with --
+    #     tmp = key[1:]
+    ARG_TYPES[known_arg] = str
 key = None
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
+    echo2('[mtanalyze] processing "{}"'.format(arg))
     if key is not None:
         mti[key] = arg
+        if key in KNOWN_KEYS:
+            if prev_arg is None:
+                raise RuntimeError("There is no prev_arg for {}"
+                                   "".format(arg))
+            DONE_ARGS += [prev_arg, arg]
+            echo2('[mtanalyze] set {}="{}"')
+        else:
+            echo2('[mtanalyze] WARNING: set unknown key {}="{}"')
         key = None
     elif arg == "--verbose":
+        DONE_ARGS.append(arg)
         verbosity = 2
     elif arg == "--debug":
+        DONE_ARGS.append(arg)
         verbosity = 2
     elif arg.startswith("--"):
         key = arg[2:]
+    prev_arg = arg
 
 
-def get_required(key):
+def get_required(key, caller_name=None):
+    '''
+
+    '''
     if key is None:
-        raise KeyError("key is None")
+        raise KeyError("key is None in caller {}".format(caller_name))
     elif len(key.strip()) == 0:
-        raise KeyError("key is blank")
+        raise KeyError("key is blank in caller {}".format(caller_name))
+    if caller_name is None:
+        caller_name = "this operation"
     value = mti.get(key)
     if value is not None:
         value = value.strip()
@@ -82,8 +141,8 @@ def get_required(key):
             value = None
     if value is None:
         raise ValueError(
-            'A value for --{} is required for this operation.'
-            ''.format(key)
+            'A value for --{} is required for {}.'
+            ''.format(key, caller_name)
         )
     return value
 
@@ -144,32 +203,6 @@ genresult_name_end_flag = "_mapper_result.txt"
 gen_error_name_end_flag = "_mapper_err.txt"
 # endregion from minetestoffline formerly part of mtanalyze
 
-
-def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def echo1(*args, **kwargs):
-    if verbosity < 1:
-        return
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def echo2(*args, **kwargs):
-    if verbosity < 2:
-        return
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def set_verbosity(level):
-    global verbosity
-    verbosity = level
-
-
-def get_verbosity(level):
-    return verbosity
-
-
 me = '__init__.py'
 
 MY_PATH = os.path.realpath(__file__)
@@ -180,6 +213,8 @@ PCT_REPO_PATH = os.path.join(REPOS_PATH, "pycodetool")
 if not os.path.isfile(os.path.join(MY_MODULE_PATH, me)):
     raise RuntimeError('{} is not in module {}.'
                        ''.format(me, MY_MODULE_PATH))
+WEB_PATH = os.path.join(MY_REPO_PATH, "web")
+# ^ formerly os.path.join(self.mydir, "web")
 
 
 PIL_DEP_MSG = '''
@@ -352,11 +387,17 @@ class EngineInfo:
 HOME_PATH = str(pathlib.Path.home())
 
 APPDATA_PATH = None
+CACHES_PATH = None
+MTANALYZE_CACHE_PATH = None
 if "windows" in platform.system().lower():
     if 'USERPROFILE' in os.environ:
         # HOME_PATH = os.environ['USERPROFILE']
         APPDATAS_PATH = os.path.join(HOME_PATH, "AppData")
         APPDATA_PATH = os.path.join(APPDATAS_PATH, "Local")
+        CACHES_PATH = os.path.join(APPDATA_PATH, "mtanalyze")
+        MTANALYZE_CACHE_PATH = os.path.join(CACHES_PATH, "cache")
+        # ^ formerly ./mtanalyze (such as for
+        #   chunkymap-genresults/resetworld)
     else:
         raise ValueError("ERROR: The USERPROFILE variable is missing"
                          " though platform.system() is {}."
@@ -365,6 +406,8 @@ else:
     if 'HOME' in os.environ:
         # HOME_PATH = os.environ['HOME']
         APPDATA_PATH = os.path.join(HOME_PATH, ".config")
+        CACHES_PATH = os.path.join(HOME_PATH, ".cache")
+        MTANALYZE_CACHE_PATH = os.path.join(CACHES_PATH, "mtanalyze")
     else:
         raise ValueError("ERROR: The HOME variable is missing"
                          " though the platform {} is not Windows."
