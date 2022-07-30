@@ -88,14 +88,17 @@ def get_required(key):
     return value
 
 
-def show_missing_arg(key, code=1, classname="path"):
+def show_missing_arg(key, code=1, classname="path", caller_name=None):
     '''
     Keyword arguments:
     code -- Always return this code.
+    caller_name -- Show what program is trying to get the value.
     '''
+    if caller_name is None:
+        caller_name = "mtanalyze"
     echo0("[ mtsenliven.py ] ERROR: {}"
-          " was not set in mtanalyze. Try adding the argument: "
-          " --{} <{}>".format(key, key, classname))
+          " was not set in {}. Try adding the argument: "
+          " --{} <{}>".format(key, caller_name, key, classname))
     return code
 
 
@@ -113,13 +116,15 @@ def ensure_arg(key, code=1):
     return 0
 
 
-def get_var_and_check(key, code=1):
+def get_var_and_check(key, code=1, caller_name=None):
     '''
     Return (value, 0) if the key is present, otherwise show usage help
     and return code.
 
     Keyword arguments:
     code -- Return (None, code) if the key is *not* set in mti.
+    caller_name -- Show what program is trying to get the value if
+        displaying an error message.
     '''
     value = mti.get(key)
     if value is not None:
@@ -128,7 +133,8 @@ def get_var_and_check(key, code=1):
             if len(value) == 0:
                 value = None
     if value is None:
-        return (value, show_missing_arg(key, code=code))
+        return (value, show_missing_arg(key, code=code,
+                                        caller_name=caller_name))
     return (value, 0)
 
 
@@ -364,18 +370,28 @@ else:
                          " though the platform {} is not Windows."
                          "".format(platform.system()))
 
-if os.path.isdir(os.path.join(os.getcwd(), "games")):
-    mti['shared_minetest_path'] = os.getcwd()
-else:
-    print('shared_minetest_path was not detected. Run in a Minetest'
-          ' directory containing "games" to detect, or use'
-          ' --shared_minetest_path <path>')
-if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
-    mti['profile_minetest_path'] = os.getcwd()
-else:
-    print('profile_minetest_path was not detected. Run in a Minetest'
-          ' directory containing "minetest.conf" to detect, or use'
-          ' --profile_minetest_path <path>')
+if mti.get('profile_minetest_path') is None:
+    if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
+        mti['profile_minetest_path'] = os.getcwd()
+    else:
+        print('profile_minetest_path was not detected. Run in a Minetest'
+              ' directory containing "minetest.conf" to detect, or use'
+              ' --profile_minetest_path <path>')
+        print('- It will also be used for shared_minetest_path'
+              ' if contains a "games" directory.')
+
+if mti.get('shared_minetest_path') is None:
+    tmp = mti.get('profile_minetest_path')
+    if os.path.isdir(os.path.join(os.getcwd(), "games")):
+        mti['shared_minetest_path'] = os.getcwd()
+    elif ((tmp is not None)
+            and (os.path.isdir(os.path.join(tmp, "games")))):
+        mti['shared_minetest_path'] = tmp
+    else:
+        print('shared_minetest_path was not detected. Run in a Minetest'
+              ' directory containing "games" to detect, or use'
+              ' --shared_minetest_path <path>')
+
 
 CONFIGS_PATH = os.path.join(APPDATA_PATH, "enlivenminetest")
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -404,5 +420,5 @@ if __name__ == '__main__':
     deprecate_minetestinfo()
     echo0()
     echo0("This is a module not a script. In Python you can do:"
-          " `import mtanalyze` ")
+          " `import mtanalyze`")
     # formerly " `import mtanalyze.minetestinfo` ")

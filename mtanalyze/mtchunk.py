@@ -16,14 +16,31 @@ from mtanalyze.parsing import (
 '''
 import sys
 import os
+import json
+
+MY_PATH = os.path.realpath(__file__)
+MY_MODULE_PATH = os.path.split(MY_PATH)[0]
+MY_REPO_PATH = os.path.split(MY_MODULE_PATH)[0]
+REPOS_PATH = os.path.split(MY_REPO_PATH)[0]
+try:
+    import mtanalyze
+except ImportError as ex:
+    if (("No module named mtanalyze" in str(ex))  # Python 2
+            or ("No module named 'mtanalyze'" in str(ex))):  # Python 3
+        sys.path.insert(0, MY_REPO_PATH)
+    else:
+        raise ex
 
 from mtanalyze import (
-    combineColorLists,
     echo0,
     echo1,
     is_yes,
     TRY_SHARE_MT_DIRS,
     mti,
+    _OLD_json_path,
+)
+from mtanalyze.minetestoffline import (
+    combineColorLists,
 )
 user_excluded_mod_count = 0
 new_mod_list = []
@@ -275,6 +292,8 @@ def getServerPath():
 
 def init_minetestinfo(**kwargs):
     '''
+    This function is deprecated. See mti in mtanalyze instead.
+
     Keyword arguments:
     shared_minetest_path -- Specify the path to the installed minetest
       binaries and shared data such ~/minetest,
@@ -912,6 +931,7 @@ def check_world_mt():
 
 def main():
     load_config()
+    echo0("[mtanalyze.mtchunk:main] loaded config")
     return 0
 
 
