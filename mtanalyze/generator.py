@@ -69,6 +69,10 @@ from mtanalyze import (
     genresult_name_end_flag,
     gen_error_name_end_flag,
 )
+from mtanalyze.mtchunk import(
+    MTChunk,
+    MTDecaChunk,
+)
 
 try:
     import pycodetool
@@ -223,7 +227,7 @@ class MTChunks(ChunkymapRenderer):
             if os.path.isdir(w_path):
                 print("Using world path '{}'".format(w_path))
             else:
-                raise ValueError("Missing world '{}'".format(w_path))
+                raise ValueError("Missing world path '{}'".format(w_path))
         else:
             raise ValueError("world is not set.")
 
