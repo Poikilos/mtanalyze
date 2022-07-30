@@ -22,6 +22,8 @@ from mtanalyze import (
     echo0,
     echo1,
     is_yes,
+    TRY_SHARE_MT_DIRS,
+    mti,
 )
 user_excluded_mod_count = 0
 new_mod_list = []
@@ -243,6 +245,7 @@ class MTChunk:
         is_changed = is_dict_subset(self.metadata, old_meta)
         return is_changed
 
+
 def getServerPath():
     tryMtServerPath = "/usr/bin/minetestserver"
     server_msg = ""
@@ -291,24 +294,24 @@ def init_minetestinfo(**kwargs):
         default_www_minetest_path = "/var/www/html/minetest"
         if "windows" in platform.system().lower():
             default_www_minetest_path = None
-            prioritized_try_paths = []
-            prioritized_try_paths.append("C:\\wamp\\www")
-            prioritized_try_paths.append("C:\\www")
-            prioritized_try_paths.append(
+            TRY_WWW_PATHS = []  # best should be first.
+            TRY_WWW_PATHS.append("C:\\wamp\\www")
+            TRY_WWW_PATHS.append("C:\\www")
+            TRY_WWW_PATHS.append(
                 os.path.join("C:\\", "Program Files",
                              "Apache Software Foundation",
                              "Apache2.2", "htdocs")
             )
 
-            prioritized_try_paths.append("C:\\Inetpub\\Wwwroot")
+            TRY_WWW_PATHS.append("C:\\Inetpub\\Wwwroot")
 
-            # prioritized_try_paths.append(
+            # TRY_WWW_PATHS.append(
             #     os.path.join("C:\\", "Program Files",
             #                  "Apache Software Foundation",
             #                  "Apache2.2", "htdocs", "folder_test",
             #                  "website")
             # )
-            for try_path in prioritized_try_paths:
+            for try_path in TRY_WWW_PATHS:
                 if os.path.isdir(try_path):
                     deep_path = os.path.join(try_path, "minetest")
                     if os.path.isdir(deep_path):
@@ -377,12 +380,10 @@ def init_minetestinfo(**kwargs):
     #   Zesty 0.4.16 packages.
     # /usr/share/minetest: arch package
     # /usr/local/share/minetest: compiled from source
-    try_paths = ["/usr/share/minetest", "/usr/share/games/minetest",
-                 "/usr/local/share/minetest"]
     if "windows" in platform.system().lower():
         default_shared_minetest_path = "C:\\Games\\Minetest"
     else:
-        for try_path in try_paths:
+        for try_path in TRY_SHARE_MT_DIRS:
             echo0("checking for '" + try_path + "'")
             if os.path.isdir(try_path):
                 default_shared_minetest_path = try_path
@@ -447,6 +448,7 @@ def save_config():
     with open(_OLD_json_path, 'w') as ins:
         json.dump(mti, ins, indent=2, sort_keys=True)
 
+
 def set_var(key, value):
     '''
     Use this function instead of accessing mti directly so that the
@@ -454,6 +456,7 @@ def set_var(key, value):
     '''
     mti[key] = value
     save_config
+
 
 def load_config():
     global mti
@@ -491,9 +494,7 @@ def define_conf_var(key, value, help_msg):
     mti_help[key] = help_msg
     return mti.setdefault(key, value)
 
-load_config()
 
-game_path_from_gameid_dict = {}
 
 
 def get_gameid_from_game_path(path):
@@ -865,6 +866,7 @@ def world_has_var(name):
     return name in world_mt_mapvars
 
 
+game_path_from_gameid_dict = {}
 world_mt_mapvars = None
 world_mt_mapvars_world_path = None
 
@@ -906,3 +908,12 @@ def check_world_mt():
     if world_mt_mapvars is None:
         echo0("ERROR: Tried to get world.mt settings but couldn't"
               " read '" + this_world_mt_path + "'")
+
+
+def main():
+    load_config()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -46,6 +46,11 @@ except NameError:
 
 '''
 PYTHON_MR = sys.version_info.major
+TRY_SHARE_MT_DIRS = [
+    "/usr/local/share/minetest",  # such as from source
+    "/usr/share/minetest",
+    "/usr/share/games/minetest",
+]
 
 # mtanalyze was formerly mtanalyze.minetestinfo
 mti = {}  # (see under HOME_PATH for detected settings)
@@ -82,32 +87,82 @@ def get_required(key):
         )
     return value
 
+
+def show_missing_arg(key, code=1, classname="path"):
+    '''
+    Keyword arguments:
+    code -- Always return this code.
+    '''
+    echo0("[ mtsenliven.py ] ERROR: {}"
+          " was not set in mtanalyze. Try adding the argument: "
+          " --{} <{}>".format(key, key, classname))
+    return code
+
+
+def ensure_arg(key, code=1):
+    '''
+    Return 0 if the key is present, otherwise show usage help and return
+    code.
+
+    Keyword arguments:
+    code -- Return this code if the key isn't set in mti (but still
+        return 0 if the key is present).
+    '''
+    if key not in mti:
+        return show_missing_arg(key, code=code)
+    return 0
+
+
+def get_var_and_check(key, code=1):
+    '''
+    Return (value, 0) if the key is present, otherwise show usage help
+    and return code.
+
+    Keyword arguments:
+    code -- Return (None, code) if the key is *not* set in mti.
+    '''
+    value = mti.get(key)
+    if value is not None:
+        if hasattr(value, 'strip'):
+            value = value.strip()
+            if len(value) == 0:
+                value = None
+    if value is None:
+        return (value, show_missing_arg(key, code=code))
+    return (value, 0)
+
+
 # region from minetestoffline formerly part of mtanalyze
 FLAG_EMPTY_HEXCOLOR = "#010000"
 genresult_name_end_flag = "_mapper_result.txt"
 gen_error_name_end_flag = "_mapper_err.txt"
 # endregion from minetestoffline formerly part of mtanalyze
 
-# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
+
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 def echo1(*args, **kwargs):
     if verbosity < 1:
         return
     print(*args, file=sys.stderr, **kwargs)
 
+
 def echo2(*args, **kwargs):
     if verbosity < 2:
         return
     print(*args, file=sys.stderr, **kwargs)
 
+
 def set_verbosity(level):
     global verbosity
     verbosity = level
 
+
 def get_verbosity(level):
     return verbosity
+
 
 me = '__init__.py'
 
@@ -152,6 +207,7 @@ def is_yes(s):
     if s.lower() == "yes":
         return True
     return False
+
 
 class EngineInfo:
     def __init__(self, path_user, path_share, prefix=None,
@@ -227,13 +283,11 @@ class EngineInfo:
             paths['conf'] = conf_path
         if run_in_place:
             if conf_path is None:
-                paths['conf'] = os.path.join(path_share,
-                                                  'minetest.conf')
+                paths['conf'] = os.path.join(path_share, 'minetest.conf')
             paths['screenshots'] = os.getcwd()
             tryBinsPath = os.path.join(path_share, 'bin')
 
-            paths['minetest'] = os.path.join(tryBinsPath,
-                                                  'minetest')
+            paths['minetest'] = os.path.join(tryBinsPath, 'minetest')
             tryExeDirsMsg = 'in "{}"'.format(os.path.join(tryBinsPath))
             if not os.path.isfile(paths['minetest']):
                 del paths['minetest']
@@ -248,8 +302,7 @@ class EngineInfo:
                 exeCount += 1
         else:
             if conf_path is None:
-                paths['conf'] = os.path.join(path_user,
-                                                  'minetest.conf')
+                paths['conf'] = os.path.join(path_user, 'minetest.conf')
             gamesDirs = []
             sysGames = os.path.join(path_share, "games")
             myGames = os.path.join(path_user, "games")
@@ -268,8 +321,7 @@ class EngineInfo:
                         paths[binName] = tryBinPath
                         exeCount += 1
                         break
-            paths['screenshots'] = os.path.join(path_user,
-                                                     "screenshots")
+            paths['screenshots'] = os.path.join(path_user, "screenshots")
             tryExes = [
                 '/usr/games/minetest',  # Ubuntu bionic package for MT5
             ]
@@ -288,7 +340,6 @@ class EngineInfo:
         if exeCount < 1:
             echo0("WARNING: There was no minetest nor minetestserver"
                   " found {}.")
-
 
 
 # HOME_PATH = expanduser("~")  # from os.path import expanduser
@@ -346,8 +397,6 @@ def deprecate_minetestinfo():
     if os.path.isfile(_OLD_json_path):
         print("{} is deprecated and will be ignored."
               "".format(_OLD_json_path))
-
-
 
 
 if __name__ == '__main__':
