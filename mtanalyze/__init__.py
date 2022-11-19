@@ -31,7 +31,19 @@ import sys
 from datetime import datetime
 import platform
 import json
-import pathlib
+
+if sys.version_info.major >= 3:
+    import pathlib
+else:
+    class Pathlib_Path:
+        def home():
+            if platform.system() == "Windows":
+                return os.environ['USERPROFILE']
+            return os.environ['HOME']
+
+    class pathlib:
+        Path = Pathlib_Path()
+
 
 # from voxboxor.settings import Settings
 '''
@@ -51,6 +63,10 @@ TRY_SHARE_MT_DIRS = [
     "/usr/share/minetest",
     "/usr/share/games/minetest",
 ]
+
+from find_hierosoft import hierosoft
+from hierosoft import get_unique_path
+MTANALYZE_CACHE_PATH = get_unique_path("mtanalyze", key="Cache:Unique")
 
 # mtanalyze was formerly mtanalyze.minetestinfo
 mti = {}  # (see under HOME_PATH for detected settings)
@@ -382,37 +398,6 @@ class EngineInfo:
             echo0("WARNING: There was no minetest nor minetestserver"
                   " found {}.")
 
-
-# HOME_PATH = expanduser("~")  # from os.path import expanduser
-HOME_PATH = str(pathlib.Path.home())
-
-APPDATA_PATH = None
-CACHES_PATH = None
-MTANALYZE_CACHE_PATH = None
-if "windows" in platform.system().lower():
-    if 'USERPROFILE' in os.environ:
-        # HOME_PATH = os.environ['USERPROFILE']
-        APPDATAS_PATH = os.path.join(HOME_PATH, "AppData")
-        APPDATA_PATH = os.path.join(APPDATAS_PATH, "Local")
-        CACHES_PATH = os.path.join(APPDATA_PATH, "mtanalyze")
-        MTANALYZE_CACHE_PATH = os.path.join(CACHES_PATH, "cache")
-        # ^ formerly ./mtanalyze (such as for
-        #   chunkymap-genresults/resetworld)
-    else:
-        raise ValueError("ERROR: The USERPROFILE variable is missing"
-                         " though platform.system() is {}."
-                         "".format(platform.system()))
-else:
-    if 'HOME' in os.environ:
-        # HOME_PATH = os.environ['HOME']
-        APPDATA_PATH = os.path.join(HOME_PATH, ".config")
-        CACHES_PATH = os.path.join(HOME_PATH, ".cache")
-        MTANALYZE_CACHE_PATH = os.path.join(CACHES_PATH, "mtanalyze")
-    else:
-        raise ValueError("ERROR: The HOME variable is missing"
-                         " though the platform {} is not Windows."
-                         "".format(platform.system()))
-
 if mti.get('profile_minetest_path') is None:
     if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
         mti['profile_minetest_path'] = os.getcwd()
@@ -436,12 +421,13 @@ if mti.get('shared_minetest_path') is None:
               ' --shared_minetest_path <path>')
 
 
-CONFIGS_PATH = os.path.join(APPDATA_PATH, "enlivenminetest")
+# CONFIG_DIR = os.path.join(APPDATA, "enlivenminetest")
+# ^ formerly CONFIGS_PATH, but unused
 # conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #                          "minetestmeta.yml")
 _OLD_yaml_path = os.path.join(MY_MODULE_PATH, "minetestmeta.yml")
 # ^ formerly _OLD_conf_path formerly conf_path (or _OLD_json_path?)
-_OLD_json_path = os.path.join(APPDATA_PATH, "minetestmeta.json")
+_OLD_json_path = os.path.join(APPDATA, "minetestmeta.json")
 # ^ formerly config_path
 
 

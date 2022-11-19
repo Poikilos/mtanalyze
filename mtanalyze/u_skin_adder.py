@@ -29,22 +29,8 @@ from mtanalyze import (  # formerly: from minetestinfo import *
     HOME_PATH,
 ) # paths and FLAG_EMPTY_HEXCOLOR = "#010000"
 
-try:
-    import pycodetool
-except ImportError as ex:
-    if (("No module named pycodetool" in str(ex))  # Python 2
-            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
-        sys.path.insert(0, PCT_REPO_PATH)
-try:
-    import pycodetool
-except ImportError as ex:
-    if (("No module named pycodetool" in str(ex))  # Python 2
-            or ("No module named 'pycodetool'" in str(ex))):  # Python 3
-        sys.stderr.write(PYCODETOOL_DEP_MSG+"\n")
-        sys.stderr.flush()
-        sys.exit(1)
-    else:
-        raise ex
+from find_pycodetool import pycodetool
+# ^ works for submodules since changes sys.path
 
 from pycodetool.parsing import *
 
