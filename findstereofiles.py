@@ -38,6 +38,7 @@ Known issues:
     file size outcomes of various compression options vs no compression
     options.
 '''
+from __future__ import print_function
 import argparse
 from pathlib import Path
 import os

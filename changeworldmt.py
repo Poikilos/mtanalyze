@@ -12,6 +12,7 @@ cd worlds
 changeworldmt.py gameid Bucket_Game bucket
 
 '''
+from __future__ import print_function
 import sys
 import os
 import shutil

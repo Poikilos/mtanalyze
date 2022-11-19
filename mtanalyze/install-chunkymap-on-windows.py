@@ -1,3 +1,4 @@
+from __future__ import print_function
 import platform
 import urllib2
 import sys

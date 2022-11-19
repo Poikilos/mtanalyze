@@ -8,6 +8,7 @@ and mtanalyze/minetestoffline.py
 # <https://raw.githubusercontent.com/poikilos/pycodetool
 # /master/pycodetool/parsing.py>
 '''
+from __future__ import print_function
 import sys
 import os
 import json

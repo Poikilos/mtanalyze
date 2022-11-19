@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import print_function
 # TODO: crafts (scrape list of ingredients to remove from inventory)
 
 worldgen_mod_list = []

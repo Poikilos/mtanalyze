@@ -11,7 +11,7 @@ Command-line interface:
 worldctl --mg_name carpathian --create ~/minetest/worlds/worldname
 # ^ where ~/minetest/worlds is your Minetest worlds directory
 '''
-
+from __future__ import print_function
 import sys
 import os
 me = "worldctl"

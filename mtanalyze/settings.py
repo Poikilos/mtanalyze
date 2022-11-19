@@ -21,6 +21,7 @@ from mtanalyze.minebest import (
 For a more complete implementation of Minetest settings, see
 <https://github.com/poikilos/voxboxor>.
 '''
+
 # mtanalyze: module for using minetest data
 # Copyright (C) 2022 Jake Gustafson
 
@@ -40,6 +41,7 @@ For a more complete implementation of Minetest settings, see
 # Boston, MA 02110-1301 USA
 
 # TODO: read settingtypes.txt files (and cache them):
+from __future__ import print_function
 
 setting_formats = {
     "possible_flags": "<string>,...",
