@@ -49,7 +49,14 @@ function get_server_meta() {
     $meta = array();
     // $p = popen("minebest list", "r");
     // pclose($p);
-    $out = shell_exec("minebest list");
+    // $out = shell_exec("minebest list");
+    // ^ needs work--says some are down when not down (tested on minetest.io)
+    $out = shell_exec("minetest-list");
+
+    // ^ returns nothing (only tested with minebest list) if triggered by public site visit
+    //   so use ../mtanalyze/scripts/cron.hourly/update-server-status.sh
+    //   for now.
+
     // echo "out=$out";
     if ($out === false) {
         $meta['error'] = "pipe cannot be established";
@@ -76,8 +83,8 @@ function get_server_meta() {
             if ($parts[2] != "is") {
                 append_at($server, 'error', '"is" should be the 3rd word but line $line_n is "$line".');
             }
-            if ($parts[3] == "up") {
-                $server['up'] = true;
+            if ($parts[3] == "running") {
+                $server['running'] = true;
             }
             $server['port'] = $parts[0];
             $server['name'] = $parts[1];
