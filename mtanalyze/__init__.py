@@ -64,8 +64,11 @@ TRY_SHARE_MT_DIRS = [
     "/usr/share/games/minetest",
 ]
 
-from find_hierosoft import hierosoft
-from hierosoft import get_unique_path
+from .find_hierosoft import hierosoft
+from hierosoft import (
+    get_unique_path,
+    APPDATA,
+)
 MTANALYZE_CACHE_PATH = get_unique_path("mtanalyze", key="Cache:Unique")
 
 # mtanalyze was formerly mtanalyze.minetestinfo
