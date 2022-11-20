@@ -42,7 +42,7 @@ function get_server_meta() {
         return $meta;
     }
     elseif ($out === null) {
-        $meta['error'] = "There was an error or no output for 'minebest list'.";
+        $meta['error'] = "There was an error (or no output) for '$cmd'.";
         return $meta;
     }
     $arr = preg_split('/\n/', $out);
@@ -98,6 +98,7 @@ else {
 $CACHE_JSON = dirname(__FILE__) . DIRECTORY_SEPARATOR . "status.json";
 preg_replace('#/+#', '/', $CACHE_JSON);
 $json_stat = false;
+$json_mtime = null;
 
 if (file_exists($CACHE_JSON)) {
     $json_stat = stat($CACHE_JSON);
@@ -128,11 +129,16 @@ if ($refresh) {
     $meta = get_server_meta();
     $meta['file_status'] = $file_status;
     $jsonString = json_encode($meta);
-    fwrite(STDERR, "* writing $CACHE_JSON at timestamp ".time()."...");
-    $fp = fopen($CACHE_JSON, 'w');
-    fwrite($fp, $jsonString);
-    fclose($fp);
-    fwrite(STDERR, "OK (wrote $CACHE_JSON)\n");
+    if (!array_key_exists('error', $meta)) {
+        fwrite(STDERR, "* writing $CACHE_JSON at timestamp ".time()."...");
+        $fp = fopen($CACHE_JSON, 'w');
+        fwrite($fp, $jsonString);
+        fclose($fp);
+        fwrite(STDERR, "OK (wrote $CACHE_JSON)\n");
+    }
+    else {
+        fwrite(STDERR, "* not writing $CACHE_JSON due to error (last modified '$json_mtime')...");
+    }
 }
 else {
     $jsonString = file_get_contents($CACHE_JSON);

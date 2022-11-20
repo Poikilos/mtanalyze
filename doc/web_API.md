@@ -90,7 +90,7 @@ The api is installed at HOSTNAME/api in the example below, but:
   not need to provide the last parameter, as it is only a default.
   Otherwise, change "minetest.io" to the hostname of the Minetest
   server.
-```
+```HTML
 <script type = "text/javascript" src="assets/js/mtanalyze.js"></script>
 <script type = "text/javascript">
 
@@ -98,6 +98,16 @@ show_server_rows('https://minetest.io/api', 'servers-tbody', 4, "minetest.io")
 // 4 for header_col_count of the actual table
 </script>
 ```
+
+Add a named anchor anywhere on your HTML page for each server, such as:
+```HTML
+<section>
+  <a name="skydoom"></a>
+  <h3>SkyDoom</h3>
+  <p>This is an archived copy of the old SkyDoom server.</p>
+</section>
+```
+- The name must be the short name used in minebest, not a descriptive name with different case or spaces.
 
 ## Troubleshooting
 
