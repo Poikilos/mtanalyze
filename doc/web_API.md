@@ -83,8 +83,8 @@ The api is installed at HOSTNAME/api in the example below, but:
 - The substring "/api" must be changed if you installed it elsewhere.
 - The web address (minetest.io in the example) must be changed as well
 - The implementation below assumes you've installed
-  [../assets/js/mtanalyze.js](../assets/js/mtanalyze.js) at
-  assets/js/mtanalyze.js in your website.
+  [../frontend/assets/js/mtanalyze.js](../frontend/assets/js/mtanalyze.js)
+  ass `assets/js/mtanalyze.js` in your website.
 - If each of the returned objects (see [status.json](#status.json)) has
   the optional 'host' key (not implemented in mtanalyze) then you do
   not need to provide the last parameter, as it is only a default.
