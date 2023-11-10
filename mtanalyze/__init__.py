@@ -63,8 +63,12 @@ TRY_SHARE_MT_DIRS = [
     "/usr/share/minetest",
     "/usr/share/games/minetest",
 ]
+MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(MODULE_DIR)
+if __name__ == "__main__":
+    sys.path.insert(0, REPO_DIR)
 
-from .find_hierosoft import hierosoft
+from mtanalyze.find_hierosoft import hierosoft
 from hierosoft import (
     get_unique_path,
     APPDATA,
@@ -405,10 +409,10 @@ if mti.get('profile_minetest_path') is None:
     if os.path.isfile(os.path.join(os.getcwd(), 'minetest.conf')):
         mti['profile_minetest_path'] = os.getcwd()
     else:
-        print('profile_minetest_path was not detected. Run in a Minetest'
+        echo0('profile_minetest_path was not detected. Run in a Minetest'
               ' directory containing "minetest.conf" to detect, or use'
               ' --profile_minetest_path <path>')
-        print('- It will also be used for shared_minetest_path'
+        echo0('- It will also be used for shared_minetest_path'
               ' if contains a "games" directory.')
 
 if mti.get('shared_minetest_path') is None:
@@ -419,7 +423,7 @@ if mti.get('shared_minetest_path') is None:
             and (os.path.isdir(os.path.join(tmp, "games")))):
         mti['shared_minetest_path'] = tmp
     else:
-        print('shared_minetest_path was not detected. Run in a Minetest'
+        echo0('shared_minetest_path was not detected. Run in a Minetest'
               ' directory containing "games" to detect, or use'
               ' --shared_minetest_path <path>')
 
@@ -440,10 +444,10 @@ def deprecate_minetestinfo():
     config is ignored since it is entirely irrelevant.
     '''
     if os.path.isfile(_OLD_yaml_path):
-        print("{} is deprecated and will be ignored."
+        echo0("{} is deprecated and will be ignored."
               "".format(_OLD_yaml_path))
     if os.path.isfile(_OLD_json_path):
-        print("{} is deprecated and will be ignored."
+        echo0("{} is deprecated and will be ignored."
               "".format(_OLD_json_path))
 
 
